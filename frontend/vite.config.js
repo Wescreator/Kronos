@@ -8,34 +8,44 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
 
-    server: isDev ? {
-      port: 5173,
-      proxy: {
-        '/api': {
-          target: 'http://localhost:3001',
-          changeOrigin: true,
-          secure: false,
-        },
-        '/uploads': {
-          target: 'http://localhost:3001',
-          changeOrigin: true,
-          secure: false,
-        },
-      }
-    } : {},
+    server: isDev
+      ? {
+          port: 5173,
+          proxy: {
+            '/api': {
+              target: 'http://localhost:3001',
+              changeOrigin: true,
+              secure: false,
+            },
+            '/uploads': {
+              target: 'http://localhost:3001',
+              changeOrigin: true,
+              secure: false,
+            },
+          },
+        }
+      : {},
 
     build: {
-      outDir:    'dist',
+      outDir: 'dist',
       sourcemap: false,
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor:   ['react', 'react-dom', 'react-router-dom'],
-            charts:   ['recharts'],
-            icons:    ['lucide-react'],
-          }
-        }
-      }
-    }
+          manualChunks(id) {
+            if (id.includes('react') || id.includes('react-router-dom')) {
+              return 'vendor'
+            }
+
+            if (id.includes('recharts')) {
+              return 'charts'
+            }
+
+            if (id.includes('lucide-react')) {
+              return 'icons'
+            }
+          },
+        },
+      },
+    },
   }
 })
