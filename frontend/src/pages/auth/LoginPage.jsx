@@ -17,8 +17,7 @@ export default function LoginPage() {
   setLoading(true)
 
   try {
-    // Limpa dados antigos ANTES do novo login
-    localStorage.clear()
+  
 
     const { data } = await login(form)
 

@@ -6,44 +6,48 @@ require('dotenv').config()
 
 const app = express()
 
-// ── CORS ───────────────────────────────────────
+// ── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://kronos-neon.vercel.app',
   process.env.FRONTEND_URL,
-].filter(Boolean)
+].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i) // remove duplicatas
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Permite requests sem origin (Postman, curl, mobile)
+    // Permite Postman, curl e mobile (sem origin)
     if (!origin) return callback(null, true)
     if (allowedOrigins.includes(origin)) return callback(null, true)
+    console.error(`[CORS] Bloqueado: ${origin}`)
     callback(new Error(`CORS bloqueado para origem: ${origin}`))
   },
   credentials: true,
-  methods:     ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
+  methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' }
-}))
+// Responde OPTIONS imediatamente (preflight)
+app.options('*', cors())
+
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
-// ── Uploads estáticos ──────────────────────────
+// ── Uploads estáticos ─────────────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
-// ── Health check ───────────────────────────────
+// ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     env:    process.env.NODE_ENV,
-    ts:     new Date().toISOString()
+    ts:     new Date().toISOString(),
+    frontend: process.env.FRONTEND_URL,
   })
 })
 
-// ── Rotas ──────────────────────────────────────
+// ── Rotas ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth',          require('./routes/auth.routes'))
 app.use('/api/users',         require('./routes/users.routes'))
 app.use('/api/projects',      require('./routes/projects.routes'))
@@ -52,7 +56,7 @@ app.use('/api/financial',     require('./routes/financial.routes'))
 app.use('/api/chat',          require('./routes/chat.routes'))
 app.use('/api/notifications', require('./routes/notifications.routes'))
 
-// ── Error handler global ───────────────────────
+// ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('[ERROR]', err.message)
   res.status(err.status || 500).json({
@@ -61,10 +65,11 @@ app.use((err, req, res, next) => {
   })
 })
 
-// ── Start ──────────────────────────────────────
+// ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001
 const server = app.listen(PORT, () => {
-  console.log(`✓ Servidor rodando na porta ${PORT} [${process.env.NODE_ENV}]`)
+  console.log(`✓ Kronos backend [${process.env.NODE_ENV}] porta ${PORT}`)
+  console.log(`✓ CORS liberado para: ${allowedOrigins.join(', ')}`)
 })
 
 require('./config/websocket')(server)

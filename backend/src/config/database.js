@@ -3,11 +3,17 @@ require('dotenv').config()
 
 const isProduction = process.env.NODE_ENV === 'production'
 
+// Garante SSL sempre que usar Supabase
+const sslConfig = { rejectUnauthorized: false }
+
 const pool = new Pool(
   process.env.DATABASE_URL
     ? {
         connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
+        ssl: sslConfig,
+        max: isProduction ? 5 : 10,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
       }
     : {
         host:     process.env.DB_HOST,
@@ -15,29 +21,22 @@ const pool = new Pool(
         database: process.env.DB_NAME,
         user:     process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-        ssl:      { rejectUnauthorized: false },
-        max:      isProduction ? 5 : 20,
-        idleTimeoutMillis:    30000,
-        connectionTimeoutMillis: 5000,
+        ssl:      sslConfig,
+        max:      10,
+        idleTimeoutMillis:       30000,
+        connectionTimeoutMillis: 10000,
       }
 )
 
-pool.on('connect', (client) => {
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('✓ PostgreSQL conectado')
-  }
-})
-
 pool.on('error', (err) => {
-  console.error('✗ Erro no pool do PostgreSQL:', err.message)
+  console.error('✗ Erro inesperado no pool:', err.message)
 })
 
-// Testa a conexão na inicialização
-pool.query('SELECT NOW()').then(() => {
-  console.log('✓ Banco de dados OK')
-}).catch(err => {
-  console.error('✗ Falha na conexão com o banco:', err.message)
-  process.exit(1)
-})
+pool.query('SELECT NOW()')
+  .then(() => console.log('✓ Banco de dados conectado'))
+  .catch(err => {
+    console.error('✗ Falha na conexão com o banco:', err.message)
+    process.exit(1)
+  })
 
 module.exports = pool
