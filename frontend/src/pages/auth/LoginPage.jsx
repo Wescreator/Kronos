@@ -13,16 +13,33 @@ export default function LoginPage() {
   const [show,    setShow]    = useState(false)
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
-    try {
-      const { data } = await login(form)
-      setAuth(data.user, data.accessToken, data.refreshToken)
-      navigate('/app/dashboard')
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Credenciais inválidas')
-    } finally { setLoading(false) }
+  e.preventDefault()
+  setLoading(true)
+
+  try {
+    // Limpa dados antigos ANTES do novo login
+    localStorage.clear()
+
+    const { data } = await login(form)
+
+    if (!data.accessToken) {
+      throw new Error('Token não recebido')
+    }
+
+    setAuth(data.user, data.accessToken, data.refreshToken)
+
+    // Aguarda o estado ser salvo antes de navegar
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    navigate('/app/dashboard', { replace: true })
+
+  } catch (err) {
+    localStorage.clear()
+    toast.error(err.response?.data?.message || 'Credenciais inválidas')
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div
