@@ -1,5 +1,23 @@
 const projectRepo = require('../repositories/project.repository')
+const pool        = require('../config/database')
 const { paginate, paginatedResponse } = require('../utils/pagination')
+
+const DEFAULT_STAGES = [
+  { stage_name: 'Estudo Preliminar', stage_order: 1 },
+  { stage_name: 'Projeto Básico',    stage_order: 2 },
+  { stage_name: 'Ante Projeto',      stage_order: 3 },
+  { stage_name: 'Executivo',         stage_order: 4 },
+  { stage_name: 'Entrega Final',     stage_order: 5 },
+]
+
+async function createDefaultStages(projectId) {
+  for (const s of DEFAULT_STAGES) {
+    await pool.query(
+      'INSERT INTO project_stages (project_id, stage_name, stage_order) VALUES ($1,$2,$3)',
+      [projectId, s.stage_name, s.stage_order]
+    )
+  }
+}
 
 const getAll = async (query) => {
   const { page, limit, offset } = paginate(query)
@@ -31,7 +49,10 @@ const create = async (data, userId) => {
   })
 
   await projectRepo.addMember(project.id, userId, 'manager')
-  await projectRepo.addStatusHistory(project.id, null, 'planning', userId, 'Projeto criado')
+  await projectRepo.addStatusHistory(project.id, null, 'in_progress', userId, 'Projeto criado')
+
+  // Cria automaticamente as 5 etapas padrão
+  await createDefaultStages(project.id)
 
   return project
 }
@@ -45,7 +66,7 @@ const update = async (id, data, userId) => {
   }
 
   const fields = {}
-  const allowed = ['title','client','description','budget','status','progress',
+  const allowed = ['title','client','description','budget','status',
                    'start_date','expected_date','completed_date','owner_id']
   for (const key of allowed) {
     if (data[key] !== undefined) fields[key] = data[key]
@@ -72,4 +93,7 @@ const removeMember = async (projectId, userId) => {
   await projectRepo.removeMember(projectId, userId)
 }
 
-module.exports = { getAll, getById, create, update, updateCover, getStatusHistory, addMember, removeMember }
+module.exports = {
+  getAll, getById, create, update, updateCover,
+  getStatusHistory, addMember, removeMember
+}

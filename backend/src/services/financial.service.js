@@ -8,7 +8,9 @@ const getExpenses = async (query) => {
     limit, offset,
     status:     query.status,
     categoryId: query.category_id,
-    projectId:  query.project_id
+    projectId:  query.project_id,
+    month:      query.month ? parseInt(query.month) : null,
+    year:       query.year  ? parseInt(query.year)  : null,
   })
   return paginatedResponse(rows, total, page, limit)
 }
@@ -17,8 +19,8 @@ const createExpense = async (data, userId) => {
   return await repo.createExpense({
     title:       data.title,
     description: data.description,
-    projectId:   data.project_id   || null,
-    categoryId:  data.category_id  || null,
+    projectId:   data.project_id  || null,
+    categoryId:  data.category_id || null,
     amount:      data.amount,
     dueDate:     data.due_date,
     createdBy:   userId
@@ -32,12 +34,7 @@ const confirmPayment = async (id, paidDate) => {
 }
 
 const updateExpense = async (id, data) => {
-  const fields = {}
-  const allowed = ['title','description','project_id','category_id','amount','due_date','status']
-  for (const key of allowed) {
-    if (data[key] !== undefined) fields[key] = data[key]
-  }
-  return await repo.updateExpense(id, fields)
+  return await repo.updateExpense(id, data)
 }
 
 const deleteExpense = async (id) => {
@@ -49,34 +46,49 @@ const getRevenues = async (query) => {
   const { rows, total } = await repo.findRevenues({
     limit, offset,
     status:    query.status,
-    projectId: query.project_id
+    projectId: query.project_id,
+    month:     query.month ? parseInt(query.month) : null,
+    year:      query.year  ? parseInt(query.year)  : null,
   })
   return paginatedResponse(rows, total, page, limit)
 }
 
 const createRevenue = async (data, userId) => {
+  // Suporta tanto o formato antigo (total_amount + installments)
+  // quanto o novo (installments como array com valor/data individuais)
+  const isArrayFormat = Array.isArray(data.installments_list)
+
   const revenue = await repo.createRevenue({
     title:        data.title,
     client:       data.client,
     projectId:    data.project_id  || null,
     totalAmount:  data.total_amount,
-    installments: data.installments || 1,
+    installments: isArrayFormat ? data.installments_list.length : (data.installments || 1),
     description:  data.description,
     createdBy:    userId
   })
 
-  const installmentAmount = parseFloat((data.total_amount / data.installments).toFixed(2))
-  const baseDate = new Date(data.due_date)
-  const installmentsList = []
+  let installmentsList = []
 
-  for (let i = 0; i < data.installments; i++) {
-    installmentsList.push({
+  if (isArrayFormat) {
+    // Novo formato: array com { amount, due_date } por parcela
+    installmentsList = data.installments_list.map((inst, i) => ({
       no:      i + 1,
-      amount:  i === data.installments - 1
-               ? data.total_amount - installmentAmount * (data.installments - 1)
-               : installmentAmount,
-      dueDate: format(addMonths(baseDate, i), 'yyyy-MM-dd')
-    })
+      amount:  parseFloat(inst.amount),
+      dueDate: inst.due_date
+    }))
+  } else {
+    // Formato antigo: divide total_amount em parcelas iguais
+    const count  = data.installments || 1
+    const base   = parseFloat((data.total_amount / count).toFixed(2))
+    const baseDate = new Date(data.due_date)
+    for (let i = 0; i < count; i++) {
+      installmentsList.push({
+        no:      i + 1,
+        amount:  i === count - 1 ? data.total_amount - base * (count - 1) : base,
+        dueDate: format(addMonths(baseDate, i), 'yyyy-MM-dd')
+      })
+    }
   }
 
   await repo.createInstallments(revenue.id, installmentsList)
@@ -89,24 +101,20 @@ const confirmReceipt = async (installmentId, receivedDate) => {
   return inst
 }
 
-const getCategories = async () => repo.findCategories()
-
-const createCategory = async (data, userId) => {
-  return await repo.createCategory(data.name, data.color, userId)
+const updateInstallment = async (id, data) => {
+  return await repo.updateInstallment(id, data)
 }
 
-const updateCategory = async (id, data) => {
-  return await repo.updateCategory(id, data.name, data.color)
-}
+const getCategories    = async () => repo.findCategories()
+const createCategory   = async (data, userId) => repo.createCategory(data.name, data.color, userId)
+const updateCategory   = async (id, data)     => repo.updateCategory(id, data.name, data.color)
+const deleteCategory   = async (id)           => repo.deleteCategory(id)
 
-const deleteCategory = async (id) => {
-  await repo.deleteCategory(id)
-}
-
-const getDashboard = async () => {
-  const stats = await repo.getDashboardStats()
-  const year  = new Date().getFullYear()
-  const cashflow = await repo.getCashflow(year)
+const getDashboard = async (query = {}) => {
+  const month = query.month ? parseInt(query.month) : null
+  const year  = query.year  ? parseInt(query.year)  : null
+  const stats    = await repo.getDashboardStats(month, year)
+  const cashflow = await repo.getCashflow(year || new Date().getFullYear())
   return { stats, cashflow }
 }
 
@@ -120,7 +128,7 @@ const getProjectFinancials = async () => {
 
 module.exports = {
   getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
-  getRevenues, createRevenue, confirmReceipt,
+  getRevenues, createRevenue, confirmReceipt, updateInstallment,
   getCategories, createCategory, updateCategory, deleteCategory,
   getDashboard, getDRE, getProjectFinancials
 }
