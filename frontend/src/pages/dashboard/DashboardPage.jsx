@@ -1,21 +1,20 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  DollarSign, FolderKanban, AlertCircle, TrendingUp,
-  CheckSquare, Clock, ArrowRight, Zap
+  DollarSign, FolderKanban, AlertCircle,
+  TrendingUp, CheckSquare, Clock, ArrowRight, Zap
 } from 'lucide-react'
-import StatCard from '../../components/ui/StatCard'
-import Spinner from '../../components/ui/Spinner'
-import Avatar from '../../components/ui/Avatar'
-import Badge from '../../components/ui/Badge'
+import StatCard  from '../../components/ui/StatCard'
+import Spinner   from '../../components/ui/Spinner'
+import Badge     from '../../components/ui/Badge'
 import {
   formatCurrency, formatDate, formatCompact,
-  statusLabel, statusColors, priorityColors, priorityLabel,
-  priorityDot, monthNames
+  statusLabel, statusColors,
+  priorityColors, priorityLabel, priorityDot, monthNames
 } from '../../utils/format'
 import { getFinancialDashboard } from '../../services/financial.service'
-import { getProjects } from '../../services/projects.service'
-import { getTasks } from '../../services/tasks.service'
+import { getProjects }           from '../../services/projects.service'
+import { getTasks }              from '../../services/tasks.service'
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend
@@ -25,12 +24,9 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#0D152B',
-      border: '1px solid rgba(255,255,255,0.08)',
-      borderRadius: 12,
-      padding: '10px 14px',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.45)',
-      fontSize: 12,
+      background: '#0D152B', border: '1px solid rgba(255,255,255,0.08)',
+      borderRadius: 12, padding: '10px 14px',
+      boxShadow: '0 20px 40px rgba(0,0,0,0.45)', fontSize: 12
     }}>
       <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>{label}</p>
       {payload.map((p, i) => (
@@ -51,19 +47,22 @@ export default function DashboardPage() {
   useEffect(() => {
     Promise.all([
       getFinancialDashboard(),
-      getProjects({ status: 'in_progress', limit: 5 }),
+      // Busca todos os projetos ativos (não só in_progress)
+      getProjects({ limit: 50 }),
       getTasks({ status: 'open', limit: 6 })
     ]).then(([fin, proj, tsk]) => {
       setFinancial(fin.data)
-      setProjects(proj.data.data || [])
+      // Filtra apenas os não concluídos e não cancelados para o dashboard
+      const active = (proj.data.data || []).filter(
+        p => !['completed', 'cancelled'].includes(p.status)
+      )
+      setProjects(active)
       setTasks(tsk.data.data || [])
     }).finally(() => setLoading(false))
   }, [])
 
   if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Spinner size="lg" />
-    </div>
+    <div className="flex items-center justify-center h-64"><Spinner size="lg" /></div>
   )
 
   const stats    = financial?.stats || {}
@@ -80,81 +79,54 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-7 fade-in">
-
-      {/* Greeting */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Zap size={16} style={{ color: '#7C5CFC' }} />
-            <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#A78BFA' }}>
-              Visão Executiva
-            </span>
-          </div>
-          <h1 className="text-[32px] font-bold tracking-tight" style={{ letterSpacing: '-0.025em' }}>
-            Dashboard
-          </h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <Zap size={16} style={{ color: '#7C5CFC' }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#A78BFA' }}>
+            Visão Executiva
+          </span>
         </div>
+        <h1 className="text-[32px] font-bold tracking-tight" style={{ letterSpacing: '-0.025em' }}>
+          Dashboard
+        </h1>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          {new Date().toLocaleDateString('pt-BR', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+          })}
+        </p>
       </div>
 
-      {/* KPI Row */}
+      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard
-          title="Receita do Mês"
-          value={formatCompact(netRevenue)}
-          icon={DollarSign}
-          color="green"
-          subtitle="Recebimentos confirmados"
-        />
-        <StatCard
-          title="Projetos Ativos"
-          value={projects.length}
-          icon={FolderKanban}
-          color="purple"
-          subtitle="Em andamento agora"
-        />
-        <StatCard
-          title="Despesas a Vencer"
-          value={formatCompact(stats.expenses_pending)}
-          icon={AlertCircle}
-          color="yellow"
-          subtitle={`${formatCompact(stats.expenses_overdue)} em atraso`}
-        />
-        <StatCard
-          title="Receitas a Receber"
-          value={formatCompact(stats.revenue_pending)}
-          icon={TrendingUp}
-          color="blue"
-          subtitle={`${formatCompact(stats.revenue_overdue)} em atraso`}
-        />
+        <StatCard title="Receita do Mês"     value={formatCompact(netRevenue)}            icon={DollarSign}  color="green"  subtitle="Recebimentos confirmados" />
+        <StatCard title="Projetos Ativos"    value={projects.length}                      icon={FolderKanban}color="purple" subtitle="Em andamento agora" />
+        <StatCard title="Despesas a Vencer"  value={formatCompact(stats.expenses_pending)} icon={AlertCircle} color="yellow" subtitle={`${formatCompact(stats.expenses_overdue)} em atraso`} />
+        <StatCard title="Receitas a Receber" value={formatCompact(stats.revenue_pending)}  icon={TrendingUp}  color="blue"   subtitle={`${formatCompact(stats.revenue_overdue)} em atraso`} />
       </div>
 
-      {/* Row 2: Projetos + Resumo financeiro */}
+      {/* Projetos + Resumo */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-        {/* Projetos em andamento */}
-        <div className="xl:col-span-2 card p-6">
-          <div className="flex items-center justify-between mb-6">
+        {/* Projetos ativos — altura fixa com scroll */}
+        <div className="xl:col-span-2 card p-6 flex flex-col">
+          <div className="flex items-center justify-between mb-5 shrink-0">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                Em Andamento
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+                style={{ color: 'var(--text-muted)' }}>Ativos</p>
               <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                Projetos Ativos
+                Projetos
               </h3>
             </div>
-            <Link
-              to="/app/projects"
-              className="flex items-center gap-1.5 text-xs font-semibold transition-colors"
-              style={{ color: '#A78BFA' }}
-            >
+            <Link to="/app/projects"
+              className="flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: '#A78BFA' }}>
               Ver todos <ArrowRight size={13} />
             </Link>
           </div>
 
-          <div className="space-y-4">
+          {/* Container com altura fixa e scroll interno */}
+          <div className="overflow-y-auto space-y-3 pr-1" style={{ maxHeight: 320 }}>
             {projects.length === 0 && (
               <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>
                 Nenhum projeto ativo
@@ -164,35 +136,33 @@ export default function DashboardPage() {
               <Link
                 key={p.id}
                 to={`/app/projects/${p.id}`}
-                className="group block rounded-2xl p-4 transition-all duration-200"
+                className="group flex items-center justify-between rounded-2xl p-4 transition-all duration-200"
                 style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}
                 onMouseEnter={e => {
-                  e.currentTarget.style.background = 'rgba(124,92,252,0.06)'
-                  e.currentTarget.style.borderColor = 'rgba(124,92,252,0.15)'
+                  e.currentTarget.style.background   = 'rgba(124,92,252,0.06)'
+                  e.currentTarget.style.borderColor  = 'rgba(124,92,252,0.15)'
                 }}
                 onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.025)'
-                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.04)'
+                  e.currentTarget.style.background   = 'rgba(255,255,255,0.025)'
+                  e.currentTarget.style.borderColor  = 'rgba(255,255,255,0.04)'
                 }}
               >
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-sm font-semibold truncate flex-1 mr-3" style={{ color: 'var(--text-primary)' }}>
+                <div className="flex-1 min-w-0 mr-4">
+                  <p className="text-sm font-semibold truncate mb-1"
+                    style={{ color: 'var(--text-primary)' }}>
                     {p.title}
-                  </span>
-                  <span className="text-xs font-bold shrink-0" style={{ color: '#A78BFA' }}>
-                    {p.progress}%
-                  </span>
-                </div>
-                <div className="progress-track mb-2.5">
-                  <div className="progress-fill" style={{ width: `${p.progress}%` }} />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  </p>
+                  <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
                     {p.client || 'Sem cliente'}
-                  </span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
                   <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
                     {formatDate(p.expected_date)}
                   </span>
+                  <Badge className={statusColors[p.status]}>
+                    {statusLabel[p.status]}
+                  </Badge>
                 </div>
               </Link>
             ))}
@@ -201,66 +171,46 @@ export default function DashboardPage() {
 
         {/* Resumo financeiro */}
         <div className="card p-6">
-          <div className="mb-6">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: 'var(--text-muted)' }}>
-              Este Mês
-            </p>
+          <div className="mb-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+              style={{ color: 'var(--text-muted)' }}>Este Mês</p>
             <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
               Resumo Financeiro
             </h3>
           </div>
-
           <div className="space-y-1">
             {[
-              { label: 'Receita',      value: netRevenue,              color: '#34D399' },
-              { label: 'Despesas',     value: netExpense,              color: '#FB7185' },
-              { label: 'Lucro líquido',value: netProfit,               color: netProfit >= 0 ? '#34D399' : '#FB7185', bold: true },
-              { label: 'A pagar',      value: stats.expenses_pending,  color: 'var(--text-secondary)' },
-              { label: 'A receber',    value: stats.revenue_pending,   color: 'var(--text-secondary)' },
+              { label: 'Receita',       value: netRevenue,             color: '#34D399' },
+              { label: 'Despesas',      value: netExpense,             color: '#FB7185' },
+              { label: 'Lucro líquido', value: netProfit,              color: netProfit >= 0 ? '#34D399' : '#FB7185', bold: true },
+              { label: 'A pagar',       value: stats.expenses_pending, color: 'var(--text-secondary)' },
+              { label: 'A receber',     value: stats.revenue_pending,  color: 'var(--text-secondary)' },
             ].map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between py-3"
-                style={{
-                  borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none'
-                }}
-              >
+              <div key={i} className="flex items-center justify-between py-3"
+                style={{ borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
-                <span
-                  className="text-sm"
-                  style={{ color: item.color, fontWeight: item.bold ? 700 : 600 }}
-                >
+                <span className="text-sm" style={{ color: item.color, fontWeight: item.bold ? 700 : 600 }}>
                   {formatCurrency(item.value)}
                 </span>
               </div>
             ))}
           </div>
-
-          <Link
-            to="/app/financial"
+          <Link to="/app/financial"
             className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
-            style={{
-              background: 'rgba(124,92,252,0.10)',
-              border: '1px solid rgba(124,92,252,0.20)',
-              color: '#A78BFA'
-            }}
-          >
+            style={{ background: 'rgba(124,92,252,0.10)', border: '1px solid rgba(124,92,252,0.20)', color: '#A78BFA' }}>
             Ver financeiro completo <ArrowRight size={13} />
           </Link>
         </div>
       </div>
 
-      {/* Row 3: Gráfico */}
+      {/* Gráfico */}
       <div className="card p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: 'var(--text-muted)' }}>
-              {new Date().getFullYear()}
-            </p>
-            <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-              Fluxo de Caixa
-            </h3>
-          </div>
+        <div className="mb-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+            style={{ color: 'var(--text-muted)' }}>{new Date().getFullYear()}</p>
+          <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            Fluxo de Caixa
+          </h3>
         </div>
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={cashflow} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
@@ -276,7 +226,8 @@ export default function DashboardPage() {
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
             <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+            <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false}
+              tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
             <Tooltip content={<CustomTooltip />} />
             <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }} />
             <Area type="monotone" dataKey="Receitas" stroke="#34D399" strokeWidth={2} fill="url(#gRev)" dot={false} />
@@ -285,41 +236,34 @@ export default function DashboardPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* Row 4: Tarefas + Despesas próximas */}
+      {/* Tarefas + Despesas */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-        {/* Tarefas abertas */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                Pendentes
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+                style={{ color: 'var(--text-muted)' }}>Pendentes</p>
               <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                 Tarefas Abertas
               </h3>
             </div>
-            <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#A78BFA' }}>
+            <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: '#A78BFA' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
-
           <div className="space-y-2">
             {tasks.length === 0 && (
-              <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>Nenhuma tarefa aberta</p>
+              <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>
+                Nenhuma tarefa aberta
+              </p>
             )}
             {tasks.map(t => (
-              <Link
-                key={t.id}
-                to={`/app/tasks/${t.id}`}
+              <Link key={t.id} to={`/app/tasks/${t.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
-                style={{ borderRadius: 14 }}
                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <div
-                  className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`}
-                />
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <div className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
                     {t.title}
@@ -336,50 +280,37 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Despesas próximas */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5" style={{ color: 'var(--text-muted)' }}>
-                Próximas
-              </p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+                style={{ color: 'var(--text-muted)' }}>Próximas</p>
               <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
                 Despesas a Vencer
               </h3>
             </div>
-            <Link to="/app/financial/expenses" className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: '#A78BFA' }}>
+            <Link to="/app/financial/expenses" className="flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: '#A78BFA' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>A pagar total</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Pendente</p>
+          <div className="space-y-1">
+            {[
+              { label: 'A pagar total', sub: 'Pendente',    value: stats.expenses_pending, color: '#FBBF24' },
+              { label: 'Em atraso',     sub: 'Vencidas',    value: stats.expenses_overdue, color: '#FB7185' },
+              { label: 'Pago este mês', sub: 'Confirmados', value: stats.expenses_month,   color: '#34D399' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between py-3"
+                style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.label}</p>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>
+                </div>
+                <span className="text-sm font-bold" style={{ color: item.color }}>
+                  {formatCurrency(item.value)}
+                </span>
               </div>
-              <span className="text-sm font-bold" style={{ color: '#FBBF24' }}>
-                {formatCurrency(stats.expenses_pending)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Em atraso</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Vencidas</p>
-              </div>
-              <span className="text-sm font-bold" style={{ color: '#FB7185' }}>
-                {formatCurrency(stats.expenses_overdue)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Pago este mês</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Confirmados</p>
-              </div>
-              <span className="text-sm font-bold" style={{ color: '#34D399' }}>
-                {formatCurrency(stats.expenses_month)}
-              </span>
-            </div>
+            ))}
           </div>
         </div>
       </div>

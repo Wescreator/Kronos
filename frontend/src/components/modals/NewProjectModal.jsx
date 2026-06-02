@@ -1,18 +1,16 @@
 import { useState, useEffect } from 'react'
-import { toast } from 'react-hot-toast'
-import { AlertTriangle, Info } from 'lucide-react'
-import Modal from '../ui/Modal'
-import { createProject, uploadCover } from '../../services/projects.service'
-import { getProjects } from '../../services/projects.service'
-import { addMonths, format, isWithinInterval, startOfMonth, endOfMonth, addDays } from 'date-fns'
+import { toast }               from 'react-hot-toast'
+import { AlertTriangle }       from 'lucide-react'
+import Modal                   from '../ui/Modal'
+import { createProject, uploadCover, getProjects } from '../../services/projects.service'
+import { addDays, format, startOfMonth, endOfMonth } from 'date-fns'
 
-// Status que contam para o bloqueio
-const BLOCKING_STATUSES = ['planning', 'in_progress', 'review', 'paused']
-const BLOCK_THRESHOLD   = 5   // quantidade de projetos que ativa o bloqueio
-const BLOCK_DAYS        = 45  // dias bloqueados a partir de hoje
+const BLOCKING_STATUSES = ['in_progress', 'paused']
+const BLOCK_THRESHOLD   = 5
+const BLOCK_DAYS        = 45
 
 function getBlockedUntil(projects) {
-  const now       = new Date()
+  const now        = new Date()
   const monthStart = startOfMonth(now)
   const monthEnd   = endOfMonth(now)
 
@@ -22,10 +20,9 @@ function getBlockedUntil(projects) {
     return created >= monthStart && created <= monthEnd
   })
 
-  if (activeThisMonth.length >= BLOCK_THRESHOLD) {
-    return addDays(now, BLOCK_DAYS)
-  }
-  return null
+  return activeThisMonth.length >= BLOCK_THRESHOLD
+    ? addDays(now, BLOCK_DAYS)
+    : null
 }
 
 export default function NewProjectModal({ open, onClose, onSuccess }) {
@@ -41,7 +38,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
   useEffect(() => {
     if (!open) return
     getProjects({ limit: 200 }).then(({ data }) => {
-      const all = data.data || []
+      const all   = data.data || []
       const until = getBlockedUntil(all)
       const count = all.filter(p => BLOCKING_STATUSES.includes(p.status)).length
       setBlockedUntil(until)
@@ -57,7 +54,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
 
   const handleStartDateChange = (val) => {
     if (blockedUntil && val < format(blockedUntil, 'yyyy-MM-dd')) {
-      toast.error(`Data bloqueada. Há ${activeCount} projetos ativos este mês. Inicie após ${format(blockedUntil, 'dd/MM/yyyy')}.`)
+      toast.error(`Data bloqueada. Inicie após ${format(blockedUntil, 'dd/MM/yyyy')}.`)
       return
     }
     set('start_date', val)
@@ -65,17 +62,15 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (blockedUntil && form.start_date && form.start_date < format(blockedUntil, 'yyyy-MM-dd')) {
-      toast.error(`Não é possível iniciar antes de ${format(blockedUntil, 'dd/MM/yyyy')} com ${activeCount} projetos ativos.`)
+      toast.error(`Não é possível iniciar antes de ${format(blockedUntil, 'dd/MM/yyyy')}.`)
       return
     }
-
     setLoading(true)
     try {
       const { data } = await createProject({ ...form, budget: parseFloat(form.budget) || 0 })
       if (cover) await uploadCover(data.project.id, cover)
-      toast.success('Projeto criado com sucesso!')
+      toast.success('Projeto criado! As 5 etapas padrão foram adicionadas automaticamente.')
       setForm({ title:'', client:'', description:'', budget:'', start_date:'', expected_date:'' })
       setCover(null)
       onSuccess()
@@ -88,23 +83,17 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
     <Modal open={open} onClose={onClose} title="Novo Projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
 
-        {/* Aviso de bloqueio */}
         {blockedUntil && (
-          <div
-            className="flex items-start gap-3 px-4 py-3 rounded-xl"
-            style={{
-              background: 'rgba(251,191,36,0.08)',
-              border: '1px solid rgba(251,191,36,0.20)'
-            }}
-          >
-            <AlertTriangle size={16} style={{ color: '#FBBF24', marginTop: 1, shrink: 0 }} />
+          <div className="flex items-start gap-3 px-4 py-3 rounded-xl"
+            style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.20)' }}>
+            <AlertTriangle size={16} style={{ color: '#FBBF24', marginTop: 1 }} />
             <div>
               <p className="text-xs font-bold mb-0.5" style={{ color: '#FBBF24' }}>
                 Capacidade limitada este mês
               </p>
               <p className="text-xs" style={{ color: 'rgba(251,191,36,0.75)' }}>
-                {activeCount} projetos ativos ({BLOCKING_STATUSES.map(s => s.replace('_', ' ')).join(', ')}).
-                Datas de início disponíveis a partir de <strong>{format(blockedUntil, 'dd/MM/yyyy')}</strong>.
+                {activeCount} projetos ativos. Datas disponíveis a partir de{' '}
+                <strong>{format(blockedUntil, 'dd/MM/yyyy')}</strong>.
               </p>
             </div>
           </div>
@@ -115,19 +104,16 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
           <input className="input" placeholder="Nome do projeto" required
             value={form.title} onChange={e => set('title', e.target.value)} />
         </div>
-
         <div>
           <label className="label">Cliente</label>
           <input className="input" placeholder="Nome do cliente"
             value={form.client} onChange={e => set('client', e.target.value)} />
         </div>
-
         <div>
           <label className="label">Descrição</label>
           <textarea className="input resize-none" rows={3}
             placeholder="Descreva o objetivo do projeto"
-            value={form.description}
-            onChange={e => set('description', e.target.value)} />
+            value={form.description} onChange={e => set('description', e.target.value)} />
         </div>
 
         <div className="grid grid-cols-3 gap-4">
@@ -140,38 +126,28 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
             <label className="label">
               Data de início
               {blockedUntil && (
-                <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded" style={{ background: 'rgba(251,191,36,0.15)', color: '#FBBF24' }}>
+                <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded"
+                  style={{ background: 'rgba(251,191,36,0.15)', color: '#FBBF24' }}>
                   bloqueada
                 </span>
               )}
             </label>
-            <input
-              type="date"
-              className="input"
-              min={minStartDate}
-              value={form.start_date}
-              onChange={e => handleStartDateChange(e.target.value)}
-              style={blockedUntil ? { borderColor: 'rgba(251,191,36,0.35)' } : {}}
-            />
+            <input type="date" className="input" min={minStartDate}
+              value={form.start_date} onChange={e => handleStartDateChange(e.target.value)}
+              style={blockedUntil ? { borderColor: 'rgba(251,191,36,0.35)' } : {}} />
           </div>
           <div>
             <label className="label">Previsão de entrega</label>
             <input type="date" className="input"
               min={form.start_date || format(new Date(), 'yyyy-MM-dd')}
-              value={form.expected_date}
-              onChange={e => set('expected_date', e.target.value)} />
+              value={form.expected_date} onChange={e => set('expected_date', e.target.value)} />
           </div>
         </div>
 
         <div>
           <label className="label">Capa do projeto</label>
-          <div
-            className="relative rounded-2xl transition-all duration-200 text-center py-5 px-4"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px dashed rgba(255,255,255,0.12)'
-            }}
-          >
+          <div className="relative rounded-2xl text-center py-5 px-4"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.12)' }}>
             <input type="file" accept="image/*"
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={e => setCover(e.target.files[0])} />
@@ -181,7 +157,8 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex justify-end gap-3 pt-2"
+          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Criando...' : 'Criar Projeto'}

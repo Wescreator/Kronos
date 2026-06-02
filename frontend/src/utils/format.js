@@ -23,19 +23,31 @@ export const formatCompact = (value) => {
   return formatCurrency(value)
 }
 
+// Status novos (ativos) + legados (compatibilidade com registros antigos)
 export const statusLabel = {
-  planning:    'Planejamento',
-  in_progress: 'Em andamento',
-  review:      'Revisão',
+  // Ativos — aparecem nos seletores
+  in_progress: 'Em Andamento',
   paused:      'Pausado',
   completed:   'Concluído',
   cancelled:   'Cancelado',
+  // Legados — apenas para exibição de registros antigos
+  planning:    'Planejamento',
+  review:      'Revisão',
+  // Financeiro
   open:        'Aberta',
   pending:     'Pendente',
   paid:        'Pago',
   received:    'Recebido',
   overdue:     'Atrasado',
 }
+
+// Apenas os status ativos para usar nos seletores de criação/edição
+export const ACTIVE_PROJECT_STATUSES = [
+  { value: 'in_progress', label: 'Em Andamento' },
+  { value: 'paused',      label: 'Pausado'      },
+  { value: 'completed',   label: 'Concluído'    },
+  { value: 'cancelled',   label: 'Cancelado'    },
+]
 
 export const priorityLabel = {
   low:      'Baixa',
@@ -45,12 +57,14 @@ export const priorityLabel = {
 }
 
 export const statusColors = {
-  planning:    'bg-blue-500/10 text-blue-400 border border-blue-500/20',
   in_progress: 'bg-violet-500/10 text-violet-400 border border-violet-500/20',
-  review:      'bg-amber-500/10 text-amber-400 border border-amber-500/20',
   paused:      'bg-orange-500/10 text-orange-400 border border-orange-500/20',
   completed:   'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
   cancelled:   'bg-red-500/10 text-red-400 border border-red-500/20',
+  // Legados
+  planning:    'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+  review:      'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+  // Financeiro
   open:        'bg-slate-500/10 text-slate-400 border border-slate-500/20',
   pending:     'bg-amber-500/10 text-amber-400 border border-amber-500/20',
   paid:        'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
@@ -72,4 +86,12 @@ export const priorityDot = {
   critical: 'bg-red-400',
 }
 
-export const monthNames = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+export const monthNames = [
+  'Jan','Fev','Mar','Abr','Mai','Jun',
+  'Jul','Ago','Set','Out','Nov','Dez'
+]
+
+export const monthNamesLong = [
+  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+]
