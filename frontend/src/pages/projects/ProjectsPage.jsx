@@ -3,7 +3,7 @@ import { Link }     from 'react-router-dom'
 import { Plus, Search, FolderOpen, Calendar, DollarSign } from 'lucide-react'
 import { useProjects }   from '../../hooks/useProjects'
 import useAuthStore      from '../../store/authStore'
-
+import { can }           from '../../utils/permissions'
 import PageHeader        from '../../components/ui/PageHeader'
 import Spinner           from '../../components/ui/Spinner'
 import Badge             from '../../components/ui/Badge'

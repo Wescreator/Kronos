@@ -20,7 +20,7 @@ import { formatCurrency, formatDate, statusLabel, statusColors, ACTIVE_PROJECT_S
 import { toast }           from 'react-hot-toast'
 import api                 from '../../services/api'
 import useAuthStore        from '../../store/authStore'
-
+import { can }             from '../../utils/permissions'
 
 const TABS = [
   { label: 'Etapas',     icon: CheckSquare },
