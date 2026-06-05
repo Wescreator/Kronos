@@ -1,8 +1,9 @@
 const { Resend } = require('resend')
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
+  // Instanciado aqui: só executa quando a função é chamada, não na inicialização
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
   const { data, error } = await resend.emails.send({
     from: process.env.EMAIL_FROM || 'Kronos <noreply@kronos.app>',
     to,
@@ -18,14 +19,12 @@ const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
     <tr>
       <td align="center">
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;">
-          <!-- Header -->
           <tr>
             <td align="center" style="padding-bottom:28px;">
               <div style="font-size:20px;font-weight:700;letter-spacing:0.28em;color:#ffffff;">K R O N O S</div>
               <div style="font-size:10px;letter-spacing:0.22em;color:rgba(167,139,250,0.55);text-transform:uppercase;margin-top:4px;">SISTEMA CORPORATIVO DE GESTÃO</div>
             </td>
           </tr>
-          <!-- Card -->
           <tr>
             <td style="background:linear-gradient(175deg,rgba(13,21,43,0.98) 0%,rgba(7,10,24,1) 100%);border:1px solid rgba(124,92,252,0.20);border-radius:20px;padding:36px;">
               <h2 style="color:#ffffff;font-size:20px;font-weight:700;margin:0 0 12px 0;">Redefinição de senha</h2>
@@ -55,7 +54,6 @@ const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
               </p>
             </td>
           </tr>
-          <!-- Footer -->
           <tr>
             <td align="center" style="padding-top:20px;">
               <p style="color:rgba(255,255,255,0.13);font-size:11px;margin:0;">© 2025 Kronos. Todos os direitos reservados.</p>
@@ -74,7 +72,7 @@ const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
     throw { status: 500, message: 'Erro ao enviar email de recuperação. Tente novamente.' }
   }
 
-  console.log('[EmailService] Email de recuperação enviado para:', to, '| ID:', data?.id)
+  console.log('[EmailService] Email enviado para:', to, '| ID:', data?.id)
   return data
 }
 
