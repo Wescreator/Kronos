@@ -29,7 +29,7 @@ export default function AppLayout() {
               lg:w-[520px]
               xl:w-[620px]
               object-contain
-              opacity-[0.045]
+              opacity-[0.10]
               select-none
             "
             style={{
