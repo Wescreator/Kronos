@@ -39,4 +39,32 @@ const me = async (req, res) => {
   }
 }
 
-module.exports = { login, register, refresh, me }
+/* ─── Recuperação de senha ─── */
+
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body
+    if (!email || typeof email !== 'string') {
+      return R.error(res, 'Email é obrigatório.', 400)
+    }
+    const result = await authService.forgotPassword(email.toLowerCase().trim())
+    return R.success(res, result)
+  } catch (err) {
+    return R.error(res, err.message, err.status || 500)
+  }
+}
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body
+    if (!token || !password) {
+      return R.error(res, 'Token e nova senha são obrigatórios.', 400)
+    }
+    const result = await authService.resetPassword(token, password)
+    return R.success(res, result)
+  } catch (err) {
+    return R.error(res, err.message, err.status || 500)
+  }
+}
+
+module.exports = { login, register, refresh, me, forgotPassword, resetPassword }

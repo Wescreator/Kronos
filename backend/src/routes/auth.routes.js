@@ -4,9 +4,14 @@ const validate = require('../middlewares/validate.middleware')
 const { authenticate } = require('../middlewares/auth.middleware')
 const V        = require('../validators/auth.validator')
 
-router.post('/login',   validate(V.login),    ctrl.login)
-router.post('/register',validate(V.register), ctrl.register)
-router.post('/refresh', ctrl.refresh)
-router.get('/me',       authenticate,         ctrl.me)
+// Rotas existentes — inalteradas
+router.post('/login',    validate(V.login),    ctrl.login)
+router.post('/register', validate(V.register), ctrl.register)
+router.post('/refresh',  ctrl.refresh)
+router.get('/me',        authenticate,         ctrl.me)
+
+// Novas rotas — recuperação de senha
+router.post('/forgot-password', ctrl.forgotPassword)
+router.post('/reset-password',  ctrl.resetPassword)
 
 module.exports = router

@@ -1,7 +1,9 @@
-const bcrypt    = require('bcryptjs')
-const jwt       = require('jsonwebtoken')
-const jwtConfig = require('../config/jwt')
-const userRepo  = require('../repositories/user.repository')
+const bcrypt       = require('bcryptjs')
+const crypto       = require('crypto')
+const jwt          = require('jsonwebtoken')
+const jwtConfig    = require('../config/jwt')
+const userRepo     = require('../repositories/user.repository')
+const emailService = require('./email.service')
 
 const login = async (email, password) => {
   const user = await userRepo.findByEmail(email)
@@ -54,4 +56,58 @@ const refreshToken = async (token) => {
   }
 }
 
-module.exports = { login, register, refreshToken }
+/* ─── Recuperação de senha ─── */
+
+const forgotPassword = async (email) => {
+  const user = await userRepo.findByEmail(email)
+
+  // Segurança: nunca revelar se o email existe ou não
+  if (!user) {
+    return { message: 'Se o email estiver cadastrado, você receberá as instruções de recuperação em breve.' }
+  }
+
+  const token     = crypto.randomBytes(32).toString('hex')
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hora
+
+  await userRepo.setResetToken(user.id, token, expiresAt)
+
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+  const resetLink   = `${frontendUrl}/reset-password?token=${token}`
+
+  await emailService.sendPasswordResetEmail({
+    to:        user.email,
+    name:      user.name,
+    resetLink,
+  })
+
+  return { message: 'Se o email estiver cadastrado, você receberá as instruções de recuperação em breve.' }
+}
+
+const resetPassword = async (token, newPassword) => {
+  if (!token || typeof token !== 'string' || token.length !== 64) {
+    throw { status: 400, message: 'Token inválido.' }
+  }
+
+  const user = await userRepo.findByResetToken(token)
+  if (!user) {
+    throw { status: 400, message: 'Token inválido ou expirado.' }
+  }
+
+  const now = new Date()
+  if (now > new Date(user.reset_token_expires_at)) {
+    await userRepo.clearResetToken(user.id)
+    throw { status: 400, message: 'Token expirado. Solicite uma nova recuperação de senha.' }
+  }
+
+  if (!newPassword || newPassword.length < 8) {
+    throw { status: 400, message: 'A nova senha deve ter no mínimo 8 caracteres.' }
+  }
+
+  const passwordHash = await bcrypt.hash(newPassword, 12)
+  await userRepo.updatePassword(user.id, passwordHash)
+  await userRepo.clearResetToken(user.id) // invalida token após uso
+
+  return { message: 'Senha redefinida com sucesso. Você já pode fazer login.' }
+}
+
+module.exports = { login, register, refreshToken, forgotPassword, resetPassword }

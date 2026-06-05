@@ -75,4 +75,55 @@ const updateLastLogin = async (id) => {
   await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [id])
 }
 
-module.exports = { findByEmail, findById, findAll, create, update, updateLastLogin }
+/* ─── Recuperação de senha ─── */
+
+const findByResetToken = async (token) => {
+  const { rows } = await pool.query(
+    `SELECT id, name, email, reset_token_expires_at
+     FROM users
+     WHERE reset_token = $1 AND is_active = TRUE`,
+    [token]
+  )
+  return rows[0] || null
+}
+
+const setResetToken = async (id, token, expiresAt) => {
+  await pool.query(
+    `UPDATE users
+     SET reset_token = $1, reset_token_expires_at = $2, updated_at = NOW()
+     WHERE id = $3`,
+    [token, expiresAt, id]
+  )
+}
+
+const clearResetToken = async (id) => {
+  await pool.query(
+    `UPDATE users
+     SET reset_token = NULL, reset_token_expires_at = NULL, updated_at = NOW()
+     WHERE id = $1`,
+    [id]
+  )
+}
+
+const updatePassword = async (id, passwordHash) => {
+  await pool.query(
+    `UPDATE users
+     SET password_hash = $1, updated_at = NOW()
+     WHERE id = $2`,
+    [passwordHash, id]
+  )
+}
+
+module.exports = {
+  findByEmail,
+  findById,
+  findAll,
+  create,
+  update,
+  updateLastLogin,
+  // Recuperação de senha
+  findByResetToken,
+  setResetToken,
+  clearResetToken,
+  updatePassword,
+}
