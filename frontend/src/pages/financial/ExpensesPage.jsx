@@ -1,10 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
-import { Plus, CheckCircle, Trash2, TrendingDown, Tag, Edit, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, CheckCircle, Trash2, TrendingDown, Tag, Edit, ChevronLeft, ChevronRight, Repeat } from 'lucide-react'
 import PageHeader    from '../../components/ui/PageHeader'
 import Badge         from '../../components/ui/Badge'
 import Spinner       from '../../components/ui/Spinner'
-import Modal         from '../../components/ui/Modal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { formatCurrency, formatDate, statusLabel, statusColors, monthNamesLong } from '../../utils/format'
 import {
@@ -109,19 +108,10 @@ function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
             </div>
           </div>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setShowCreate(false)}
-              className="btn-secondary text-xs py-1.5 px-3"
-            >
+            <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary text-xs py-1.5 px-3">
               Cancelar
             </button>
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={saving}
-              className="btn-primary text-xs py-1.5 px-3"
-            >
+            <button type="button" onClick={handleCreate} disabled={saving} className="btn-primary text-xs py-1.5 px-3">
               {saving ? 'Salvando...' : 'Criar categoria'}
             </button>
           </div>
@@ -169,9 +159,7 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
   )
 }
 
-// ── Modal via Portal — sempre fixo na viewport ────────────────────
-// Renderiza diretamente no document.body para evitar que o contexto
-// de empilhamento da tabela influencie a posição do modal.
+// ── Modal via Portal ──────────────────────────────────────────────
 function PortalModal({ open, onClose, title, children, size = 'md' }) {
   const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
 
@@ -190,61 +178,20 @@ function PortalModal({ open, onClose, title, children, size = 'md' }) {
   if (!open) return null
 
   return createPortal(
-    <div
-      style={{
-        position:       'fixed',
-        inset:          0,
-        zIndex:         9999,
-        display:        'flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        padding:        '1rem',
-      }}
-    >
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position:       'absolute',
-          inset:          0,
-          background:     'rgba(5,8,22,0.80)',
-          backdropFilter: 'blur(8px)',
-        }}
-      />
-
-      {/* Painel — ligeiramente acima do centro */}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(5,8,22,0.80)', backdropFilter: 'blur(8px)' }} />
       <div
         className={`relative w-full ${sizes[size]} flex flex-col`}
         style={{
-          maxHeight:    '90vh',
-          background:   'linear-gradient(180deg, #0D152B, #081024)',
-          border:       '1px solid rgba(255,255,255,0.08)',
-          borderRadius: '24px',
-          boxShadow:    '0 25px 60px rgba(0,0,0,0.55)',
-          animation:    'fadeInUp 0.2s ease forwards',
-          marginTop:    '-5vh', // sobe levemente do centro
+          maxHeight: '90vh', background: 'linear-gradient(180deg, #0D152B, #081024)',
+          border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.55)', animation: 'fadeInUp 0.2s ease forwards',
+          marginTop: '-5vh',
         }}
       >
-        {/* Brilho interno */}
-        <div
-          className="absolute inset-0 pointer-events-none rounded-3xl"
-          style={{
-            background: 'radial-gradient(circle at top right, rgba(124,92,252,0.12), transparent 60%)'
-          }}
-        />
-
-        {/* Header */}
-        <div
-          className="flex items-center justify-between px-6 py-5 shrink-0"
-          style={{
-            borderBottom: '1px solid rgba(255,255,255,0.06)',
-            position:     'relative',
-            zIndex:       1
-          }}
-        >
-          <h2 className="text-[17px] font-bold" style={{ color: 'var(--text-primary)' }}>
-            {title}
-          </h2>
+        <div className="absolute inset-0 pointer-events-none rounded-3xl" style={{ background: 'radial-gradient(circle at top right, rgba(124,92,252,0.12), transparent 60%)' }} />
+        <div className="flex items-center justify-between px-6 py-5 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'relative', zIndex: 1 }}>
+          <h2 className="text-[17px] font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
           <button
             onClick={onClose}
             className="p-1.5 rounded-xl transition-all duration-150"
@@ -255,12 +202,7 @@ function PortalModal({ open, onClose, title, children, size = 'md' }) {
             ✕
           </button>
         </div>
-
-        {/* Body */}
-        <div
-          className="overflow-y-auto flex-1 px-6 py-5"
-          style={{ position: 'relative', zIndex: 1 }}
-        >
+        <div className="overflow-y-auto flex-1 px-6 py-5" style={{ position: 'relative', zIndex: 1 }}>
           {children}
         </div>
       </div>
@@ -270,35 +212,37 @@ function PortalModal({ open, onClose, title, children, size = 'md' }) {
 }
 
 // ── Página principal ──────────────────────────────────────────────
-const EMPTY_FORM = { title: '', amount: '', due_date: '', category_id: '', description: '' }
+const EMPTY_FORM = {
+  title:        '',
+  amount:       '',
+  due_date:     '',
+  category_id:  '',
+  description:  '',
+  is_recurring: false,   // novo campo
+}
 
 export default function ExpensesPage() {
   const now = new Date()
 
-  // Dados e carregamento
   const [expenses,    setExpenses]    = useState([])
   const [categories,  setCategories]  = useState([])
   const [loading,     setLoading]     = useState(true)
   const [pagination,  setPagination]  = useState({ page: 1, pages: 1, total: 0 })
 
-  // Modais
   const [showNew,     setShowNew]     = useState(false)
   const [editItem,    setEditItem]    = useState(null)
   const [payModal,    setPayModal]    = useState(null)
   const [deleteId,    setDeleteId]    = useState(null)
 
-  // Filtros — todos preservados ao paginar
   const [statusFilter,   setStatusFilter]   = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [selectedMonth,  setSelectedMonth]  = useState(now.getMonth() + 1)
   const [selectedYear,   setSelectedYear]   = useState(now.getFullYear())
   const [currentPage,    setCurrentPage]    = useState(1)
 
-  // Formulários
   const [form,    setForm]    = useState(EMPTY_FORM)
   const [payDate, setPayDate] = useState('')
 
-  // Carrega despesas respeitando todos os filtros ativos
   const load = useCallback(async () => {
     setLoading(true)
     try {
@@ -319,7 +263,6 @@ export default function ExpensesPage() {
 
   useEffect(() => { load() }, [load])
 
-  // Recarrega categorias automaticamente quando uma nova é criada
   const loadCategories = useCallback(async () => {
     try {
       const { data } = await getCategories()
@@ -329,30 +272,20 @@ export default function ExpensesPage() {
 
   useEffect(() => { loadCategories() }, [loadCategories])
 
-  // Resetar página ao mudar qualquer filtro
-  const handleStatusFilter = (value) => {
-    setStatusFilter(value)
-    setCurrentPage(1)
-  }
-  const handleCategoryFilter = (value) => {
-    setCategoryFilter(value)
-    setCurrentPage(1)
-  }
-  const handleMonthChange = (m) => {
-    setSelectedMonth(m)
-    setCurrentPage(1)
-  }
-  const handleYearChange = (y) => {
-    setSelectedYear(y)
-    setCurrentPage(1)
-  }
+  const handleStatusFilter   = (value) => { setStatusFilter(value);   setCurrentPage(1) }
+  const handleCategoryFilter = (value) => { setCategoryFilter(value); setCurrentPage(1) }
+  const handleMonthChange    = (m)     => { setSelectedMonth(m);      setCurrentPage(1) }
+  const handleYearChange     = (y)     => { setSelectedYear(y);       setCurrentPage(1) }
 
-  // CRUD
   const handleCreate = async (e) => {
     e.preventDefault()
     try {
-      await createExpense({ ...form, amount: parseFloat(form.amount) })
-      toast.success('Despesa criada!')
+      await createExpense({
+        ...form,
+        amount:       parseFloat(form.amount),
+        is_recurring: form.is_recurring,
+      })
+      toast.success(form.is_recurring ? 'Despesa recorrente criada para os próximos 24 meses!' : 'Despesa criada!')
       setShowNew(false)
       setForm(EMPTY_FORM)
       setCurrentPage(1)
@@ -377,11 +310,12 @@ export default function ExpensesPage() {
 
   const openEdit = (expense) => {
     setForm({
-      title:       expense.title,
-      amount:      expense.amount,
-      due_date:    expense.due_date?.slice(0, 10) || '',
-      category_id: expense.category_id || '',
-      description: expense.description || ''
+      title:        expense.title,
+      amount:       expense.amount,
+      due_date:     expense.due_date?.slice(0, 10) || '',
+      category_id:  expense.category_id || '',
+      description:  expense.description || '',
+      is_recurring: expense.is_recurring || false,
     })
     setEditItem(expense)
   }
@@ -402,7 +336,6 @@ export default function ExpensesPage() {
     try {
       await deleteExpense(id)
       toast.success('Despesa excluída')
-      // Se era o último item da página, volta uma página
       if (expenses.length === 1 && currentPage > 1) {
         setCurrentPage(p => p - 1)
       } else {
@@ -413,12 +346,11 @@ export default function ExpensesPage() {
     }
   }
 
-  // Totais apenas dos itens da página atual
   const total   = expenses.reduce((s, e) => s + parseFloat(e.amount), 0)
   const paid    = expenses.filter(e => e.status === 'paid').reduce((s, e) => s + parseFloat(e.amount), 0)
   const pending = total - paid
 
-  // Formulário compartilhado (criação e edição)
+  // ── Formulário compartilhado (criação e edição) ───────────────
   const FormBody = (
     <form onSubmit={editItem ? handleEdit : handleCreate} className="space-y-5">
       <div>
@@ -430,15 +362,13 @@ export default function ExpensesPage() {
           onChange={e => setForm({ ...form, title: e.target.value })}
         />
       </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="label">Valor *</label>
           <input
-            type="number"
-            step="0.01"
-            min="0"
-            className="input"
-            required
+            type="number" step="0.01" min="0"
+            className="input" required
             value={form.amount}
             onChange={e => setForm({ ...form, amount: e.target.value })}
           />
@@ -446,9 +376,7 @@ export default function ExpensesPage() {
         <div>
           <label className="label">Vencimento *</label>
           <input
-            type="date"
-            className="input"
-            required
+            type="date" className="input" required
             value={form.due_date}
             onChange={e => setForm({ ...form, due_date: e.target.value })}
           />
@@ -461,19 +389,67 @@ export default function ExpensesPage() {
         onChange={(id) => setForm({ ...form, category_id: id })}
         onCategoryCreated={(cat) => {
           setCategories(prev => [...prev, cat])
-          loadCategories() // sincroniza o filtro também
+          loadCategories()
         }}
       />
 
       <div>
         <label className="label">Descrição</label>
         <textarea
-          className="input resize-none"
-          rows={2}
+          className="input resize-none" rows={2}
           value={form.description}
           onChange={e => setForm({ ...form, description: e.target.value })}
         />
       </div>
+
+      {/* ── Despesa recorrente — só aparece ao criar ── */}
+      {!editItem && (
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background: form.is_recurring ? 'rgba(124,92,252,0.08)' : 'rgba(255,255,255,0.02)',
+            border:     `1px solid ${form.is_recurring ? 'rgba(124,92,252,0.25)' : 'rgba(255,255,255,0.06)'}`,
+            transition: 'background 0.2s, border-color 0.2s',
+          }}
+        >
+          <label
+            className="flex items-start gap-3 cursor-pointer select-none"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <input
+              type="checkbox"
+              checked={form.is_recurring}
+              onChange={e => setForm({ ...form, is_recurring: e.target.checked })}
+              style={{ marginTop: 2, accentColor: '#7C5CFC', width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }}
+            />
+            <div>
+              <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: form.is_recurring ? '#A78BFA' : 'var(--text-secondary)' }}>
+                <Repeat size={14} />
+                Despesa recorrente
+              </span>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                Gera automaticamente uma ocorrência pendente por mês pelos próximos 24 meses. Cada mês tem status independente.
+              </p>
+            </div>
+          </label>
+        </div>
+      )}
+
+      {/* ── Indicador no modo edição (somente leitura) ── */}
+      {editItem && editItem.is_recurring && (
+        <div
+          className="flex items-center gap-2 rounded-xl px-4 py-3"
+          style={{
+            background: 'rgba(124,92,252,0.08)',
+            border:     '1px solid rgba(124,92,252,0.20)',
+          }}
+        >
+          <Repeat size={14} style={{ color: '#A78BFA', flexShrink: 0 }} />
+          <p className="text-xs" style={{ color: '#A78BFA' }}>
+            Esta é uma despesa recorrente. As outras ocorrências mensais não são afetadas por esta edição.
+          </p>
+        </div>
+      )}
 
       <div
         className="flex justify-end gap-3 pt-2"
@@ -500,10 +476,7 @@ export default function ExpensesPage() {
         tag="Financeiro"
         subtitle="Gerencie despesas e confirme pagamentos"
         actions={
-          <button
-            onClick={() => { setShowNew(true); setForm(EMPTY_FORM) }}
-            className="btn-primary"
-          >
+          <button onClick={() => { setShowNew(true); setForm(EMPTY_FORM) }} className="btn-primary">
             <Plus size={15} /> Nova Despesa
           </button>
         }
@@ -546,10 +519,7 @@ export default function ExpensesPage() {
           { label: 'Pendente',                                      value: pending, color: '#FBBF24' },
         ].map(item => (
           <div key={item.label} className="card p-5">
-            <p
-              className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-2"
-              style={{ color: 'var(--text-muted)' }}
-            >
+            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-2" style={{ color: 'var(--text-muted)' }}>
               {item.label}
             </p>
             <p className="text-2xl font-bold" style={{ color: item.color }}>
@@ -561,8 +531,6 @@ export default function ExpensesPage() {
 
       {/* ── Filtros de status e categoria ── */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
-
-        {/* Status — preservados exatamente */}
         <div className="flex gap-2 flex-wrap">
           {[
             { value: '',        label: 'Todas'    },
@@ -584,17 +552,13 @@ export default function ExpensesPage() {
           ))}
         </div>
 
-        {/* Separador */}
         {categories.length > 0 && (
           <div className="w-px h-5 shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
         )}
 
-        {/* Filtro de categoria — novo, cumulativo com status */}
         {categories.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>
-              Categoria:
-            </span>
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Categoria:</span>
             <select
               className="input text-xs py-2"
               style={{ minWidth: 140, height: 'auto' }}
@@ -609,7 +573,6 @@ export default function ExpensesPage() {
           </div>
         )}
 
-        {/* Indicador de total filtrado */}
         <span
           className="ml-auto text-xs font-semibold px-3 py-2 rounded-xl shrink-0"
           style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }}
@@ -638,11 +601,7 @@ export default function ExpensesPage() {
               {expenses.map((e, i) => (
                 <tr
                   key={e.id}
-                  style={{
-                    borderBottom: i < expenses.length - 1
-                      ? '1px solid rgba(255,255,255,0.03)'
-                      : 'none'
-                  }}
+                  style={{ borderBottom: i < expenses.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}
                   onMouseEnter={ev => ev.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
                   onMouseLeave={ev => ev.currentTarget.style.background = 'transparent'}
                 >
@@ -650,25 +609,31 @@ export default function ExpensesPage() {
                     <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
                       {e.title}
                     </p>
-                    {e.description && (
-                      <p
-                        className="text-xs mt-0.5 truncate max-w-[200px]"
-                        style={{ color: 'var(--text-muted)' }}
+                    {/* ── Badge recorrente ── */}
+                    {e.is_recurring && (
+                      <span
+                        className="inline-flex items-center gap-1 text-xs mt-0.5"
+                        style={{ color: '#A78BFA' }}
                       >
+                        <Repeat size={11} />
+                        Recorrente
+                      </span>
+                    )}
+                    {e.description && !e.is_recurring && (
+                      <p className="text-xs mt-0.5 truncate max-w-[200px]" style={{ color: 'var(--text-muted)' }}>
+                        {e.description}
+                      </p>
+                    )}
+                    {e.description && e.is_recurring && (
+                      <p className="text-xs truncate max-w-[200px]" style={{ color: 'var(--text-muted)' }}>
                         {e.description}
                       </p>
                     )}
                   </td>
                   <td className="table-cell hidden md:table-cell">
                     {e.category_name ? (
-                      <span
-                        className="inline-flex items-center gap-1.5 text-xs font-medium"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        <span
-                          className="h-2 w-2 rounded-full shrink-0"
-                          style={{ background: e.category_color }}
-                        />
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ background: e.category_color }} />
                         {e.category_name}
                       </span>
                     ) : (
@@ -730,13 +695,10 @@ export default function ExpensesPage() {
           {expenses.length === 0 && !loading && (
             <div className="py-16 text-center" style={{ color: 'var(--text-muted)' }}>
               <TrendingDown size={32} className="mx-auto mb-3 opacity-30" />
-              <p className="text-sm">
-                Nenhuma despesa em {monthNamesLong[selectedMonth - 1]}
-              </p>
+              <p className="text-sm">Nenhuma despesa em {monthNamesLong[selectedMonth - 1]}</p>
             </div>
           )}
 
-          {/* Paginação — usa total real da API */}
           <Pagination
             page={currentPage}
             totalPages={pagination.pages || 1}
@@ -746,7 +708,7 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* ── Modal Nova / Editar Despesa (Portal — sempre fixo na viewport) ── */}
+      {/* ── Modal Nova / Editar Despesa ── */}
       <PortalModal
         open={showNew || !!editItem}
         onClose={() => { setShowNew(false); setEditItem(null); setForm(EMPTY_FORM) }}
@@ -766,18 +728,10 @@ export default function ExpensesPage() {
         <div className="space-y-5">
           <div>
             <label className="label">Data do pagamento</label>
-            <input
-              type="date"
-              className="input"
-              value={payDate}
-              onChange={e => setPayDate(e.target.value)}
-            />
+            <input type="date" className="input" value={payDate} onChange={e => setPayDate(e.target.value)} />
           </div>
           <div className="flex justify-end gap-3">
-            <button
-              onClick={() => { setPayModal(null); setPayDate('') }}
-              className="btn-secondary"
-            >
+            <button onClick={() => { setPayModal(null); setPayDate('') }} className="btn-secondary">
               Cancelar
             </button>
             <button onClick={handlePay} className="btn-primary">
