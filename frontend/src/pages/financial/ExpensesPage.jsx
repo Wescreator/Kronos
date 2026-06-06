@@ -593,6 +593,7 @@ export default function ExpensesPage() {
                 <th className="table-header hidden md:table-cell">Categoria</th>
                 <th className="table-header">Valor</th>
                 <th className="table-header hidden sm:table-cell">Vencimento</th>
+                <th className="table-header hidden lg:table-cell">Pagamento</th>
                 <th className="table-header">Status</th>
                 <th className="table-header">Ações</th>
               </tr>
@@ -646,6 +647,8 @@ export default function ExpensesPage() {
                   <td className="table-cell hidden sm:table-cell text-sm" style={{ color: 'var(--text-muted)' }}>
                     {formatDate(e.due_date)}
                   </td>
+                  <td className="table-cell hidden lg:table-cell text-sm" style={{color: e.paid_date? '#34D399': 'var(--text-muted)'}}
+                  >{e.paid_date? formatDate(e.paid_date): '—'} </td>
                   <td className="table-cell">
                     <Badge className={statusColors[e.status]}>
                       {statusLabel[e.status]}
