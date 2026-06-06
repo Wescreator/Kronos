@@ -19,8 +19,6 @@ const findExpenses = async ({ limit, offset, status, categoryId, projectId, mont
     conditions.push(`e.project_id = $${params.length}`)
   }
 
-  // Filtro mensal: exibe despesas do mês selecionado
-  // + despesas pendentes de meses anteriores (persistência de pendências)
   if (month && year) {
     params.push(year)
     const pYear = params.length
@@ -66,16 +64,31 @@ const findExpenses = async ({ limit, offset, status, categoryId, projectId, mont
   return { rows, total: parseInt(cnt[0].count) }
 }
 
-const createExpense = async ({ title, description, projectId, categoryId, amount, dueDate, createdBy }) => {
+const createExpense = async ({ title, description, projectId, categoryId, amount, dueDate, isRecurring, recurringOriginId, createdBy }) => {
   const { rows } = await pool.query(
     `INSERT INTO expenses
        (title, description, project_id, category_id, amount, due_date,
-        competence_month, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6, DATE_TRUNC('month', $6::date)::date, $7)
+        competence_month, is_recurring, recurring_origin_id, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6, DATE_TRUNC('month', $6::date)::date, $7,$8,$9)
      RETURNING *`,
-    [title, description, projectId, categoryId, amount, dueDate, createdBy]
+    [title, description, projectId, categoryId, amount, dueDate,
+     isRecurring || false, recurringOriginId || null, createdBy]
   )
   return rows[0]
+}
+
+/* ─── Insere as ocorrências mensais futuras de uma despesa recorrente ─── */
+const createRecurringOccurrences = async (occurrences) => {
+  for (const occ of occurrences) {
+    await pool.query(
+      `INSERT INTO expenses
+         (title, description, project_id, category_id, amount, due_date,
+          competence_month, is_recurring, recurring_origin_id, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6, DATE_TRUNC('month', $6::date)::date, TRUE,$7,$8)`,
+      [occ.title, occ.description, occ.projectId, occ.categoryId,
+       occ.amount, occ.dueDate, occ.recurringOriginId, occ.createdBy]
+    )
+  }
 }
 
 const confirmPayment = async (id, paidDate) => {
@@ -102,7 +115,6 @@ const updateExpense = async (id, fields) => {
 
   if (keys.length === 0) return null
 
-  // Se due_date foi alterado, atualiza competence_month junto
   const extraSets = keys.includes('due_date')
     ? `, competence_month = DATE_TRUNC('month', $${keys.indexOf('due_date') + 1}::date)::date`
     : ''
@@ -130,21 +142,16 @@ const findRevenues = async ({ limit, offset, status, projectId, month, year }) =
   const conditions = []
   const params     = []
 
-  // Filtro de projeto
   if (projectId) {
     params.push(projectId)
     conditions.push(`r.project_id = $${params.length}`)
   }
 
-  // Filtro de status
   if (status) {
     params.push(status)
     conditions.push(`ri.status = $${params.length}`)
   }
 
-  // Filtro mensal com persistência de pendências
-  // Regra: exibe parcelas cujo due_date está no mês/ano selecionado
-  //        OU parcelas ainda pendentes de meses anteriores ao selecionado
   if (month && year) {
     params.push(year)
     const pYear = params.length
@@ -414,7 +421,8 @@ const getProjectFinancials = async () => {
 }
 
 module.exports = {
-  findExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
+  findExpenses, createExpense, createRecurringOccurrences,
+  confirmPayment, updateExpense, deleteExpense,
   findRevenues, createRevenue, createInstallments, updateInstallment, confirmReceipt,
   findCategories, createCategory, updateCategory, deleteCategory,
   getDashboardStats, getCashflow, getDRE, getProjectFinancials

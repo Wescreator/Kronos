@@ -1,12 +1,14 @@
 const Joi = require('joi')
 
 const createExpense = Joi.object({
-  title:       Joi.string().min(3).max(200).required(),
-  description: Joi.string().optional().allow(''),
-  project_id:  Joi.string().uuid().optional().allow(null),
-  category_id: Joi.string().uuid().optional().allow(null),
-  amount:      Joi.number().positive().required(),
-  due_date:    Joi.date().iso().required()
+  title:        Joi.string().min(3).max(200).required(),
+  description:  Joi.string().optional().allow(''),
+  project_id:   Joi.string().uuid().optional().allow(null),
+  category_id:  Joi.string().uuid().optional().allow(null),
+  amount:       Joi.number().positive().required(),
+  due_date:     Joi.date().iso().required(),
+  // Novo campo — opcional, padrão false, não quebra chamadas existentes
+  is_recurring: Joi.boolean().default(false)
 })
 
 const confirmPayment = Joi.object({

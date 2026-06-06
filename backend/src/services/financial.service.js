@@ -2,6 +2,9 @@ const repo = require('../repositories/financial.repository')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 const { addMonths, format } = require('date-fns')
 
+/* ─── Número de meses futuros gerados para despesas recorrentes ─── */
+const RECURRING_MONTHS_AHEAD = 24
+
 const getExpenses = async (query) => {
   const { page, limit, offset } = paginate(query)
   const { rows, total } = await repo.findExpenses({
@@ -16,18 +19,48 @@ const getExpenses = async (query) => {
 }
 
 const createExpense = async (data, userId) => {
-  return await repo.createExpense({
-    title:       data.title,
-    description: data.description,
-    projectId:   data.project_id  || null,
-    categoryId:  data.category_id || null,
-    amount:      data.amount,
-    dueDate:     data.due_date,
-    createdBy:   userId
+  const isRecurring = data.is_recurring === true || data.is_recurring === 'true'
+
+  // Cria a despesa original (mês atual)
+  const expense = await repo.createExpense({
+    title:             data.title,
+    description:       data.description,
+    projectId:         data.project_id  || null,
+    categoryId:        data.category_id || null,
+    amount:            data.amount,
+    dueDate:           data.due_date,
+    isRecurring:       isRecurring,
+    recurringOriginId: null, // a original nunca tem origin
+    createdBy:         userId
   })
+
+  // Se recorrente, gera as próximas ocorrências mensais independentes
+  if (isRecurring) {
+    const occurrences = []
+    const baseDate = new Date(data.due_date)
+
+    for (let i = 1; i <= RECURRING_MONTHS_AHEAD; i++) {
+      const nextDate = addMonths(baseDate, i)
+      occurrences.push({
+        title:             data.title,
+        description:       data.description,
+        projectId:         data.project_id  || null,
+        categoryId:        data.category_id || null,
+        amount:            data.amount,
+        dueDate:           format(nextDate, 'yyyy-MM-dd'),
+        recurringOriginId: expense.id, // aponta para a despesa original
+        createdBy:         userId
+      })
+    }
+
+    await repo.createRecurringOccurrences(occurrences)
+  }
+
+  return expense
 }
 
 const confirmPayment = async (id, paidDate) => {
+  // Confirma apenas esta ocorrência — não afeta os demais meses
   const expense = await repo.confirmPayment(id, paidDate)
   if (!expense) throw { status: 404, message: 'Despesa não encontrada' }
   return expense
@@ -54,8 +87,6 @@ const getRevenues = async (query) => {
 }
 
 const createRevenue = async (data, userId) => {
-  // Suporta tanto o formato antigo (total_amount + installments)
-  // quanto o novo (installments como array com valor/data individuais)
   const isArrayFormat = Array.isArray(data.installments_list)
 
   const revenue = await repo.createRevenue({
@@ -71,16 +102,14 @@ const createRevenue = async (data, userId) => {
   let installmentsList = []
 
   if (isArrayFormat) {
-    // Novo formato: array com { amount, due_date } por parcela
     installmentsList = data.installments_list.map((inst, i) => ({
       no:      i + 1,
       amount:  parseFloat(inst.amount),
       dueDate: inst.due_date
     }))
   } else {
-    // Formato antigo: divide total_amount em parcelas iguais
-    const count  = data.installments || 1
-    const base   = parseFloat((data.total_amount / count).toFixed(2))
+    const count    = data.installments || 1
+    const base     = parseFloat((data.total_amount / count).toFixed(2))
     const baseDate = new Date(data.due_date)
     for (let i = 0; i < count; i++) {
       installmentsList.push({
