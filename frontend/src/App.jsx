@@ -17,6 +17,7 @@ import DREPage            from './pages/financial/DREPage'
 import ChatPage           from './pages/chat/ChatPage'
 import TeamPage           from './pages/team/TeamPage'
 import TeamMemberPage     from './pages/team/TeamMemberPage'
+import RoleRoute          from './routes/RoleRoute'
 
 export default function App() {
   return (
