@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const ctrl   = require('../controllers/financial.controller')
-const { authenticate } = require('../middlewares/auth.middleware')
+const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const validate = require('../middlewares/validate.middleware')
 const V        = require('../validators/financial.validator')
 const logger   = require('../middlewares/logger.middleware')

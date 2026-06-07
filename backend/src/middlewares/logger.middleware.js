@@ -1,4 +1,4 @@
-require('../config/database')
+const pool = require('../config/database')
 
 const logger = (req, res, next) => {
   res.on('finish', async () => {
