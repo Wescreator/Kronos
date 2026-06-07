@@ -16,7 +16,7 @@ function buildStorage(subfolder) {
 }
 
 const imageFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+  const allowed = ['image/jpeg', 'image/png', 'image/webp']
   allowed.includes(file.mimetype)
     ? cb(null, true)
     : cb(new Error('Apenas imagens são permitidas'), false)

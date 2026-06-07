@@ -6,7 +6,7 @@ const V        = require('../validators/financial.validator')
 const logger   = require('../middlewares/logger.middleware')
 const pool     = require('../config/database')
 
-router.use(authenticate, logger)
+router.use(authenticate,  authorize('admin'), logger)
 
 router.get('/dashboard',  ctrl.getDashboard)
 router.get('/dre',        ctrl.getDRE)

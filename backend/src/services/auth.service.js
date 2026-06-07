@@ -27,6 +27,7 @@ const login = async (email, password) => {
 }
 
 const register = async (data) => {
+  delete data.role
   const exists = await userRepo.findByEmail(data.email)
   if (exists) throw { status: 409, message: 'E-mail já cadastrado' }
 
@@ -34,7 +35,7 @@ const register = async (data) => {
 
   const user = await userRepo.create({
     name: data.name, email: data.email, passwordHash,
-    role: data.role || 'member', position: data.position, phone: data.phone,
+    role: 'member', position: data.position, phone: data.phone,
     admittedAt: data.admitted_at
   })
 

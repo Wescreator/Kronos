@@ -40,11 +40,9 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'ok',
-    env:    process.env.NODE_ENV,
-    ts:     new Date().toISOString(),
-    frontend: process.env.FRONTEND_URL,
-  })
+  status: 'ok',
+  ts: new Date().toISOString()
+})
 })
 
 // ── Rotas ─────────────────────────────────────────────────────────────────────
