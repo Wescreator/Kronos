@@ -4,6 +4,10 @@ export const getFinancialDashboard = (p)    => api.get('/financial/dashboard', {
 export const getDRE                = (p)    => api.get('/financial/dre', { params: p })
 export const getProjectFinancials  = ()     => api.get('/financial/projects')
 
+// Análise avançada — leitura pura (novos)
+export const getExpensesByCategory = (p)    => api.get('/financial/expenses-by-category', { params: p })
+export const getFinancialForecast  = ()     => api.get('/financial/forecast')
+
 export const getExpenses    = (p)    => api.get('/financial/expenses',   { params: p })
 export const createExpense  = (d)    => api.post('/financial/expenses',  d)
 export const updateExpense  = (id,d) => api.patch(`/financial/expenses/${id}`, d)
