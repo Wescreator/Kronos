@@ -235,6 +235,7 @@ export default function RevenuesPage() {
                 <th className="table-header hidden sm:table-cell">Parcela</th>
                 <th className="table-header">Valor</th>
                 <th className="table-header hidden sm:table-cell">Vencimento</th>
+                <th className="table-header hidden lg:table-cell">Recebimento</th>
                 <th className="table-header">Status</th>
                 <th className="table-header">Ações</th>
               </tr>
@@ -265,6 +266,9 @@ export default function RevenuesPage() {
                   <td className="table-cell hidden sm:table-cell text-sm" style={{ color: 'var(--text-muted)' }}>
                     {formatDate(r.installment_due)}
                   </td>
+                  <td className="table-cell hidden lg:table-cell text-sm" style={{ color: r.received_date? '#34D399': 'var(--text-muted)'}}>
+                    {r.received_date? formatDate(r.received_date): '—'}
+                    </td>
                   <td className="table-cell">
                     <Badge className={statusColors[r.installment_status]}>{statusLabel[r.installment_status]}</Badge>
                   </td>
