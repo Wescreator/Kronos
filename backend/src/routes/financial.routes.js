@@ -12,6 +12,10 @@ router.get('/dashboard',  ctrl.getDashboard)
 router.get('/dre',        ctrl.getDRE)
 router.get('/projects',   ctrl.getProjectFinancials)
 
+// Análise avançada — leitura pura (novas, aditivas)
+router.get('/expenses-by-category', ctrl.getExpensesByCategory)
+router.get('/forecast',             ctrl.getForecast)
+
 router.get('/expenses',              ctrl.getExpenses)
 router.post('/expenses', validate(V.createExpense), ctrl.createExpense)
 router.patch('/expenses/:id',        ctrl.updateExpense)

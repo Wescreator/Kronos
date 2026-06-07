@@ -77,7 +77,6 @@ const createExpense = async ({ title, description, projectId, categoryId, amount
   return rows[0]
 }
 
-/* ─── Insere as ocorrências mensais futuras de uma despesa recorrente ─── */
 const createRecurringOccurrences = async (occurrences) => {
   for (const occ of occurrences) {
     await pool.query(
@@ -136,6 +135,56 @@ const deleteExpense = async (id) => {
   await pool.query('DELETE FROM expenses WHERE id = $1', [id])
 }
 
+/* ─── Despesas pagas agrupadas por categoria (painéis analíticos) ─── */
+const getExpensesByCategory = async (month, year) => {
+  const { rows } = await pool.query(`
+    SELECT
+      COALESCE(ec.name,  'Sem categoria') AS category_name,
+      COALESCE(ec.color, '#6B7280')       AS category_color,
+      SUM(e.amount)::numeric              AS total
+    FROM expenses e
+    LEFT JOIN expense_categories ec ON ec.id = e.category_id
+    WHERE e.status    = 'paid'
+      AND e.paid_date IS NOT NULL
+      AND EXTRACT(YEAR  FROM e.paid_date) = $1
+      AND EXTRACT(MONTH FROM e.paid_date) = $2
+    GROUP BY ec.id, ec.name, ec.color
+    ORDER BY total DESC
+  `, [year, month])
+  return rows
+}
+
+/* ─── Previsão: despesas e receitas pendentes agrupadas por mês futuro ─── */
+const getForecast = async () => {
+  const { rows: expenses } = await pool.query(`
+    SELECT
+      EXTRACT(YEAR  FROM due_date)::int AS year,
+      EXTRACT(MONTH FROM due_date)::int AS month,
+      SUM(amount)::numeric              AS total
+    FROM expenses
+    WHERE status   = 'pending'
+      AND due_date >= DATE_TRUNC('month', NOW())
+    GROUP BY EXTRACT(YEAR FROM due_date), EXTRACT(MONTH FROM due_date)
+    ORDER BY year, month
+    LIMIT 12
+  `)
+
+  const { rows: revenues } = await pool.query(`
+    SELECT
+      EXTRACT(YEAR  FROM due_date)::int AS year,
+      EXTRACT(MONTH FROM due_date)::int AS month,
+      SUM(amount)::numeric              AS total
+    FROM revenue_installments
+    WHERE status   = 'pending'
+      AND due_date >= DATE_TRUNC('month', NOW())
+    GROUP BY EXTRACT(YEAR FROM due_date), EXTRACT(MONTH FROM due_date)
+    ORDER BY year, month
+    LIMIT 12
+  `)
+
+  return { expenses, revenues }
+}
+
 // ── RECEITAS ──────────────────────────────────────────────────────
 
 const findRevenues = async ({ limit, offset, status, projectId, month, year }) => {
@@ -175,16 +224,8 @@ const findRevenues = async ({ limit, offset, status, projectId, month, year }) =
 
   const { rows } = await pool.query(
     `SELECT
-       r.id,
-       r.title,
-       r.client,
-       r.project_id,
-       r.total_amount,
-       r.installments,
-       r.description,
-       r.created_by,
-       r.created_at,
-       r.updated_at,
+       r.id, r.title, r.client, r.project_id, r.total_amount,
+       r.installments, r.description, r.created_by, r.created_at, r.updated_at,
        ri.id             AS installment_id,
        ri.installment_no,
        ri.amount         AS installment_amount,
@@ -278,9 +319,7 @@ const confirmReceipt = async (installmentId, receivedDate) => {
 // ── CATEGORIAS ────────────────────────────────────────────────────
 
 const findCategories = async () => {
-  const { rows } = await pool.query(
-    'SELECT * FROM expense_categories ORDER BY name'
-  )
+  const { rows } = await pool.query('SELECT * FROM expense_categories ORDER BY name')
   return rows
 }
 
@@ -355,15 +394,13 @@ const getCashflow = async (year) => {
     LEFT JOIN (
       SELECT EXTRACT(MONTH FROM paid_date)::int AS month, SUM(amount) AS total
       FROM expenses
-      WHERE status = 'paid'
-      AND EXTRACT(YEAR FROM paid_date) = $1
+      WHERE status = 'paid' AND EXTRACT(YEAR FROM paid_date) = $1
       GROUP BY 1
     ) e ON e.month = m.month
     LEFT JOIN (
       SELECT EXTRACT(MONTH FROM received_date)::int AS month, SUM(amount) AS total
       FROM revenue_installments
-      WHERE status = 'received'
-      AND EXTRACT(YEAR FROM received_date) = $1
+      WHERE status = 'received' AND EXTRACT(YEAR FROM received_date) = $1
       GROUP BY 1
     ) r ON r.month = m.month
     ORDER BY m.month
@@ -394,15 +431,9 @@ const getDRE = async (startDate, endDate) => {
 const getProjectFinancials = async () => {
   const { rows } = await pool.query(`
     SELECT
-      p.id,
-      p.title,
-      p.budget,
-      COALESCE(
-        SUM(DISTINCT e.amount) FILTER (WHERE e.status = 'paid'), 0
-      ) AS costs,
-      COALESCE(
-        SUM(DISTINCT ri.amount) FILTER (WHERE ri.status = 'received'), 0
-      ) AS revenues
+      p.id, p.title, p.budget,
+      COALESCE(SUM(DISTINCT e.amount)  FILTER (WHERE e.status  = 'paid'),     0) AS costs,
+      COALESCE(SUM(DISTINCT ri.amount) FILTER (WHERE ri.status = 'received'),  0) AS revenues
     FROM projects p
     LEFT JOIN expenses e              ON e.project_id  = p.id
     LEFT JOIN revenues rv             ON rv.project_id = p.id
@@ -423,7 +454,8 @@ const getProjectFinancials = async () => {
 module.exports = {
   findExpenses, createExpense, createRecurringOccurrences,
   confirmPayment, updateExpense, deleteExpense,
+  getExpensesByCategory, getForecast,
   findRevenues, createRevenue, createInstallments, updateInstallment, confirmReceipt,
   findCategories, createCategory, updateCategory, deleteCategory,
-  getDashboardStats, getCashflow, getDRE, getProjectFinancials
+  getDashboardStats, getCashflow, getDRE, getProjectFinancials,
 }

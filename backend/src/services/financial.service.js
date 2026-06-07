@@ -2,7 +2,6 @@ const repo = require('../repositories/financial.repository')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 const { addMonths, format } = require('date-fns')
 
-/* ─── Número de meses futuros gerados para despesas recorrentes ─── */
 const RECURRING_MONTHS_AHEAD = 24
 
 const getExpenses = async (query) => {
@@ -21,7 +20,6 @@ const getExpenses = async (query) => {
 const createExpense = async (data, userId) => {
   const isRecurring = data.is_recurring === true || data.is_recurring === 'true'
 
-  // Cria a despesa original (mês atual)
   const expense = await repo.createExpense({
     title:             data.title,
     description:       data.description,
@@ -30,11 +28,10 @@ const createExpense = async (data, userId) => {
     amount:            data.amount,
     dueDate:           data.due_date,
     isRecurring:       isRecurring,
-    recurringOriginId: null, // a original nunca tem origin
+    recurringOriginId: null,
     createdBy:         userId
   })
 
-  // Se recorrente, gera as próximas ocorrências mensais independentes
   if (isRecurring) {
     const occurrences = []
     const baseDate = new Date(data.due_date)
@@ -48,7 +45,7 @@ const createExpense = async (data, userId) => {
         categoryId:        data.category_id || null,
         amount:            data.amount,
         dueDate:           format(nextDate, 'yyyy-MM-dd'),
-        recurringOriginId: expense.id, // aponta para a despesa original
+        recurringOriginId: expense.id,
         createdBy:         userId
       })
     }
@@ -60,18 +57,23 @@ const createExpense = async (data, userId) => {
 }
 
 const confirmPayment = async (id, paidDate) => {
-  // Confirma apenas esta ocorrência — não afeta os demais meses
   const expense = await repo.confirmPayment(id, paidDate)
   if (!expense) throw { status: 404, message: 'Despesa não encontrada' }
   return expense
 }
 
-const updateExpense = async (id, data) => {
-  return await repo.updateExpense(id, data)
+const updateExpense = async (id, data) => repo.updateExpense(id, data)
+const deleteExpense = async (id)       => repo.deleteExpense(id)
+
+/* ─── Análise avançada — leitura pura ─── */
+const getExpensesByCategory = async (month, year) => {
+  const m = month ? parseInt(month) : new Date().getMonth() + 1
+  const y = year  ? parseInt(year)  : new Date().getFullYear()
+  return await repo.getExpensesByCategory(m, y)
 }
 
-const deleteExpense = async (id) => {
-  await repo.deleteExpense(id)
+const getForecast = async () => {
+  return await repo.getForecast()
 }
 
 const getRevenues = async (query) => {
@@ -124,20 +126,17 @@ const createRevenue = async (data, userId) => {
   return revenue
 }
 
-const confirmReceipt = async (installmentId, receivedDate) => {
+const confirmReceipt    = async (installmentId, receivedDate) => {
   const inst = await repo.confirmReceipt(installmentId, receivedDate)
   if (!inst) throw { status: 404, message: 'Parcela não encontrada' }
   return inst
 }
+const updateInstallment = async (id, data) => repo.updateInstallment(id, data)
 
-const updateInstallment = async (id, data) => {
-  return await repo.updateInstallment(id, data)
-}
-
-const getCategories    = async () => repo.findCategories()
-const createCategory   = async (data, userId) => repo.createCategory(data.name, data.color, userId)
-const updateCategory   = async (id, data)     => repo.updateCategory(id, data.name, data.color)
-const deleteCategory   = async (id)           => repo.deleteCategory(id)
+const getCategories  = async ()             => repo.findCategories()
+const createCategory = async (data, userId) => repo.createCategory(data.name, data.color, userId)
+const updateCategory = async (id, data)     => repo.updateCategory(id, data.name, data.color)
+const deleteCategory = async (id)           => repo.deleteCategory(id)
 
 const getDashboard = async (query = {}) => {
   const month = query.month ? parseInt(query.month) : null
@@ -147,17 +146,13 @@ const getDashboard = async (query = {}) => {
   return { stats, cashflow }
 }
 
-const getDRE = async (start, end) => {
-  return await repo.getDRE(start, end)
-}
-
-const getProjectFinancials = async () => {
-  return await repo.getProjectFinancials()
-}
+const getDRE               = async (start, end) => repo.getDRE(start, end)
+const getProjectFinancials = async ()            => repo.getProjectFinancials()
 
 module.exports = {
   getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
+  getExpensesByCategory, getForecast,
   getRevenues, createRevenue, confirmReceipt, updateInstallment,
   getCategories, createCategory, updateCategory, deleteCategory,
-  getDashboard, getDRE, getProjectFinancials
+  getDashboard, getDRE, getProjectFinancials,
 }

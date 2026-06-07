@@ -2,9 +2,8 @@ const financialService = require('../services/financial.service')
 const R = require('../utils/response')
 
 const getDashboard = async (req, res) => {
-  try {
-    return R.success(res, await financialService.getDashboard(req.query))
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
+  try { return R.success(res, await financialService.getDashboard(req.query)) }
+  catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getDRE = async (req, res) => {
@@ -16,9 +15,8 @@ const getDRE = async (req, res) => {
 }
 
 const getProjectFinancials = async (req, res) => {
-  try {
-    return R.success(res, { projects: await financialService.getProjectFinancials() })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
+  try { return R.success(res, { projects: await financialService.getProjectFinancials() }) }
+  catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getExpenses = async (req, res) => {
@@ -44,6 +42,22 @@ const updateExpense = async (req, res) => {
 const deleteExpense = async (req, res) => {
   try { await financialService.deleteExpense(req.params.id); return R.success(res, { message: 'Despesa excluída' }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
+}
+
+/* ─── Análise avançada — leitura pura ─── */
+const getExpensesByCategory = async (req, res) => {
+  try {
+    const { month, year } = req.query
+    const categories = await financialService.getExpensesByCategory(month, year)
+    return R.success(res, { categories })
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
+}
+
+const getForecast = async (req, res) => {
+  try {
+    const forecast = await financialService.getForecast()
+    return R.success(res, forecast)
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getRevenues = async (req, res) => {
@@ -89,6 +103,7 @@ const deleteCategory = async (req, res) => {
 module.exports = {
   getDashboard, getDRE, getProjectFinancials,
   getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
+  getExpensesByCategory, getForecast,
   getRevenues, createRevenue, confirmReceipt, updateInstallment,
-  getCategories, createCategory, updateCategory, deleteCategory
+  getCategories, createCategory, updateCategory, deleteCategory,
 }
