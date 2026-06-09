@@ -174,17 +174,46 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
   )
 }
 
+// ── Componente: Separador de data ────────────────────────────────
+function DateSeparator({ dateStr }) {
+  const d   = new Date(dateStr)
+  const now = new Date()
+  const isToday     = d.toDateString() === now.toDateString()
+  const isYesterday = d.toDateString() === new Date(now - 86400000).toDateString()
+  const label = isToday ? 'Hoje'
+    : isYesterday ? 'Ontem'
+    : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  return (
+    <div className="flex items-center gap-3 my-5">
+      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+      <span
+        className="text-[10px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
+        style={{
+          color:      'rgba(255,255,255,0.28)',
+          background: 'rgba(255,255,255,0.04)',
+          border:     '1px solid rgba(255,255,255,0.06)',
+          letterSpacing: '0.10em',
+        }}
+      >
+        {label}
+      </span>
+      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+    </div>
+  )
+}
+
 // ── Componente: Balão de mensagem ─────────────────────────────────
 function MessageBubble({ msg, isMe, showAvatar, prevIsMe }) {
   const time = formatMessageTime(msg.created_at)
 
   return (
     <div
-      className={`flex gap-2.5 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
-      style={{ marginTop: prevIsMe === isMe ? 2 : 14 }}
+      className={`flex gap-3 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}
+      style={{ marginTop: prevIsMe === isMe ? 3 : 16 }}
     >
       {/* Avatar — apenas primeira mensagem de um bloco */}
-      <div className="w-7 shrink-0 flex items-end pb-0.5">
+      <div className="w-8 shrink-0 flex items-end pb-1">
         {showAvatar && !isMe && (
           <Avatar name={msg.user_name} src={msg.avatar_url} size="sm" />
         )}
@@ -192,13 +221,13 @@ function MessageBubble({ msg, isMe, showAvatar, prevIsMe }) {
 
       <div
         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-        style={{ maxWidth: '65%' }}
+        style={{ maxWidth: '68%' }}
       >
         {/* Nome — apenas primeira mensagem do bloco */}
         {showAvatar && !isMe && (
           <span
-            className="text-[11px] font-semibold mb-1 px-1"
-            style={{ color: '#A78BFA' }}
+            className="text-[11px] font-semibold mb-1.5 px-1"
+            style={{ color: '#A78BFA', letterSpacing: '0.01em' }}
           >
             {msg.user_name}
           </span>
@@ -206,29 +235,31 @@ function MessageBubble({ msg, isMe, showAvatar, prevIsMe }) {
 
         {/* Balão */}
         <div
-          className="px-3.5 py-2 text-sm leading-relaxed"
+          className="px-4 py-2.5 text-sm leading-relaxed"
           style={isMe ? {
-            background:   'linear-gradient(135deg, #7C5CFC, #6347e0)',
+            background:   'linear-gradient(135deg, #7C5CFC 0%, #5b3fe0 100%)',
             color:        '#fff',
-            borderRadius: '16px 16px 4px 16px',
-            boxShadow:    '0 2px 12px rgba(124,92,252,0.25)',
+            borderRadius: '18px 4px 18px 18px',
+            boxShadow:    '0 4px 20px rgba(124,92,252,0.35), 0 1px 0 rgba(255,255,255,0.08) inset',
+            letterSpacing: '0.01em',
           } : {
-            background:   'rgba(255,255,255,0.06)',
-            color:        'var(--text-primary)',
-            border:       '1px solid rgba(255,255,255,0.07)',
-            borderRadius: '16px 16px 16px 4px',
+            background:   'rgba(255,255,255,0.07)',
+            color:        'rgba(255,255,255,0.88)',
+            border:       '1px solid rgba(255,255,255,0.09)',
+            borderRadius: '4px 18px 18px 18px',
+            boxShadow:    '0 2px 8px rgba(0,0,0,0.20)',
+            letterSpacing: '0.01em',
           }}
         >
           {msg.content}
         </div>
 
-        {/* Horário */}
+        {/* Horário + check */}
         <div
-          className="flex items-center gap-1 mt-1 px-1"
-          style={{ color: 'var(--text-muted)' }}
+          className="flex items-center gap-1.5 mt-1 px-1"
         >
-          <span className="text-[10px]">{time}</span>
-          {isMe && <CheckCheck size={11} style={{ color: '#A78BFA' }} />}
+          <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.28)' }}>{time}</span>
+          {isMe && <CheckCheck size={11} style={{ color: 'rgba(167,139,250,0.60)' }} />}
         </div>
       </div>
     </div>
@@ -271,24 +302,42 @@ function TypingIndicator({ names }) {
 // ── Componente: Estado vazio da área de conversa ──────────────────
 function EmptyConversation({ onNewChat }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-8">
+    <div className="flex flex-col items-center justify-center h-full text-center px-8" style={{ position: 'relative' }}>
+      {/* Glow decorativo */}
+      <div style={{
+        position: 'absolute',
+        width: 300, height: 300,
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(124,92,252,0.08) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
       <div
-        className="p-5 rounded-3xl mb-5"
         style={{
-          background: 'rgba(124,92,252,0.05)',
-          border:     '1px solid rgba(124,92,252,0.10)',
+          width: 72, height: 72, borderRadius: 24,
+          background: 'linear-gradient(135deg, rgba(124,92,252,0.18), rgba(124,92,252,0.06))',
+          border: '1px solid rgba(124,92,252,0.22)',
+          boxShadow: '0 0 32px rgba(124,92,252,0.12)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 20,
+          position: 'relative',
         }}
       >
-        <MessageSquare size={36} style={{ color: 'rgba(124,92,252,0.45)' }} />
+        <MessageSquare size={30} style={{ color: '#A78BFA' }} />
       </div>
-      <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+
+      <h3 className="text-base font-bold mb-2" style={{ color: 'rgba(255,255,255,0.85)', letterSpacing: '-0.01em' }}>
         Suas mensagens
       </h3>
-      <p className="text-sm mb-6" style={{ color: 'var(--text-muted)', maxWidth: 220 }}>
+      <p className="text-sm mb-7" style={{ color: 'rgba(255,255,255,0.30)', maxWidth: 220, lineHeight: 1.6 }}>
         Envie mensagens privadas ou crie grupos com a sua equipe.
       </p>
-      <button onClick={onNewChat} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <Plus size={15} /> Nova conversa
+      <button
+        onClick={onNewChat}
+        className="btn-primary"
+        style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}
+      >
+        <Plus size={14} /> Nova conversa
       </button>
     </div>
   )
@@ -646,36 +695,38 @@ export default function ChatPage() {
       <div
         className="fade-in flex overflow-hidden"
         style={{
-          height:         'calc(100vh - 5rem)',
-          background:     'rgba(8,12,28,0.72)',
-          backdropFilter: 'blur(24px)',
-          border:         '1px solid rgba(255,255,255,0.06)',
-          borderRadius:   20,
-          boxShadow:      '0 8px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04)',
-          position:       'relative',
-          overflow:       'hidden',
+          height:       'calc(100vh - 5rem)',
+          background:   '#080e1e',
+          border:       '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 20,
+          boxShadow:    '0 8px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05)',
+          position:     'relative',
+          overflow:     'hidden',
         }}
       >
-        {/* Background textura/granulação sutil */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background: `
-              radial-gradient(ellipse 60% 40% at 20% 0%, rgba(124,92,252,0.07) 0%, transparent 70%),
-              radial-gradient(ellipse 40% 30% at 80% 100%, rgba(56,189,248,0.04) 0%, transparent 60%)
-            `,
-            zIndex: 0,
-          }}
-        />
-        {/* Grain overlay */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E")`,
-            zIndex: 0,
-            opacity: 0.5,
-          }}
-        />
+        {/* Camadas de background — profundidade e ambientação */}
+        <div className="pointer-events-none absolute inset-0" style={{ zIndex: 0 }}>
+          {/* Glow principal roxo — canto superior esquerdo */}
+          <div style={{
+            position: 'absolute', top: -80, left: -60,
+            width: 480, height: 480,
+            background: 'radial-gradient(circle, rgba(124,92,252,0.13) 0%, transparent 65%)',
+            filter: 'blur(1px)',
+          }} />
+          {/* Glow azul — canto inferior direito */}
+          <div style={{
+            position: 'absolute', bottom: -60, right: -40,
+            width: 360, height: 360,
+            background: 'radial-gradient(circle, rgba(56,189,248,0.07) 0%, transparent 65%)',
+          }} />
+          {/* Grade sutil — padrão de pontos */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px)',
+            backgroundSize: '28px 28px',
+            maskImage: 'radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)',
+          }} />
+        </div>
 
         {/* ════════════════════════════════════════════════════════
             SIDEBAR — Lista de conversas
@@ -685,8 +736,8 @@ export default function ChatPage() {
             showSidebar ? 'w-[280px]' : 'w-0 md:w-[280px]'
           } overflow-hidden`}
           style={{
-            borderRight: '1px solid rgba(255,255,255,0.05)',
-            background:  'rgba(6,10,22,0.50)',
+            borderRight: '1px solid rgba(255,255,255,0.06)',
+            background:  'rgba(5,8,18,0.90)',
             position:    'relative',
             zIndex:      1,
           }}
@@ -828,11 +879,14 @@ export default function ChatPage() {
             <>
               {/* Cabeçalho da conversa */}
               <div
-                className="flex items-center gap-3 px-5 py-3 shrink-0"
+                className="flex items-center gap-3 px-5 shrink-0"
                 style={{
-                  borderBottom:   '1px solid rgba(255,255,255,0.05)',
-                  background:     'rgba(6,10,22,0.40)',
-                  backdropFilter: 'blur(12px)',
+                  borderBottom:   '1px solid rgba(255,255,255,0.07)',
+                  background:     'rgba(5,8,18,0.75)',
+                  backdropFilter: 'blur(16px)',
+                  minHeight:      56,
+                  paddingTop:     12,
+                  paddingBottom:  12,
                 }}
               >
                 {/* Voltar — mobile */}
@@ -850,21 +904,26 @@ export default function ChatPage() {
                 <div className="relative shrink-0">
                   {activeIsGroup ? (
                     <div
-                      className="h-8 w-8 rounded-full flex items-center justify-center"
-                      style={{ background: 'rgba(124,92,252,0.12)', border: '1px solid rgba(124,92,252,0.20)' }}
+                      className="h-9 w-9 rounded-xl flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(124,92,252,0.25), rgba(124,92,252,0.10))',
+                        border: '1px solid rgba(124,92,252,0.30)',
+                        boxShadow: '0 0 16px rgba(124,92,252,0.15)',
+                      }}
                     >
-                      <Hash size={14} style={{ color: '#A78BFA' }} />
+                      <Hash size={15} style={{ color: '#A78BFA' }} />
                     </div>
                   ) : (
                     <div className="relative">
-                      <Avatar name={activeRoomName} src={activeRoomAvatar} size="sm" />
+                      <Avatar name={activeRoomName} src={activeRoomAvatar} size="md" />
                       {/* Indicador de presença real */}
                       <div
-                        className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full"
+                        className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full"
                         style={{
-                          background: isOtherOnline ? '#34D399' : 'rgba(255,255,255,0.20)',
-                          border: '2px solid #06080f',
-                          transition: 'background 0.4s',
+                          background: isOtherOnline ? '#34D399' : '#374151',
+                          border: '2px solid #05081a',
+                          boxShadow: isOtherOnline ? '0 0 6px rgba(52,211,153,0.5)' : 'none',
+                          transition: 'all 0.4s',
                         }}
                       />
                     </div>
@@ -873,55 +932,84 @@ export default function ChatPage() {
 
                 {/* Nome e status */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                  <p className="text-[15px] font-bold truncate leading-tight" style={{ color: '#fff' }}>
                     {activeRoomName}
                   </p>
                   <p
-                    className="text-[11px] font-medium"
+                    className="text-[11px] font-medium leading-tight mt-0.5"
                     style={{
                       color: activeIsGroup
-                        ? 'var(--text-muted)'
-                        : (isOtherOnline ? '#34D399' : 'var(--text-muted)'),
+                        ? 'rgba(255,255,255,0.35)'
+                        : (isOtherOnline ? '#34D399' : 'rgba(255,255,255,0.30)'),
                       transition: 'color 0.4s',
                     }}
                   >
-                    {activeIsGroup ? 'Grupo' : (isOtherOnline ? 'Online' : 'Offline')}
+                    {activeIsGroup ? 'Canal de grupo' : (isOtherOnline ? '● Online agora' : '○ Offline')}
                   </p>
                 </div>
               </div>
 
               {/* Área de mensagens */}
               <div
-                className="flex-1 overflow-y-auto px-4 py-4 chat-scroll"
+                className="flex-1 overflow-y-auto chat-scroll"
                 style={{
                   background: 'transparent',
-                  // Centraliza levemente com max-width interno
+                  padding: '24px 20px 12px',
+                  position: 'relative',
                 }}
               >
-                <div style={{ maxWidth: 720, margin: '0 auto' }}>
+                {/* Padrão de fundo sutil na área de chat */}
+                <div className="pointer-events-none absolute inset-0" style={{
+                  backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.018) 1px, transparent 1px)',
+                  backgroundSize: '24px 24px',
+                  zIndex: 0,
+                }} />
+
+                <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative', zIndex: 1 }}>
                   {loadingMsgs ? (
-                    <div className="flex justify-center py-10"><Spinner /></div>
+                    <div className="flex justify-center py-16"><Spinner /></div>
                   ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center" style={{ minHeight: 200 }}>
-                      <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                        Nenhuma mensagem ainda. Diga olá! 👋
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                      <div style={{
+                        width: 56, height: 56, borderRadius: 18,
+                        background: 'rgba(124,92,252,0.10)',
+                        border: '1px solid rgba(124,92,252,0.18)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        marginBottom: 16,
+                      }}>
+                        <MessageSquare size={24} style={{ color: 'rgba(167,139,250,0.6)' }} />
+                      </div>
+                      <p className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                        Início da conversa
+                      </p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                        Diga olá para {activeRoomName} 👋
                       </p>
                     </div>
                   ) : (
                     messages.map((msg, i) => {
-                      const isMe      = msg.user_id === user?.id
-                      const prevMsg   = i > 0 ? messages[i - 1] : null
-                      const prevIsMe  = prevMsg?.user_id === user?.id
+                      const isMe       = msg.user_id === user?.id
+                      const prevMsg    = i > 0 ? messages[i - 1] : null
+                      const prevIsMe   = prevMsg?.user_id === user?.id
                       const showAvatar = !isMe && (prevMsg?.user_id !== msg.user_id)
+
+                      // Separador de data
+                      const msgDate  = msg.created_at ? new Date(msg.created_at).toDateString() : null
+                      const prevDate = prevMsg?.created_at ? new Date(prevMsg.created_at).toDateString() : null
+                      const showDate = msgDate && msgDate !== prevDate
+
                       return (
-                        <div key={msg.id} className="msg-appear">
-                          <MessageBubble
-                            msg={msg}
-                            isMe={isMe}
-                            showAvatar={showAvatar}
-                            prevIsMe={prevIsMe}
-                          />
-                        </div>
+                        <React.Fragment key={msg.id}>
+                          {showDate && <DateSeparator dateStr={msg.created_at} />}
+                          <div className="msg-appear">
+                            <MessageBubble
+                              msg={msg}
+                              isMe={isMe}
+                              showAvatar={showAvatar}
+                              prevIsMe={prevIsMe}
+                            />
+                          </div>
+                        </React.Fragment>
                       )
                     })
                   )}
@@ -939,10 +1027,15 @@ export default function ChatPage() {
 
               {/* Input de mensagem */}
               <div
-                className="px-4 pb-3 pt-2 shrink-0 relative"
-                style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+                className="shrink-0 relative"
+                style={{
+                  borderTop:  '1px solid rgba(255,255,255,0.06)',
+                  background: 'rgba(5,8,18,0.80)',
+                  backdropFilter: 'blur(16px)',
+                  padding: '12px 20px 16px',
+                }}
               >
-                <div style={{ maxWidth: 720, margin: '0 auto' }}>
+                <div style={{ maxWidth: 680, margin: '0 auto' }}>
                   {/* Emoji picker */}
                   {showEmoji && (
                     <div
@@ -994,23 +1087,23 @@ export default function ChatPage() {
                     <div
                       className="flex-1 flex items-end rounded-2xl px-4 py-2.5"
                       style={{
-                        background:  'rgba(255,255,255,0.05)',
-                        border:      '1px solid rgba(255,255,255,0.07)',
+                        background:  'rgba(255,255,255,0.06)',
+                        border:      '1px solid rgba(255,255,255,0.09)',
                         transition:  'border-color 0.2s, box-shadow 0.2s',
                       }}
                       onFocusCapture={e => {
-                        e.currentTarget.style.borderColor = 'rgba(124,92,252,0.35)'
-                        e.currentTarget.style.boxShadow   = '0 0 0 3px rgba(124,92,252,0.07)'
+                        e.currentTarget.style.borderColor = 'rgba(124,92,252,0.45)'
+                        e.currentTarget.style.boxShadow   = '0 0 0 3px rgba(124,92,252,0.08)'
                       }}
                       onBlurCapture={e => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)'
                         e.currentTarget.style.boxShadow   = 'none'
                       }}
                     >
                       <textarea
                         ref={inputRef}
                         className="flex-1 bg-transparent outline-none resize-none text-sm leading-relaxed"
-                        style={{ color: 'var(--text-primary)', maxHeight: 120, minHeight: 24 }}
+                        style={{ color: '#e2e8f0', maxHeight: 120, minHeight: 24 }}
                         placeholder={`Mensagem para ${activeRoomName}...`}
                         value={content}
                         rows={1}
