@@ -1,14 +1,11 @@
-const { Resend } = require('resend')
+const { getTransporter } = require('./gmail.service')
 
 const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
   // Instanciado aqui: só executa quando a função é chamada, não na inicialização
-  const resend = new Resend(process.env.RESEND_API_KEY)
 
-  const { data, error } = await resend.emails.send({
-    from: process.env.EMAIL_FROM || 'Kronos <noreply@kronos.app>',
-    to,
-    subject: 'Redefinição de senha — Kronos',
-    html: `<!DOCTYPE html>
+  const transporter = await getTransporter()
+
+  const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -65,15 +62,21 @@ const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
   </table>
 </body>
 </html>`
-  })
 
-  if (error) {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to,
+      subject: 'Redefinição de senha — Kronos',
+      html
+    })
+
+    console.log('[EmailService] Email enviado para:', to, '| ID:', info?.messageId)
+    return info
+  } catch (error) {
     console.error('[EmailService] Erro ao enviar email de recuperação:', error)
     throw { status: 500, message: 'Erro ao enviar email de recuperação. Tente novamente.' }
   }
-
-  console.log('[EmailService] Email enviado para:', to, '| ID:', data?.id)
-  return data
 }
 
 module.exports = { sendPasswordResetEmail }
