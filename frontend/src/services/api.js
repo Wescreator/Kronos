@@ -10,7 +10,7 @@ console.log('[API] VITE_API_URL:', import.meta.env.VITE_API_URL)
 
 const api = axios.create({
   baseURL,
-  timeout: 20000,
+  timeout: 60000,
   withCredentials: false,
 })
 
