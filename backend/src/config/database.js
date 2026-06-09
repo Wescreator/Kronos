@@ -33,10 +33,12 @@ pool.on('error', (err) => {
 })
 
 pool.query('SELECT NOW()')
-  .then(() => console.log('✓ Banco de dados conectado'))
+  .then(() => {
+    console.log('✓ Banco de dados conectado')
+  })
   .catch(err => {
     console.error('✗ Falha na conexão com o banco:', err.message)
-    process.exit(1)
   })
+
 
 module.exports = pool
