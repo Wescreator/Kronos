@@ -516,7 +516,8 @@ export default function ChatPage() {
   // ── Abre uma conversa ─────────────────────────────────────────
   const openRoom = useCallback(async (room) => {
     setActiveRoom(room)
-    setShowSidebar(false)
+    // Só recolhe a sidebar em mobile (< 768px)
+    if (window.innerWidth < 768) setShowSidebar(false)
     setLoadingMsgs(true)
     setMessages([])
     setTypingUsers({})
@@ -734,7 +735,7 @@ export default function ChatPage() {
         <div
           className={`flex flex-col shrink-0 transition-all duration-200 ${
             showSidebar ? 'w-[280px]' : 'w-0 md:w-[280px]'
-          } overflow-hidden`}
+          } md:w-[280px] overflow-hidden`}
           style={{
             borderRight: '1px solid rgba(255,255,255,0.06)',
             background:  'rgba(5,8,18,0.90)',
