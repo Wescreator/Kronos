@@ -15,20 +15,17 @@ const allowedOrigins = [
 ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i) // remove duplicatas
 
 app.use(cors({
-  origin: (origin, callback) => {
-    // Permite Postman, curl e mobile (sem origin)
-    if (!origin) return callback(null, true)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
-    console.error(`[CORS] Bloqueado: ${origin}`)
-    callback(new Error(`CORS bloqueado para origem: ${origin}`))
-  },
+  origin: true,
   credentials: true,
-  methods:     ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
 // Responde OPTIONS imediatamente (preflight)
-app.options('*', cors())
+app.options('*', cors({
+  origin: true,
+  credentials: true
+}))
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(express.json({ limit: '10mb' }))
