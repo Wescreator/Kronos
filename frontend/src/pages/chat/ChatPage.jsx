@@ -744,10 +744,10 @@ export default function ChatPage() {
         >
           {/* Header */}
           <div
-            className="px-3 pt-4 pb-3 shrink-0"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+            className="px-3 shrink-0"
+            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingTop: 20, paddingBottom: 14 }}
           >
-            <div className="flex items-center justify-between mb-3 px-1">
+            <div className="flex items-center justify-between px-1" style={{ marginBottom: 12 }}>
               <h2 className="text-[13px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>
                 Mensagens
               </h2>
@@ -882,11 +882,11 @@ export default function ChatPage() {
                 className="flex items-center gap-3 px-5 shrink-0"
                 style={{
                   borderBottom:   '1px solid rgba(255,255,255,0.07)',
-                  background:     'rgba(5,8,18,0.75)',
+                  background:     'rgba(5,8,18,0.80)',
                   backdropFilter: 'blur(16px)',
-                  minHeight:      56,
-                  paddingTop:     12,
-                  paddingBottom:  12,
+                  height:         64,
+                  paddingTop:     0,
+                  paddingBottom:  0,
                 }}
               >
                 {/* Voltar — mobile */}
@@ -954,7 +954,7 @@ export default function ChatPage() {
                 className="flex-1 overflow-y-auto chat-scroll"
                 style={{
                   background: 'transparent',
-                  padding: '24px 20px 12px',
+                  padding: '24px 32px 12px',
                   position: 'relative',
                 }}
               >
@@ -965,7 +965,7 @@ export default function ChatPage() {
                   zIndex: 0,
                 }} />
 
-                <div style={{ maxWidth: 680, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+                <div style={{ position: 'relative', zIndex: 1 }}>
                   {loadingMsgs ? (
                     <div className="flex justify-center py-16"><Spinner /></div>
                   ) : messages.length === 0 ? (
@@ -1035,7 +1035,7 @@ export default function ChatPage() {
                   padding: '12px 20px 16px',
                 }}
               >
-                <div style={{ maxWidth: 680, margin: '0 auto' }}>
+                <div style={{ position: 'relative' }}>
                   {/* Emoji picker */}
                   {showEmoji && (
                     <div
