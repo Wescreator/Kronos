@@ -5,6 +5,7 @@ const R      = require('../utils/response')
 
 router.use(authenticate)
 
+// ── GET /chat/rooms ─────────────────────────────────────────────
 router.get('/rooms', async (req, res) => {
   try {
     const { rows } = await pool.query(
@@ -22,6 +23,7 @@ router.get('/rooms', async (req, res) => {
   } catch (err) { return R.error(res, err.message) }
 })
 
+// ── POST /chat/rooms ────────────────────────────────────────────
 router.post('/rooms', async (req, res) => {
   try {
     const { name, type = 'private', members = [] } = req.body
@@ -41,6 +43,41 @@ router.post('/rooms', async (req, res) => {
   } catch (err) { return R.error(res, err.message) }
 })
 
+// ── DELETE /chat/rooms/:id ──────────────────────────────────────
+// Apenas o criador da sala ou admin pode excluir
+router.delete('/rooms/:id', async (req, res) => {
+  try {
+    const { id } = req.params
+
+    // Verifica se a sala existe e se o usuário é membro
+    const { rows: roomRows } = await pool.query(
+      `SELECT cr.* FROM chat_rooms cr
+       JOIN chat_room_members crm ON crm.room_id = cr.id AND crm.user_id = $1
+       WHERE cr.id = $2`,
+      [req.user.id, id]
+    )
+
+    if (roomRows.length === 0) {
+      return R.notFound(res, 'Sala não encontrada ou acesso negado')
+    }
+
+    const room = roomRows[0]
+
+    // Apenas criador ou admin pode excluir
+    if (room.created_by !== req.user.id && req.user.role !== 'admin') {
+      return R.forbidden(res, 'Apenas o criador pode excluir esta conversa')
+    }
+
+    // Remove mensagens, membros e sala em cascata (ou confie no ON DELETE CASCADE do schema)
+    await pool.query('DELETE FROM chat_messages      WHERE room_id = $1', [id])
+    await pool.query('DELETE FROM chat_room_members  WHERE room_id = $1', [id])
+    await pool.query('DELETE FROM chat_rooms         WHERE id      = $1', [id])
+
+    return R.success(res, { deleted: true })
+  } catch (err) { return R.error(res, err.message) }
+})
+
+// ── GET /chat/rooms/:id/messages ────────────────────────────────
 router.get('/rooms/:id/messages', async (req, res) => {
   try {
     const limit  = parseInt(req.query.limit)  || 50
@@ -58,6 +95,7 @@ router.get('/rooms/:id/messages', async (req, res) => {
   } catch (err) { return R.error(res, err.message) }
 })
 
+// ── POST /chat/rooms/:id/messages ───────────────────────────────
 router.post('/rooms/:id/messages', async (req, res) => {
   try {
     const { content } = req.body
