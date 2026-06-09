@@ -14,7 +14,11 @@ oauth2Client.setCredentials({
 })
 
 async function getTransporter() {
-  const accessToken = await oauth2Client.getAccessToken()
+  const { token: accessToken } = await oauth2Client.getAccessToken()
+
+  if (!accessToken) {
+    throw new Error('Não foi possível obter o access token do Gmail. Verifique as credenciais OAuth2.')
+  }
 
   return nodemailer.createTransport({
     service: 'gmail',
