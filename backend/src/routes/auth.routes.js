@@ -14,7 +14,7 @@ router.get('/me',        authenticate,         ctrl.me)
 router.post('/forgot-password', ctrl.forgotPassword)
 router.post('/reset-password',  ctrl.resetPassword)
 
-router.post('/test-email', async (req, res) => {
+router.get('/test-email', async (req, res) => {
   try {
     const emailService = require('../services/email.service')
 
