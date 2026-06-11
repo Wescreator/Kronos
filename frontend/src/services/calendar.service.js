@@ -1,75 +1,30 @@
 // frontend/services/calendar.service.js
-// Módulo Agenda — Kronos
 
-const API_URL = import.meta.env.VITE_API_URL;
+import api from './api'
 
-function authHeaders() {
-  const token = localStorage.getItem('token');
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
-}
+export const getEventsByMonth = (year, month) =>
+  api.get('/calendar/month', {
+    params: { year, month }
+  })
 
-async function handleResponse(res) {
-  if (res.status === 204) return null;
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Erro na requisição');
-  return data;
-}
+export const getEventsByWeek = (startOfWeek, endOfWeek) =>
+  api.get('/calendar/week', {
+    params: { startOfWeek, endOfWeek }
+  })
 
-export async function getEventsByMonth(year, month) {
-  const res = await fetch(
-    `${API_URL}/calendar/month?year=${year}&month=${month}`,
-    { headers: authHeaders() }
-  );
-  return handleResponse(res);
-}
+export const getAgendaEvents = (fromDate) =>
+  api.get('/calendar/agenda', {
+    params: { fromDate }
+  })
 
-export async function getEventsByWeek(startOfWeek, endOfWeek) {
-  const res = await fetch(
-    `${API_URL}/calendar/week?startOfWeek=${startOfWeek}&endOfWeek=${endOfWeek}`,
-    { headers: authHeaders() }
-  );
-  return handleResponse(res);
-}
+export const getEventById = (id) =>
+  api.get(`/calendar/${id}`)
 
-export async function getAgendaEvents(fromDate) {
-  const from = fromDate || new Date().toISOString();
-  const res = await fetch(
-    `${API_URL}/calendar/agenda?fromDate=${from}`,
-    { headers: authHeaders() }
-  );
-  return handleResponse(res);
-}
+export const createEvent = (data) =>
+  api.post('/calendar', data)
 
-export async function getEventById(id) {
-  const res = await fetch(`${API_URL}/calendar/${id}`, { headers: authHeaders() });
-  return handleResponse(res);
-}
+export const updateEvent = (id, data) =>
+  api.patch(`/calendar/${id}`, data)
 
-export async function createEvent(data) {
-  const res = await fetch(`${API_URL}/calendar`, {
-    method: 'POST',
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
-
-export async function updateEvent(id, data) {
-  const res = await fetch(`${API_URL}/calendar/${id}`, {
-    method: 'PATCH',
-    headers: authHeaders(),
-    body: JSON.stringify(data),
-  });
-  return handleResponse(res);
-}
-
-export async function deleteEvent(id) {
-  const res = await fetch(`${API_URL}/calendar/${id}`, {
-    method: 'DELETE',
-    headers: authHeaders(),
-  });
-  return handleResponse(res);
-}
+export const deleteEvent = (id) =>
+  api.delete(`/calendar/${id}`)
