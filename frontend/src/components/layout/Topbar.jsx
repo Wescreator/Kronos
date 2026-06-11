@@ -23,6 +23,7 @@ import { formatDateTime } from '../../utils/format'
 // ─── Links extraídos diretamente do Sidebar original ──────────────
 const NAV_LINKS = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard'  },
+  { to: '/app/agenda',    icon: Calendar,        label: 'Agenda' },
   { to: '/app/projects',  icon: FolderKanban,    label: 'Projetos'   },
   { to: '/app/financial', icon: DollarSign,       label: 'Financeiro' },
   { to: '/app/tasks',     icon: CheckSquare,      label: 'Tarefas'    },
