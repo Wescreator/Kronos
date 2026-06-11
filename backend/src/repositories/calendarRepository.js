@@ -2,7 +2,9 @@
 // Módulo Agenda — Kronos
 // ADITIVO: não altera nenhum outro repositório
 
-const { pool } = require('../config/database'); // ajuste ao import real do projeto
+// backend/repositories/calendarRepository.js
+
+const pool = require('../config/database');
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
