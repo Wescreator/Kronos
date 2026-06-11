@@ -5,7 +5,8 @@ import {
   DollarSign,
   CheckSquare,
   MessageSquare,
-  Users
+  Users,
+  calendar
 } from 'lucide-react'
 
 import useUIStore from '../../store/uiStore'
