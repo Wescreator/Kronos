@@ -3,7 +3,7 @@ const cors    = require('cors')
 const helmet  = require('helmet')
 const path    = require('path')
 require('dotenv').config()
-
+const { authenticate } = require('./middlewares/auth.middleware')
 const app = express()
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
@@ -50,6 +50,7 @@ app.use('/api/tasks',         require('./routes/tasks.routes'))
 app.use('/api/financial',     require('./routes/financial.routes'))
 app.use('/api/chat',          require('./routes/chat.routes'))
 app.use('/api/notifications', require('./routes/notifications.routes'))
+app.use('/api/calendar',      authenticate,require('./routes/calendarRoutes'))
 
 // ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
