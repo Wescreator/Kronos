@@ -254,7 +254,7 @@ export default function ExpensesPage() {
         page:        currentPage,
         limit:       ITEMS_PER_PAGE,
       })
-      setExpenses(data.data || [])
+      setExpenses([...(data.data || [])].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR')))
       setPagination(data.pagination || { page: 1, pages: 1, total: 0 })
     } finally {
       setLoading(false)
@@ -264,11 +264,12 @@ export default function ExpensesPage() {
   useEffect(() => { load() }, [load])
 
   const loadCategories = useCallback(async () => {
-    try {
-      const { data } = await getCategories()
-      setCategories(data.categories || [])
-    } catch { /* silencioso */ }
-  }, [])
+  try {
+    const { data } = await getCategories()
+    const sortedCategories = [...(data.categories || [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    setCategories(sortedCategories)
+  } catch { /* silencioso */ }
+}, [])
 
   useEffect(() => { loadCategories() }, [loadCategories])
 
@@ -387,10 +388,12 @@ export default function ExpensesPage() {
         categories={categories}
         value={form.category_id}
         onChange={(id) => setForm({ ...form, category_id: id })}
-        onCategoryCreated={(cat) => {
-          setCategories(prev => [...prev, cat])
-          loadCategories()
-        }}
+        onCategoryCreated={(cat) => {setCategories(prev =>[...prev, cat].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')
+    )
+  )
+
+  loadCategories()
+}}
       />
 
       <div>

@@ -53,14 +53,16 @@ export default function RevenuesPage() {
         year:   selectedYear,
         limit:  200
       })
-      setRevenues(data.data || [])
+      setRevenues([...(data.data || [])].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR')))
     } finally { setLoading(false) }
   }, [statusFilter, selectedMonth, selectedYear])
 
   useEffect(() => { load() }, [load])
-  useEffect(() => {
-    getProjects({ limit: 200 }).then(r => setProjects(r.data.data || []))
-  }, [])
+  useEffect(() => { getProjects({ limit: 200 }).then(r => {
+    const sortedProjects = [...(r.data.data || [])].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
+    setProjects(sortedProjects)
+  })
+}, [])
 
   const resetForm = () => {
     setForm({ title:'', client:'', description:'', project_id:'', installments_list: [{ ...EMPTY_INSTALLMENT }] })
