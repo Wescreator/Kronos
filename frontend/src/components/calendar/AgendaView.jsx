@@ -16,9 +16,14 @@ function formatDate(iso) {
 }
 
 function formatTime(iso) {
-  return new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-}
+  if (!iso) return '';
 
+  const time = iso.split('T')[1];
+
+  if (!time) return '';
+
+  return time.substring(0, 5);
+}
 function groupByDate(events) {
   const groups = {};
   events.forEach(ev => {

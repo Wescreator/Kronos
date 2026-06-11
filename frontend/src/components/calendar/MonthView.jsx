@@ -47,8 +47,13 @@ function getEventsForDay(events, date) {
 }
 
 function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (!iso) return '';
+
+  const time = iso.split('T')[1];
+
+  if (!time) return '';
+
+  return time.substring(0, 5);
 }
 
 export default function MonthView({ currentDate, events, onDayClick, onEventClick }) {
