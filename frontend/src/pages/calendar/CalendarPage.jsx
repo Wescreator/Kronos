@@ -7,7 +7,7 @@ import MonthView from '../../components/calendar/MonthView'
 import WeekView from '../../components/calendar/WeekView'
 import AgendaView from '../../components/calendar/AgendaView'
 import EventModal from '../../components/calendar/EventModal'
-
+import '../../App.css'
 import {
   getEventsByMonth,
   getEventsByWeek,
