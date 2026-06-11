@@ -3,7 +3,9 @@ export const formatCurrency = (value) =>
 
 export const formatDate = (date) => {
   if (!date) return '—'
-  return new Intl.DateTimeFormat('pt-BR').format(new Date(date))
+  const iso = String(date).split('T')[0]
+  const [year, month, day] = iso.split('-')
+  return `${day}/${month}/${year}`
 }
 
 export const formatDateTime = (date) => {
@@ -14,7 +16,7 @@ export const formatDateTime = (date) => {
   }).format(new Date(date))
 }
 
-export const formatPercent = (value) => `${value || 0}%`
+export const formatPercent = (value) => `${value || 0}%`  
 
 export const formatCompact = (value) => {
   if (!value) return 'R$ 0'

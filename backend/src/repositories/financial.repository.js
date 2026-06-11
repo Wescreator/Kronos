@@ -364,19 +364,24 @@ const getDashboardStats = async (month, year) => {
         AS revenue_month,
 
       (SELECT COALESCE(SUM(amount), 0) FROM expenses
-       WHERE status = 'pending')
-        AS expenses_pending,
+      WHERE status = 'pending'
+      AND EXTRACT(YEAR FROM due_date) = $1
+      AND EXTRACT(MONTH FROM due_date) = $2
+      )
+      AS expenses_pending,
 
       (SELECT COALESCE(SUM(amount), 0) FROM revenue_installments
-       WHERE status = 'pending')
-        AS revenue_pending,
+      WHERE status = 'pending'
+      AND EXTRACT(YEAR FROM due_date) = $1
+      AND EXTRACT(MONTH FROM due_date) = $2)
+      AS revenue_pending,
 
       (SELECT COALESCE(SUM(amount), 0) FROM expenses
-       WHERE status = 'pending' AND due_date < NOW())
+       WHERE status = 'pending' AND due_date < CURRENT_DATE)
         AS expenses_overdue,
 
       (SELECT COALESCE(SUM(amount), 0) FROM revenue_installments
-       WHERE status = 'pending' AND due_date < NOW())
+       WHERE status = 'pending' AND due_date < CURRENT_DATE)
         AS revenue_overdue
   `, [y, m])
 

@@ -139,10 +139,12 @@ const updateCategory = async (id, data)     => repo.updateCategory(id, data.name
 const deleteCategory = async (id)           => repo.deleteCategory(id)
 
 const getDashboard = async (query = {}) => {
-  const month = query.month ? parseInt(query.month) : null
-  const year  = query.year  ? parseInt(query.year)  : null
-  const stats    = await repo.getDashboardStats(month, year)
-  const cashflow = await repo.getCashflow(year || new Date().getFullYear())
+  const today = new Date()
+  const month = query.month? parseInt(query.month): today.getMonth() + 1
+  const year = query.year? parseInt(query.year): today.getFullYear()
+  const stats = await repo.getDashboardStats(month, year)
+  const cashflow = await repo.getCashflow(year)
+
   return { stats, cashflow }
 }
 
