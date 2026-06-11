@@ -35,9 +35,9 @@ export const ROLE_STYLES = {
 // ─────────────────────────────────────────────────────────────────
 
 export const VISIBLE_MODULES = {
-  admin:   ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team'],
-  manager: ['projects',  'tasks',    'chat',  'team'],
-  member:  ['projects',  'tasks',    'chat',  'team'],
+  admin:   ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team' , 'agenda'],
+  manager: ['projects',  'tasks',    'chat',  'team' , 'agenda'],
+  member:  ['projects',  'tasks',    'chat',  'team' , 'agenda'],
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -83,6 +83,13 @@ export const PERMISSIONS = {
     createMember: ['admin'],
     editMember:   ['admin'],
     toggleStatus: ['admin'],
+  },
+  
+  agenda: {
+    view:   ['admin', 'manager', 'member'],
+    create: ['admin', 'manager'],
+    edit:   ['admin', 'manager'],
+    delete: ['admin'],
   },
 }
 
