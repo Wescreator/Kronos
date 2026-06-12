@@ -55,18 +55,35 @@ const EmptyChart = ({ message }) => (
     {message}
   </div>
 )
+
 const darkenColor = (hex, amount = 0.45) => {
   const color = hex.replace('#', '')
-
   const r = parseInt(color.substring(0, 2), 16)
   const g = parseInt(color.substring(2, 4), 16)
   const b = parseInt(color.substring(4, 6), 16)
+  return `rgb(${Math.floor(r * (1 - amount))}, ${Math.floor(g * (1 - amount))}, ${Math.floor(b * (1 - amount))})`
+}
 
-  return `rgb(
-    ${Math.floor(r * (1 - amount))},
-    ${Math.floor(g * (1 - amount))},
-    ${Math.floor(b * (1 - amount))}
-  )`
+/* ─── Label personalizada nas fatias ─── */
+const PiePercentLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+  if (percent < 0.05) return null
+  const RADIAN = Math.PI / 180
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+  const x = cx + radius * Math.cos(-midAngle * RADIAN)
+  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+  return (
+    <text
+      x={x} y={y}
+      fill="rgba(255,255,255,0.92)"
+      textAnchor="middle"
+      dominantBaseline="central"
+      fontSize={11}
+      fontWeight={700}
+      style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
+    >
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  )
 }
 
 export default function FinancialPage() {
@@ -131,8 +148,6 @@ export default function FinancialPage() {
   const margin     = netRevenue > 0 ? ((netProfit / netRevenue) * 100).toFixed(1) : 0
 
   /* ── Cálculos dos novos painéis ── */
-  const maxCatTotal = categories.length > 0 ? parseFloat(categories[0].total) : 1
-
   const forecastExpData = forecast.expenses.slice(0, 6).map(r => ({
     name:     monthNames[r.month - 1],
     Previsto: parseFloat(r.total),
@@ -146,6 +161,9 @@ export default function FinancialPage() {
   const totalForecastExpenses = forecast.expenses.reduce((s, r) => s + parseFloat(r.total), 0)
   const totalForecastRevenues = forecast.revenues.reduce((s, r) => s + parseFloat(r.total), 0)
   const projectedBalance      = totalForecastRevenues - totalForecastExpenses
+
+  /* ── Total das categorias ── */
+  const totalCat = categories.reduce((s, c) => s + parseFloat(c.total), 0)
 
   return (
     <div className="space-y-7 fade-in">
@@ -298,20 +316,18 @@ export default function FinancialPage() {
         {/* Linha 1: Categoria + Saldo Projetado */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
 
-          {/* ── Card: Despesas por Categoria ── */}
-         <div
-  className="card p-6"
-  style={{
-    background: `
-      radial-gradient(
-        circle at top right,
-        rgba(124,92,252,0.14),
-        rgba(0,0,0,0) 45%
-      ),
-      var(--card-bg)
-    `,
-  }}
->
+          {/* ══════════════════════════════════════════════════
+              CARD REDESENHADO: Despesas por Categoria
+          ══════════════════════════════════════════════════ */}
+          <div
+            className="card p-6"
+            style={{
+              background: `
+                radial-gradient(circle at top right, rgba(124,92,252,0.14), rgba(0,0,0,0) 45%),
+                var(--card-bg)
+              `,
+            }}
+          >
             {/* Header + seletor de mês/ano */}
             <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
               <div>
@@ -347,207 +363,187 @@ export default function FinancialPage() {
               </div>
             </div>
 
-           {/* Conteúdo */}
-{catLoading ? (
-  <InlineSpinner />
-) : categories.length === 0 ? (
-  <EmptyChart message="Nenhuma despesa paga neste mês" />
-) : (
-  <div
-    style={{
-      height: 290,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 20,
-    }}
-  >
-    {/* Área do gráfico */}
-    <div
-      style={{
-        flex: 1,
-        minWidth: 300,
-        height: '100%',
-      }}
-    >
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
+            {/* Conteúdo */}
+            {catLoading ? (
+              <InlineSpinner />
+            ) : categories.length === 0 ? (
+              <EmptyChart message="Nenhuma despesa paga neste mês" />
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 
-          {/* Espessura 3D */}
-          <Pie
-            data={categories}
-            dataKey="total"
-            cx="50%"
-            cy="53%"
-            innerRadius={48}
-            outerRadius={82}
-            stroke="none"
-            isAnimationActive={false}
-          >
-            {categories.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={darkenColor(entry.category_color)}
-              />
-            ))}
-          </Pie>
+                  {/* ── Gráfico Donut com centro absoluto ── */}
+                  <div style={{ position: 'relative', width: 200, height: 200, flexShrink: 0 }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        {/* Anel sombra (efeito 3-D) */}
+                        <Pie
+                          data={categories}
+                          dataKey="total"
+                          cx="50%"
+                          cy="55%"
+                          innerRadius={54}
+                          outerRadius={84}
+                          stroke="none"
+                          isAnimationActive={false}
+                        >
+                          {categories.map((entry, index) => (
+                            <Cell key={index} fill={darkenColor(entry.category_color)} />
+                          ))}
+                        </Pie>
 
-          {/* Disco principal */}
-          <Pie
-            data={categories}
-            dataKey="total"
-            cx="50%"
-            cy="48%"
-            innerRadius={48}
-            outerRadius={82}
-            paddingAngle={2}
-            stroke="rgba(255,255,255,0.08)"
-            strokeWidth={1}
-            isAnimationActive={false}
-          >
-            {categories.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={entry.category_color}
-              />
-            ))}
-          </Pie>
+                        {/* Anel principal com labels de % */}
+                        <Pie
+                          data={categories}
+                          dataKey="total"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={54}
+                          outerRadius={84}
+                          paddingAngle={2}
+                          stroke="rgba(255,255,255,0.06)"
+                          strokeWidth={1}
+                          isAnimationActive={false}
+                          labelLine={false}
+                          label={<PiePercentLabel />}
+                        >
+                          {categories.map((entry, index) => (
+                            <Cell
+                              key={index}
+                              fill={entry.category_color}
+                              style={{
+                                filter: `drop-shadow(0 0 8px ${entry.category_color}70)`,
+                              }}
+                            />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
 
-        </PieChart>
-      </ResponsiveContainer>
-    </div>
+                    {/* Centro: Total Pago */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%', left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      textAlign: 'center',
+                      pointerEvents: 'none',
+                      width: 90,
+                    }}>
+                      <p style={{
+                        fontSize: 8.5,
+                        fontWeight: 700,
+                        color: 'var(--text-muted)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.10em',
+                        marginBottom: 5,
+                        whiteSpace: 'nowrap',
+                      }}>
+                        Total Pago
+                      </p>
+                      <p style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: 'var(--text-primary)',
+                        lineHeight: 1.2,
+                        wordBreak: 'break-all',
+                      }}>
+                        {formatCurrency(totalCat)}
+                      </p>
+                    </div>
+                  </div>
 
-    {/* Legenda Premium */}
-    <div
-      style={{
-        width: 300,
-        flexShrink: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-      }}
-    >
-      {categories.map((cat, i) => (
-        <div
-          key={i}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              minWidth: 0,
-            }}
-          >
-            <span
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: '50%',
-                background: cat.category_color,
-                boxShadow: `0 0 12px ${cat.category_color}`,
-                flexShrink: 0,
-              }}
-            />
+                  {/* ── Legenda premium ── */}
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    minWidth: 0,
+                  }}>
+                    {categories.map((cat, i) => {
+                      const pct = totalCat > 0
+                        ? ((parseFloat(cat.total) / totalCat) * 100).toFixed(0)
+                        : 0
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 10,
+                            paddingBottom: i < categories.length - 1 ? 10 : 0,
+                            borderBottom: i < categories.length - 1
+                              ? '1px solid rgba(255,255,255,0.04)'
+                              : 'none',
+                          }}
+                        >
+                          {/* Dot + nome + valor */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                            <span style={{
+                              width: 9,
+                              height: 9,
+                              borderRadius: '50%',
+                              background: cat.category_color,
+                              boxShadow: `0 0 10px ${cat.category_color}`,
+                              flexShrink: 0,
+                            }} />
+                            <div style={{ minWidth: 0 }}>
+                              <p style={{
+                                fontSize: 12,
+                                fontWeight: 600,
+                                color: 'var(--text-primary)',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                marginBottom: 1,
+                              }}>
+                                {cat.category_name}
+                              </p>
+                              <p style={{
+                                fontSize: 11,
+                                color: 'var(--text-muted)',
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {formatCurrency(cat.total)}
+                              </p>
+                            </div>
+                          </div>
 
-            <span
-              style={{
-                color: 'var(--text-secondary)',
-                fontSize: 12,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {cat.category_name}
-            </span>
+                          {/* Percentual */}
+                          <span style={{
+                            fontSize: 13,
+                            fontWeight: 700,
+                            color: cat.category_color,
+                            flexShrink: 0,
+                          }}>
+                            {pct}%
+                          </span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Rodapé informativo */}
+                <p style={{
+                  fontSize: 11,
+                  color: 'var(--text-muted)',
+                  textAlign: 'center',
+                  marginTop: 18,
+                  opacity: 0.55,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 5,
+                }}>
+                  <span style={{ fontSize: 12 }}>ⓘ</span>
+                  Valores referentes ao mês selecionado
+                </p>
+              </>
+            )}
           </div>
-
-          <span
-            style={{
-              color: 'var(--text-primary)',
-              fontWeight: 700,
-              fontSize: 12,
-            }}
-          >
-            {formatCurrency(cat.total)}
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
-    {/* Legenda Premium */}
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 12,
-      }}
-    >
-      {categories.map((cat, i) => (
-        <div
-          key={i}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-          }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              minWidth: 0,
-            }}
-          >
-            <span
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: '50%',
-                background: cat.category_color,
-                boxShadow: `0 0 12px ${cat.category_color}`,
-                flexShrink: 0,
-              }}
-            />
-
-            <span
-              style={{
-                color: 'var(--text-secondary)',
-                fontSize: 12,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {cat.category_name}
-            </span>
-          </div>
-
-          <span
-            style={{
-              color: 'var(--text-primary)',
-              fontWeight: 700,
-              fontSize: 12,
-            }}
-          >
-            {formatCurrency(cat.total)}
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-
-          </div>
+          {/* ══ fim card Despesas por Categoria ══ */}
 
           {/* ── Card: Saldo Projetado ── */}
           <div className="card p-6">
@@ -757,6 +753,6 @@ export default function FinancialPage() {
         </div>
       </div>
 
-    
+    </div>
   )
 }
