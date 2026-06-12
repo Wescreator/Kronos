@@ -14,7 +14,7 @@ import {
   getFinancialForecast,
 } from '../../services/financial.service'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart, Pie,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 
 /* ─── Tooltip compartilhado ─── */
@@ -64,24 +64,144 @@ const darkenColor = (hex, amount = 0.45) => {
   return `rgb(${Math.floor(r * (1 - amount))}, ${Math.floor(g * (1 - amount))}, ${Math.floor(b * (1 - amount))})`
 }
 
-/* ─── Label personalizada nas fatias ─── */
-const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-  if (percent < 0.05) return null
-  const RADIAN = Math.PI / 180
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+/* ─── Donut SVG puro com hover interativo ─── */
+const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
+  const [hovered, setHovered] = useState(null)
+
+  const SIZE       = 200
+  const CX         = SIZE / 2
+  const CY         = SIZE / 2
+  const INNER_R    = 52
+  const OUTER_R    = 82
+  const GAP_DEG    = 1.8
+  const HOVER_LIFT = 7
+
+  const toRad = deg => (deg * Math.PI) / 180
+
+  const polar = (angleDeg, r) => ({
+    x: CX + r * Math.cos(toRad(angleDeg - 90)),
+    y: CY + r * Math.sin(toRad(angleDeg - 90)),
+  })
+
+  const arcPath = (sa, ea, iR, oR) => {
+    const s = sa + GAP_DEG / 2
+    const e = ea - GAP_DEG / 2
+    if (e - s <= 0) return ''
+    const o1 = polar(s, oR), o2 = polar(e, oR)
+    const i1 = polar(e, iR), i2 = polar(s, iR)
+    const lg = e - s > 180 ? 1 : 0
+    return [
+      `M ${o1.x.toFixed(3)} ${o1.y.toFixed(3)}`,
+      `A ${oR} ${oR} 0 ${lg} 1 ${o2.x.toFixed(3)} ${o2.y.toFixed(3)}`,
+      `L ${i1.x.toFixed(3)} ${i1.y.toFixed(3)}`,
+      `A ${iR} ${iR} 0 ${lg} 0 ${i2.x.toFixed(3)} ${i2.y.toFixed(3)}`,
+      'Z',
+    ].join(' ')
+  }
+
+  let running = 0
+  const segments = categories.map((cat, i) => {
+    const value   = parseFloat(cat.total)
+    const sweep   = totalCat > 0 ? (value / totalCat) * 360 : 0
+    const start   = running
+    const end     = running + sweep
+    running       = end
+    const mid     = (start + end) / 2
+    const pct     = totalCat > 0 ? (value / totalCat) * 100 : 0
+    return { ...cat, start, end, mid, sweep, pct, i }
+  })
+
   return (
-    <text
-      x={x} y={y}
-      fill="rgba(255,255,255,0.95)"
-      textAnchor="middle"
-      dominantBaseline="central"
-      fontSize={11}
-      fontWeight={700}
+    <svg
+      width={SIZE}
+      height={SIZE}
+      viewBox={`0 0 ${SIZE} ${SIZE}`}
+      style={{ overflow: 'visible', display: 'block' }}
     >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
+      <defs>
+        {segments.map((seg, i) => (
+          <filter key={i} id={`glow${i}`} x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        ))}
+      </defs>
+
+      {segments.map((seg, i) => {
+        const isH = hovered === i
+        const tx  = isH ? HOVER_LIFT * Math.cos(toRad(seg.mid - 90)) : 0
+        const ty  = isH ? HOVER_LIFT * Math.sin(toRad(seg.mid - 90)) : 0
+        const lp  = polar(seg.mid, (INNER_R + OUTER_R) / 2)
+        const main = arcPath(seg.start, seg.end, INNER_R, OUTER_R)
+
+        return (
+          <g
+            key={i}
+            style={{
+              transform:  `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px)`,
+              transition: 'transform 0.22s cubic-bezier(.34,1.56,.64,1)',
+              cursor:     'pointer',
+            }}
+            onMouseEnter={() => setHovered(i)}
+            onMouseLeave={() => setHovered(null)}
+          >
+            {/* Sombra 3D */}
+            <path
+              d={main}
+              fill={darkenColor(seg.category_color, 0.55)}
+              transform="translate(0,5)"
+              opacity={0.5}
+            />
+            {/* Fatia principal */}
+            <path
+              d={main}
+              fill={seg.category_color}
+              stroke="rgba(255,255,255,0.07)"
+              strokeWidth={1}
+              filter={isH ? `url(#glow${i})` : undefined}
+              style={{ transition: 'filter 0.2s' }}
+            />
+            {/* Label % */}
+            {seg.pct >= 5 && (
+              <text
+                x={lp.x} y={lp.y}
+                fill="rgba(255,255,255,0.95)"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={isH ? 12.5 : 11}
+                fontWeight={700}
+                style={{ pointerEvents: 'none', transition: 'font-size 0.2s' }}
+              >
+                {Math.round(seg.pct)}%
+              </text>
+            )}
+          </g>
+        )
+      })}
+
+      {/* Tooltip flutuante no hover */}
+      {hovered !== null && (() => {
+        const seg  = segments[hovered]
+        const tipR = OUTER_R + 18
+        const tp   = polar(seg.mid, tipR)
+        const text = formatCurrencyFn(parseFloat(seg.total))
+        const bw   = text.length * 6.5 + 16
+        const bh   = 22
+        const bx   = tp.x - bw / 2
+        const by   = tp.y - bh / 2
+        return (
+          <g style={{ pointerEvents: 'none' }}>
+            <rect x={bx} y={by} width={bw} height={bh} rx={6}
+              fill="#0D152B" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
+            <text x={tp.x} y={tp.y} fill={seg.category_color}
+              textAnchor="middle" dominantBaseline="central"
+              fontSize={10.5} fontWeight={700}>
+              {text}
+            </text>
+          </g>
+        )
+      })()}
+    </svg>
   )
 }
 
@@ -371,50 +491,13 @@ export default function FinancialPage() {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 
-                  {/* ── Gráfico Donut com centro absoluto ── */}
+                  {/* ── Gráfico Donut SVG com hover interativo ── */}
                   <div style={{ position: 'relative', width: 200, height: 200, flexShrink: 0 }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        {/* Anel sombra (efeito 3-D) */}
-                        <Pie
-                          data={categories}
-                          dataKey="total"
-                          cx="50%"
-                          cy="55%"
-                          innerRadius={54}
-                          outerRadius={84}
-                          stroke="none"
-                          isAnimationActive={false}
-                        >
-                          {categories.map((entry, index) => (
-                            <Cell key={index} fill={darkenColor(entry.category_color)} />
-                          ))}
-                        </Pie>
-
-                        {/* Anel principal com labels de % */}
-                        <Pie
-                          data={categories}
-                          dataKey="total"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={54}
-                          outerRadius={84}
-                          paddingAngle={2}
-                          stroke="rgba(255,255,255,0.06)"
-                          strokeWidth={1}
-                          isAnimationActive={false}
-                          labelLine={false}
-                          label={renderPieLabel}
-                        >
-                          {categories.map((entry, index) => (
-                            <Cell
-                              key={index}
-                              fill={entry.category_color}
-                            />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
+                    <DonutChart
+                      categories={categories}
+                      totalCat={totalCat}
+                      formatCurrencyFn={formatCurrency}
+                    />
 
                     {/* Centro: Total Pago */}
                     <div style={{
