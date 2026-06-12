@@ -70,6 +70,38 @@ O Kronos oferece uma interface moderna com tema escuro e identidade visual premi
 * Fluxo de caixa anual em gráfico
 * Lista de projetos ativos e tarefas abertas
 
+## 📅 AGENDA
+
+* Calendário corporativo integrado para gestão de compromissos e eventos
+* Três modos de visualização:
+
+  * Mês
+  * Semana
+  * Agenda (lista cronológica)
+    
+* Cadastro de eventos com:
+  * Título
+  * Descrição
+  * Data e horário
+  * Local ou link de reunião
+  * Responsável
+  * Status
+  * Cor de identificação
+    
+* Controle de reuniões, visitas técnicas, entregas, apresentações e prazos de projetos
+* Organização dos compromissos por período e responsável
+  
+* Atualização de status dos eventos:
+  * Agendado
+  * Em andamento
+  * Concluído
+  * Cancelado
+    
+* Administradores podem visualizar, criar, editar e excluir eventos
+* Arquitetos podem visualizar, criar e editar eventos
+* Estagiários possuem acesso apenas para visualização
+
+
 ## 📁 GESTÃO DE PROJETOS
 
 * Criação e edição de projetos com capa, orçamento e datas
