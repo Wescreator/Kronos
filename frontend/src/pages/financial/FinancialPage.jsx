@@ -14,7 +14,7 @@ import {
   getFinancialForecast,
 } from '../../services/financial.service'
 import {
-  AreaChart, Area, BarChart, Bar, PieChart, Pie, Sector, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell,
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell, PieChart, Pie,
 } from 'recharts'
 
 /* ─── Tooltip compartilhado ─── */
@@ -55,6 +55,19 @@ const EmptyChart = ({ message }) => (
     {message}
   </div>
 )
+const darkenColor = (hex, amount = 0.45) => {
+  const color = hex.replace('#', '')
+
+  const r = parseInt(color.substring(0, 2), 16)
+  const g = parseInt(color.substring(2, 4), 16)
+  const b = parseInt(color.substring(4, 6), 16)
+
+  return `rgb(
+    ${Math.floor(r * (1 - amount))},
+    ${Math.floor(g * (1 - amount))},
+    ${Math.floor(b * (1 - amount))}
+  )`
+}
 
 export default function FinancialPage() {
   /* ── Estado principal (inalterado) ── */
@@ -286,7 +299,19 @@ export default function FinancialPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 mb-5">
 
           {/* ── Card: Despesas por Categoria ── */}
-          <div className="card p-6">
+         <div
+  className="card p-6"
+  style={{
+    background: `
+      radial-gradient(
+        circle at top right,
+        rgba(124,92,252,0.14),
+        rgba(0,0,0,0) 45%
+      ),
+      var(--card-bg)
+    `,
+  }}
+>
             {/* Header + seletor de mês/ano */}
             <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
               <div>
@@ -323,67 +348,126 @@ export default function FinancialPage() {
             </div>
 
             {/* Conteúdo */}
-            {catLoading ? ( <InlineSpinner />) : categories.length === 0 ? (<EmptyChart message="Nenhuma despesa paga neste mês" />) : (
-              <div style={{ height: 292 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <defs><filter id="pieShadow">
-                      <feDropShadow
-              dx="0"
-              dy="6"
-              stdDeviation="8"
-              floodColor="rgba(0,0,0,0.55)"
-            />
-          </filter>
-        </defs>
+            {catLoading ? (
+  <InlineSpinner />
+) : categories.length === 0 ? (
+  <EmptyChart message="Nenhuma despesa paga neste mês" />
+) : (
+  <div
+    style={{
+      height: 290,
+      display: 'grid',
+      gridTemplateColumns: '1.5fr 1fr',
+      alignItems: 'center',
+      gap: 20,
+    }}
+  >
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
 
+        {/* Espessura 3D */}
         <Pie
-          data={categories.map(cat => ({
-            name: cat.category_name,
-            value: parseFloat(cat.total),
-            color: cat.category_color,
-          }))}
-          cx="42%"
-          cy="50%"
-          innerRadius={45}
-          outerRadius={88}
+          data={categories}
+          dataKey="total"
+          cx="50%"
+          cy="53%"
+          innerRadius={48}
+          outerRadius={82}
+          stroke="none"
+        >
+          {categories.map((entry, index) => (
+            <Cell
+              key={index}
+              fill={darkenColor(entry.category_color)}
+            />
+          ))}
+        </Pie>
+
+        {/* Disco principal */}
+        <Pie
+          data={categories}
+          dataKey="total"
+          cx="50%"
+          cy="48%"
+          innerRadius={48}
+          outerRadius={82}
           paddingAngle={2}
-          dataKey="value"
-          filter="url(#pieShadow)"
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth={1}
         >
           {categories.map((entry, index) => (
             <Cell
               key={index}
               fill={entry.category_color}
-              stroke="rgba(255,255,255,0.08)"
-              strokeWidth={1}
             />
           ))}
         </Pie>
 
-        <Tooltip
-          formatter={(value) => formatCurrency(value)}
-          contentStyle={{
-            background: '#0D152B',
-            border: '1px solid rgba(255,255,255,0.08)',
-            borderRadius: 12,
-          }}
-        />
-
-        <Legend
-          layout="vertical"
-          verticalAlign="middle"
-          align="right"
-          iconType="circle"
-          wrapperStyle={{
-            fontSize: 11,
-            color: '#fff',
-            lineHeight: '18px',
-            right: 0,
-          }}
-        />
       </PieChart>
     </ResponsiveContainer>
+
+    {/* Legenda Premium */}
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      {categories.map((cat, i) => (
+        <div
+          key={i}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              minWidth: 0,
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: cat.category_color,
+                boxShadow: `0 0 12px ${cat.category_color}`,
+                flexShrink: 0,
+              }}
+            />
+
+            <span
+              style={{
+                color: 'var(--text-secondary)',
+                fontSize: 12,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cat.category_name}
+            </span>
+          </div>
+
+          <span
+            style={{
+              color: 'var(--text-primary)',
+              fontWeight: 700,
+              fontSize: 12,
+            }}
+          >
+            {formatCurrency(cat.total)}
+          </span>
+        </div>
+      ))}
+    </div>
   </div>
 )}
           </div>
