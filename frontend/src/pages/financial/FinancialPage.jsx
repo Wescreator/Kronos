@@ -64,31 +64,32 @@ const darkenColor = (hex, amount = 0.45) => {
   return `rgb(${Math.floor(r * (1 - amount))}, ${Math.floor(g * (1 - amount))}, ${Math.floor(b * (1 - amount))})`
 }
 
-/* ─── Donut SVG puro com hover interativo ─── */
+/* ─── Donut SVG puro com hover interativo e profundidade 3D ─── */
 const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
   const [hovered, setHovered] = useState(null)
 
-  const SIZE       = 200
-  const CX         = SIZE / 2
-  const CY         = SIZE / 2
-  const INNER_R    = 52
-  const OUTER_R    = 82
-  const GAP_DEG    = 1.8
+  const SIZE      = 200
+  const CX        = SIZE / 2
+  const CY        = SIZE / 2
+  const INNER_R   = 52
+  const OUTER_R   = 82
+  const DEPTH     = 12
+  const GAP_DEG   = 1.8
   const HOVER_LIFT = 7
 
   const toRad = deg => (deg * Math.PI) / 180
 
-  const polar = (angleDeg, r) => ({
+  const polar = (angleDeg, r, offsetY = 0) => ({
     x: CX + r * Math.cos(toRad(angleDeg - 90)),
-    y: CY + r * Math.sin(toRad(angleDeg - 90)),
+    y: CY + r * Math.sin(toRad(angleDeg - 90)) + offsetY,
   })
 
-  const arcPath = (sa, ea, iR, oR) => {
+  const arcPath = (sa, ea, iR, oR, offsetY = 0) => {
     const s = sa + GAP_DEG / 2
     const e = ea - GAP_DEG / 2
     if (e - s <= 0) return ''
-    const o1 = polar(s, oR), o2 = polar(e, oR)
-    const i1 = polar(e, iR), i2 = polar(s, iR)
+    const o1 = polar(s, oR, offsetY), o2 = polar(e, oR, offsetY)
+    const i1 = polar(e, iR, offsetY), i2 = polar(s, iR, offsetY)
     const lg = e - s > 180 ? 1 : 0
     return [
       `M ${o1.x.toFixed(3)} ${o1.y.toFixed(3)}`,
@@ -101,13 +102,13 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
 
   let running = 0
   const segments = categories.map((cat, i) => {
-    const value   = parseFloat(cat.total)
-    const sweep   = totalCat > 0 ? (value / totalCat) * 360 : 0
-    const start   = running
-    const end     = running + sweep
-    running       = end
-    const mid     = (start + end) / 2
-    const pct     = totalCat > 0 ? (value / totalCat) * 100 : 0
+    const value = parseFloat(cat.total)
+    const sweep = totalCat > 0 ? (value / totalCat) * 360 : 0
+    const start = running
+    const end   = running + sweep
+    running     = end
+    const mid   = (start + end) / 2
+    const pct   = totalCat > 0 ? (value / totalCat) * 100 : 0
     return { ...cat, start, end, mid, sweep, pct, i }
   })
 
@@ -119,20 +120,45 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
       style={{ overflow: 'visible', display: 'block' }}
     >
       <defs>
-        {segments.map((seg, i) => (
-          <filter key={i} id={`glow${i}`} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        <radialGradient id="floorGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="rgba(120,80,255,0.5)" />
+          <stop offset="65%"  stopColor="rgba(80,40,200,0.18)" />
+          <stop offset="100%" stopColor="rgba(0,0,0,0)" />
+        </radialGradient>
+        {segments.map((_, i) => (
+          <filter key={i} id={`glow${i}`} x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
         ))}
       </defs>
 
+      {/* Elipse de glow no chão */}
+      <ellipse
+        cx={CX} cy={CY + DEPTH + 14}
+        rx={OUTER_R + 18} ry={20}
+        fill="url(#floorGrad)"
+      />
+
+      {/* Anéis de sombra (espessura 3D) */}
+      {segments.map((seg, i) => (
+        <path
+          key={`sh-${i}`}
+          d={arcPath(seg.start, seg.end, INNER_R, OUTER_R, DEPTH)}
+          fill={darkenColor(seg.category_color, 0.58)}
+          opacity={0.85}
+        />
+      ))}
+
+      {/* Fatias principais */}
       {segments.map((seg, i) => {
         const isH = hovered === i
         const tx  = isH ? HOVER_LIFT * Math.cos(toRad(seg.mid - 90)) : 0
         const ty  = isH ? HOVER_LIFT * Math.sin(toRad(seg.mid - 90)) : 0
         const lp  = polar(seg.mid, (INNER_R + OUTER_R) / 2)
-        const main = arcPath(seg.start, seg.end, INNER_R, OUTER_R)
 
         return (
           <g
@@ -145,23 +171,14 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
             onMouseEnter={() => setHovered(i)}
             onMouseLeave={() => setHovered(null)}
           >
-            {/* Sombra 3D */}
             <path
-              d={main}
-              fill={darkenColor(seg.category_color, 0.55)}
-              transform="translate(0,5)"
-              opacity={0.5}
-            />
-            {/* Fatia principal */}
-            <path
-              d={main}
+              d={arcPath(seg.start, seg.end, INNER_R, OUTER_R)}
               fill={seg.category_color}
-              stroke="rgba(255,255,255,0.07)"
+              stroke="rgba(255,255,255,0.08)"
               strokeWidth={1}
               filter={isH ? `url(#glow${i})` : undefined}
-              style={{ transition: 'filter 0.2s' }}
+              style={{ transition: 'filter 0.18s' }}
             />
-            {/* Label % */}
             {seg.pct >= 5 && (
               <text
                 x={lp.x} y={lp.y}
@@ -182,20 +199,29 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
       {/* Tooltip flutuante no hover */}
       {hovered !== null && (() => {
         const seg  = segments[hovered]
-        const tipR = OUTER_R + 18
+        const tipR = OUTER_R + 22
         const tp   = polar(seg.mid, tipR)
         const text = formatCurrencyFn(parseFloat(seg.total))
-        const bw   = text.length * 6.5 + 16
+        const bw   = text.length * 6.2 + 18
         const bh   = 22
-        const bx   = tp.x - bw / 2
-        const by   = tp.y - bh / 2
         return (
           <g style={{ pointerEvents: 'none' }}>
-            <rect x={bx} y={by} width={bw} height={bh} rx={6}
-              fill="#0D152B" stroke="rgba(255,255,255,0.12)" strokeWidth={1} />
-            <text x={tp.x} y={tp.y} fill={seg.category_color}
-              textAnchor="middle" dominantBaseline="central"
-              fontSize={10.5} fontWeight={700}>
+            <rect
+              x={tp.x - bw / 2} y={tp.y - bh / 2}
+              width={bw} height={bh} rx={6}
+              fill="#0D152B"
+              stroke={seg.category_color}
+              strokeWidth={1}
+              opacity={0.95}
+            />
+            <text
+              x={tp.x} y={tp.y}
+              fill={seg.category_color}
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize={10.5}
+              fontWeight={700}
+            >
               {text}
             </text>
           </g>
@@ -491,43 +517,63 @@ export default function FinancialPage() {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 
-                  {/* ── Gráfico Donut SVG com hover interativo ── */}
-                  <div style={{ position: 'relative', width: 200, height: 200, flexShrink: 0 }}>
-                    <DonutChart
-                      categories={categories}
-                      totalCat={totalCat}
-                      formatCurrencyFn={formatCurrency}
-                    />
-
-                    {/* Centro: Total Pago */}
+                  {/* ── Gráfico Donut 3D com perspectiva CSS ── */}
+                  {/* Camada de perspectiva (não rotaciona, só define a câmera) */}
+                  <div style={{
+                    width: 200,
+                    height: 220,
+                    flexShrink: 0,
+                    perspective: '520px',
+                    perspectiveOrigin: '50% 40%',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'center',
+                  }}>
+                    {/* Plano inclinado — SVG + texto central rotacionam juntos */}
                     <div style={{
-                      position: 'absolute',
-                      top: '50%', left: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      textAlign: 'center',
-                      pointerEvents: 'none',
-                      width: 90,
+                      position: 'relative',
+                      width: 200,
+                      height: 200,
+                      transform: 'rotateX(28deg)',
+                      transformOrigin: '50% 60%',
+                      transformStyle: 'preserve-3d',
                     }}>
-                      <p style={{
-                        fontSize: 8.5,
-                        fontWeight: 700,
-                        color: 'var(--text-muted)',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.10em',
-                        marginBottom: 5,
-                        whiteSpace: 'nowrap',
+                      <DonutChart
+                        categories={categories}
+                        totalCat={totalCat}
+                        formatCurrencyFn={formatCurrency}
+                      />
+
+                      {/* Centro: Total Pago (inclina junto) */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%', left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        textAlign: 'center',
+                        pointerEvents: 'none',
+                        width: 90,
                       }}>
-                        Total Pago
-                      </p>
-                      <p style={{
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: 'var(--text-primary)',
-                        lineHeight: 1.2,
-                        wordBreak: 'break-all',
-                      }}>
-                        {formatCurrency(totalCat)}
-                      </p>
+                        <p style={{
+                          fontSize: 8.5,
+                          fontWeight: 700,
+                          color: 'var(--text-muted)',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.10em',
+                          marginBottom: 4,
+                          whiteSpace: 'nowrap',
+                        }}>
+                          Total Pago
+                        </p>
+                        <p style={{
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: 'var(--text-primary)',
+                          lineHeight: 1.2,
+                          wordBreak: 'break-all',
+                        }}>
+                          {formatCurrency(totalCat)}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
