@@ -14,8 +14,7 @@ import {
   getFinancialForecast,
 } from '../../services/financial.service'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
-  CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell,
+  AreaChart, Area, BarChart, Bar, PieChart, Pie, Sector, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell,
 } from 'recharts'
 
 /* ─── Tooltip compartilhado ─── */
@@ -324,61 +323,69 @@ export default function FinancialPage() {
             </div>
 
             {/* Conteúdo */}
-            {catLoading ? (
-              <InlineSpinner />
-            ) : categories.length === 0 ? (
-              <EmptyChart message="Nenhuma despesa paga neste mês" />
-            ) : (
-              <div style={{ maxHeight: 292, overflowY: 'auto', paddingRight: 4 }}>
-                {categories.map((cat, i) => {
-                  const total = parseFloat(cat.total)
-                  const pct   = (total / maxCatTotal) * 100
-                  return (
-                    <div key={i} style={{ marginBottom: i < categories.length - 1 ? 14 : 0 }}>
-                      {/* Nome + valor */}
-                      <div style={{
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: 'space-between', marginBottom: 5,
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
-                          <span style={{
-                            width: 9, height: 9, borderRadius: '50%',
-                            background: cat.category_color, flexShrink: 0,
-                          }} />
-                          <span style={{
-                            fontSize: 12, color: 'var(--text-secondary)',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                          }}>
-                            {cat.category_name}
-                          </span>
-                        </div>
-                        <span style={{
-                          fontSize: 12, fontWeight: 700,
-                          color: 'var(--text-primary)', flexShrink: 0, marginLeft: 8,
-                        }}>
-                          {formatCurrency(total)}
-                        </span>
-                      </div>
-                      {/* Barra proporcional */}
-                      <div style={{
-                        height: 5, borderRadius: 4,
-                        background: 'rgba(255,255,255,0.06)',
-                        overflow: 'hidden',
-                      }}>
-                        <div style={{
-                          height: '100%',
-                          width:  `${pct}%`,
-                          borderRadius: 4,
-                          background: cat.category_color || 'rgba(124,92,252,0.70)',
-                          transition: 'width 0.5s ease',
-                          opacity: 0.85,
-                        }} />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+            {catLoading ? ( <InlineSpinner />) : categories.length === 0 ? (<EmptyChart message="Nenhuma despesa paga neste mês" />) : (
+              <div style={{ height: 292 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <defs><filter id="pieShadow">
+                      <feDropShadow
+              dx="0"
+              dy="6"
+              stdDeviation="8"
+              floodColor="rgba(0,0,0,0.55)"
+            />
+          </filter>
+        </defs>
+
+        <Pie
+          data={categories.map(cat => ({
+            name: cat.category_name,
+            value: parseFloat(cat.total),
+            color: cat.category_color,
+          }))}
+          cx="42%"
+          cy="50%"
+          innerRadius={45}
+          outerRadius={88}
+          paddingAngle={2}
+          dataKey="value"
+          filter="url(#pieShadow)"
+        >
+          {categories.map((entry, index) => (
+            <Cell
+              key={index}
+              fill={entry.category_color}
+              stroke="rgba(255,255,255,0.08)"
+              strokeWidth={1}
+            />
+          ))}
+        </Pie>
+
+        <Tooltip
+          formatter={(value) => formatCurrency(value)}
+          contentStyle={{
+            background: '#0D152B',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 12,
+          }}
+        />
+
+        <Legend
+          layout="vertical"
+          verticalAlign="middle"
+          align="right"
+          iconType="circle"
+          wrapperStyle={{
+            fontSize: 11,
+            color: '#fff',
+            lineHeight: '18px',
+            right: 0,
+          }}
+        />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+)}
           </div>
 
           {/* ── Card: Saldo Projetado ── */}
