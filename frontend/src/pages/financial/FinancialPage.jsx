@@ -65,7 +65,7 @@ const darkenColor = (hex, amount = 0.45) => {
 }
 
 /* ─── Label personalizada nas fatias ─── */
-const PiePercentLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+const renderPieLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
   if (percent < 0.05) return null
   const RADIAN = Math.PI / 180
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5
@@ -74,12 +74,11 @@ const PiePercentLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }
   return (
     <text
       x={x} y={y}
-      fill="rgba(255,255,255,0.92)"
+      fill="rgba(255,255,255,0.95)"
       textAnchor="middle"
       dominantBaseline="central"
       fontSize={11}
       fontWeight={700}
-      style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
     >
       {`${(percent * 100).toFixed(0)}%`}
     </text>
@@ -405,15 +404,12 @@ export default function FinancialPage() {
                           strokeWidth={1}
                           isAnimationActive={false}
                           labelLine={false}
-                          label={<PiePercentLabel />}
+                          label={renderPieLabel}
                         >
                           {categories.map((entry, index) => (
                             <Cell
                               key={index}
                               fill={entry.category_color}
-                              style={{
-                                filter: `drop-shadow(0 0 8px ${entry.category_color}70)`,
-                              }}
                             />
                           ))}
                         </Pie>
