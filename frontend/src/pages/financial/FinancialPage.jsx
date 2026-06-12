@@ -347,8 +347,8 @@ export default function FinancialPage() {
               </div>
             </div>
 
-            {/* Conteúdo */}
-            {catLoading ? (
+           {/* Conteúdo */}
+{catLoading ? (
   <InlineSpinner />
 ) : categories.length === 0 ? (
   <EmptyChart message="Nenhuma despesa paga neste mês" />
@@ -356,55 +356,132 @@ export default function FinancialPage() {
   <div
     style={{
       height: 290,
-      display: 'grid',
-      gridTemplateColumns: '1.5fr 1fr',
+      display: 'flex',
       alignItems: 'center',
       gap: 20,
     }}
   >
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
+    {/* Área do gráfico */}
+    <div
+      style={{
+        flex: 1,
+        minWidth: 300,
+        height: '100%',
+      }}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
 
-        {/* Espessura 3D */}
-        <Pie
-          data={categories}
-          dataKey="total"
-          cx="50%"
-          cy="53%"
-          innerRadius={48}
-          outerRadius={82}
-          stroke="none"
+          {/* Espessura 3D */}
+          <Pie
+            data={categories}
+            dataKey="total"
+            cx="50%"
+            cy="53%"
+            innerRadius={48}
+            outerRadius={82}
+            stroke="none"
+            isAnimationActive={false}
+          >
+            {categories.map((entry, index) => (
+              <Cell
+                key={index}
+                fill={darkenColor(entry.category_color)}
+              />
+            ))}
+          </Pie>
+
+          {/* Disco principal */}
+          <Pie
+            data={categories}
+            dataKey="total"
+            cx="50%"
+            cy="48%"
+            innerRadius={48}
+            outerRadius={82}
+            paddingAngle={2}
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth={1}
+            isAnimationActive={false}
+          >
+            {categories.map((entry, index) => (
+              <Cell
+                key={index}
+                fill={entry.category_color}
+              />
+            ))}
+          </Pie>
+
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+
+    {/* Legenda Premium */}
+    <div
+      style={{
+        width: 300,
+        flexShrink: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 12,
+      }}
+    >
+      {categories.map((cat, i) => (
+        <div
+          key={i}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+          }}
         >
-          {categories.map((entry, index) => (
-            <Cell
-              key={index}
-              fill={darkenColor(entry.category_color)}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              minWidth: 0,
+            }}
+          >
+            <span
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: '50%',
+                background: cat.category_color,
+                boxShadow: `0 0 12px ${cat.category_color}`,
+                flexShrink: 0,
+              }}
             />
-          ))}
-        </Pie>
 
-        {/* Disco principal */}
-        <Pie
-          data={categories}
-          dataKey="total"
-          cx="50%"
-          cy="48%"
-          innerRadius={48}
-          outerRadius={82}
-          paddingAngle={2}
-          stroke="rgba(255,255,255,0.08)"
-          strokeWidth={1}
-        >
-          {categories.map((entry, index) => (
-            <Cell
-              key={index}
-              fill={entry.category_color}
-            />
-          ))}
-        </Pie>
+            <span
+              style={{
+                color: 'var(--text-secondary)',
+                fontSize: 12,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {cat.category_name}
+            </span>
+          </div>
 
-      </PieChart>
-    </ResponsiveContainer>
+          <span
+            style={{
+              color: 'var(--text-primary)',
+              fontWeight: 700,
+              fontSize: 12,
+            }}
+          >
+            {formatCurrency(cat.total)}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
 
     {/* Legenda Premium */}
     <div
@@ -469,7 +546,7 @@ export default function FinancialPage() {
       ))}
     </div>
   </div>
-)}
+
           </div>
 
           {/* ── Card: Saldo Projetado ── */}
@@ -680,6 +757,6 @@ export default function FinancialPage() {
         </div>
       </div>
 
-    </div>
+    
   )
 }
