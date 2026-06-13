@@ -68,12 +68,12 @@ const darkenColor = (hex, amount = 0.45) => {
 const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
   const [hovered, setHovered] = useState(null)
 
-  const SIZE      = 200
+  const SIZE      = 240
   const CX        = SIZE / 2
   const CY        = SIZE / 2
-  const INNER_R   = 52
-  const OUTER_R   = 82
-  const DEPTH     = 12
+  const INNER_R   = 62
+  const OUTER_R   = 100
+  const DEPTH     = 14
   const GAP_DEG   = 1.8
   const HOVER_LIFT = 7
 
@@ -515,25 +515,23 @@ export default function FinancialPage() {
               <EmptyChart message="Nenhuma despesa paga neste mês" />
             ) : (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
 
                   {/* ── Gráfico Donut 3D com perspectiva CSS ── */}
-                  {/* Camada de perspectiva (não rotaciona, só define a câmera) */}
                   <div style={{
-                    width: 200,
-                    height: 220,
+                    width: 240,
+                    height: 250,
                     flexShrink: 0,
-                    perspective: '520px',
+                    perspective: '560px',
                     perspectiveOrigin: '50% 40%',
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'center',
                   }}>
-                    {/* Plano inclinado — SVG + texto central rotacionam juntos */}
                     <div style={{
                       position: 'relative',
-                      width: 200,
-                      height: 200,
+                      width: 240,
+                      height: 240,
                       transform: 'rotateX(28deg)',
                       transformOrigin: '50% 60%',
                       transformStyle: 'preserve-3d',
@@ -544,7 +542,7 @@ export default function FinancialPage() {
                         formatCurrencyFn={formatCurrency}
                       />
 
-                      {/* Centro: Total Pago (inclina junto) */}
+                      {/* Centro: Total Pago */}
                       <div style={{
                         position: 'absolute',
                         top: '50%', left: '50%',
@@ -577,12 +575,12 @@ export default function FinancialPage() {
                     </div>
                   </div>
 
-                  {/* ── Legenda premium ── */}
+                  {/* ── Legenda compacta ── */}
                   <div style={{
                     flex: 1,
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 10,
+                    gap: 0,
                     minWidth: 0,
                   }}>
                     {categories.map((cat, i) => {
@@ -596,54 +594,50 @@ export default function FinancialPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            gap: 10,
-                            paddingBottom: i < categories.length - 1 ? 10 : 0,
+                            gap: 8,
+                            padding: '7px 0',
                             borderBottom: i < categories.length - 1
                               ? '1px solid rgba(255,255,255,0.04)'
                               : 'none',
                           }}
                         >
-                          {/* Dot + nome + valor */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          {/* Dot + nome */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
                             <span style={{
-                              width: 9,
-                              height: 9,
+                              width: 8,
+                              height: 8,
                               borderRadius: '50%',
                               background: cat.category_color,
-                              boxShadow: `0 0 10px ${cat.category_color}`,
+                              boxShadow: `0 0 8px ${cat.category_color}`,
                               flexShrink: 0,
                             }} />
-                            <div style={{ minWidth: 0 }}>
-                              <p style={{
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: 'var(--text-primary)',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                marginBottom: 1,
-                              }}>
-                                {cat.category_name}
-                              </p>
-                              <p style={{
-                                fontSize: 11,
-                                color: 'var(--text-muted)',
-                                whiteSpace: 'nowrap',
-                              }}>
-                                {formatCurrency(cat.total)}
-                              </p>
-                            </div>
+                            <span style={{
+                              fontSize: 11.5,
+                              fontWeight: 600,
+                              color: 'var(--text-primary)',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}>
+                              {cat.category_name}
+                            </span>
                           </div>
 
-                          {/* Percentual */}
-                          <span style={{
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: cat.category_color,
-                            flexShrink: 0,
-                          }}>
-                            {pct}%
-                          </span>
+                          {/* Valor + % */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                            <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                              {formatCurrency(cat.total)}
+                            </span>
+                            <span style={{
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              color: cat.category_color,
+                              minWidth: 28,
+                              textAlign: 'right',
+                            }}>
+                              {pct}%
+                            </span>
+                          </div>
                         </div>
                       )
                     })}
