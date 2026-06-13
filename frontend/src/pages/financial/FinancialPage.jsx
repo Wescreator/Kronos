@@ -313,6 +313,116 @@ export default function FinancialPage() {
   return (
     <div className="space-y-7 fade-in">
 
+      {/* ── Estilos da borda animada (scoped à FinancialPage) ── */}
+      <style>{`
+        @keyframes kronosBorderSpin {
+          from { transform: translate(-50%, -50%) rotate(0deg);   }
+          to   { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Wrapper base */
+        .kpi-glow-wrap,
+        .nav-glow-wrap {
+          position: relative;
+          border-radius: 14px;
+          overflow: hidden;
+          isolation: isolate;
+        }
+
+        /* Disco giratório — fica atrás de tudo */
+        .kpi-glow-wrap::before,
+        .nav-glow-wrap::before {
+          content: '';
+          position: absolute;
+          width: 220%;
+          aspect-ratio: 1;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(0deg);
+          opacity: 0;
+          transition: opacity 0.35s ease;
+          will-change: transform, opacity;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        /* Tampa central — restaura o fundo do card */
+        .kpi-glow-wrap::after,
+        .nav-glow-wrap::after {
+          content: '';
+          position: absolute;
+          inset: 1.5px;
+          border-radius: 12px;
+          background: var(--card-bg);
+          z-index: 1;
+          pointer-events: none;
+        }
+
+        /* Conteúdo acima da tampa */
+        .kpi-glow-wrap > *,
+        .nav-glow-wrap > * {
+          position: relative;
+          z-index: 2;
+        }
+
+        /* Ativa animação no hover */
+        .kpi-glow-wrap:hover::before,
+        .nav-glow-wrap:hover::before {
+          opacity: 1;
+          animation: kronosBorderSpin 2s linear infinite;
+        }
+
+        /* ── Cores por card ── */
+        .kpi-glow-wrap.glow-emerald::before {
+          background: conic-gradient(from 0deg, transparent 0%, #34D399 18%, transparent 36%);
+        }
+        .kpi-glow-wrap.glow-emerald:hover {
+          box-shadow: 0 0 18px rgba(52,211,153,.35);
+        }
+
+        .kpi-glow-wrap.glow-rose::before {
+          background: conic-gradient(from 0deg, transparent 0%, #FB7185 18%, transparent 36%);
+        }
+        .kpi-glow-wrap.glow-rose:hover {
+          box-shadow: 0 0 18px rgba(251,113,133,.35);
+        }
+
+        .kpi-glow-wrap.glow-violet::before {
+          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 18%, transparent 36%);
+        }
+        .kpi-glow-wrap.glow-violet:hover {
+          box-shadow: 0 0 18px rgba(124,92,252,.35);
+        }
+
+        .kpi-glow-wrap.glow-sky::before {
+          background: conic-gradient(from 0deg, transparent 0%, #38BDF8 18%, transparent 36%);
+        }
+        .kpi-glow-wrap.glow-sky:hover {
+          box-shadow: 0 0 18px rgba(56,189,248,.35);
+        }
+
+        .nav-glow-wrap.glow-rose::before {
+          background: conic-gradient(from 0deg, transparent 0%, #FB7185 18%, transparent 36%);
+        }
+        .nav-glow-wrap.glow-rose:hover {
+          box-shadow: 0 0 18px rgba(251,113,133,.35);
+        }
+
+        .nav-glow-wrap.glow-emerald::before {
+          background: conic-gradient(from 0deg, transparent 0%, #34D399 18%, transparent 36%);
+        }
+        .nav-glow-wrap.glow-emerald:hover {
+          box-shadow: 0 0 18px rgba(52,211,153,.35);
+        }
+
+        .nav-glow-wrap.glow-violet::before {
+          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 18%, transparent 36%);
+        }
+        .nav-glow-wrap.glow-violet:hover {
+          box-shadow: 0 0 18px rgba(124,92,252,.35);
+        }
+      `}</style>
+
       {/* ══════════════════════════════════════════════════════════
           SEÇÃO EXISTENTE — inalterada
       ══════════════════════════════════════════════════════════ */}
@@ -328,15 +438,23 @@ export default function FinancialPage() {
         </Link>
       </div>
 
-      {/* KPIs — inalterados */}
+      {/* KPIs — com borda animada */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Receita do Mês"  value={formatCompact(netRevenue)}            icon={TrendingUp}   color="green" subtitle="Recebimentos confirmados" />
-        <StatCard title="Despesas do Mês" value={formatCompact(netExpense)}            icon={TrendingDown} color="red"   subtitle="Pagamentos confirmados" />
-        <StatCard title="Lucro Líquido"   value={formatCompact(netProfit)}             icon={DollarSign}   color={netProfit >= 0 ? 'green' : 'red'} subtitle={`Margem ${margin}%`} />
-        <StatCard title="A Receber"       value={formatCompact(stats.revenue_pending)} icon={ArrowUpRight} color="blue"  subtitle={`${formatCompact(stats.revenue_overdue)} atrasado`} />
+        <div className="kpi-glow-wrap glow-emerald">
+          <StatCard title="Receita do Mês"  value={formatCompact(netRevenue)}            icon={TrendingUp}   color="green" subtitle="Recebimentos confirmados" />
+        </div>
+        <div className="kpi-glow-wrap glow-rose">
+          <StatCard title="Despesas do Mês" value={formatCompact(netExpense)}            icon={TrendingDown} color="red"   subtitle="Pagamentos confirmados" />
+        </div>
+        <div className="kpi-glow-wrap glow-violet">
+          <StatCard title="Lucro Líquido"   value={formatCompact(netProfit)}             icon={DollarSign}   color={netProfit >= 0 ? 'green' : 'red'} subtitle={`Margem ${margin}%`} />
+        </div>
+        <div className="kpi-glow-wrap glow-sky">
+          <StatCard title="A Receber"       value={formatCompact(stats.revenue_pending)} icon={ArrowUpRight} color="blue"  subtitle={`${formatCompact(stats.revenue_overdue)} atrasado`} />
+        </div>
       </div>
 
-      {/* Atalhos de navegação — inalterados */}
+      {/* Atalhos de navegação — com borda animada */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           {
@@ -346,6 +464,7 @@ export default function FinancialPage() {
             sub:   `${formatCompact(stats.expenses_overdue)} em atraso`,
             accent: '#FB7185',
             glow:   'rgba(251,113,133,0.08)',
+            glowClass: 'glow-rose',
           },
           {
             to: '/app/financial/revenues',
@@ -354,6 +473,7 @@ export default function FinancialPage() {
             sub:   `${formatCompact(stats.revenue_overdue)} em atraso`,
             accent: '#34D399',
             glow:   'rgba(52,211,153,0.08)',
+            glowClass: 'glow-emerald',
           },
           {
             to: '/app/financial/dre',
@@ -362,24 +482,26 @@ export default function FinancialPage() {
             sub:   'Demonstrativo de resultados',
             accent: '#7C5CFC',
             glow:   'rgba(124,92,252,0.08)',
+            glowClass: 'glow-violet',
           },
         ].map(item => (
-          <Link
-            key={item.to}
-            to={item.to}
-            className="card card-hover p-5 flex items-center justify-between"
-            style={{ boxShadow: `0 10px 30px rgba(0,0,0,0.35), 0 0 30px ${item.glow}` }}
-          >
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1"
-                style={{ color: 'var(--text-muted)' }}>
-                {item.label}
-              </p>
-              <p className="text-xl font-bold mb-0.5" style={{ color: item.accent }}>{item.value}</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>
-            </div>
-            <ArrowRight size={18} style={{ color: 'var(--text-muted)' }} />
-          </Link>
+          <div key={item.to} className={`nav-glow-wrap ${item.glowClass}`}>
+            <Link
+              to={item.to}
+              className="card card-hover p-5 flex items-center justify-between"
+              style={{ boxShadow: `0 10px 30px rgba(0,0,0,0.35), 0 0 30px ${item.glow}` }}
+            >
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1"
+                  style={{ color: 'var(--text-muted)' }}>
+                  {item.label}
+                </p>
+                <p className="text-xl font-bold mb-0.5" style={{ color: item.accent }}>{item.value}</p>
+                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>
+              </div>
+              <ArrowRight size={18} style={{ color: 'var(--text-muted)' }} />
+            </Link>
+          </div>
         ))}
       </div>
 
