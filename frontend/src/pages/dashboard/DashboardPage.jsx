@@ -24,9 +24,10 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#0D152B', border: '1px solid rgba(255,255,255,0.08)',
+      background: 'rgba(13,21,43,0.92)', border: '1px solid rgba(255,255,255,0.10)',
       borderRadius: 12, padding: '10px 14px',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.45)', fontSize: 12
+      boxShadow: '0 20px 40px rgba(0,0,0,0.45)', fontSize: 12,
+      backdropFilter: 'blur(12px)',
     }}>
       <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>{label}</p>
       {payload.map((p, i) => (
@@ -38,6 +39,22 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
+/* ── Estilos de glassmorphism inline reutilizáveis ── */
+const glassRow = {
+  background: 'rgba(255,255,255,0.030)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderTop: '1px solid rgba(255,255,255,0.11)',
+}
+
+const glassRowHoverEnter = (e) => {
+  e.currentTarget.style.background  = 'rgba(124,92,252,0.07)'
+  e.currentTarget.style.borderColor = 'rgba(124,92,252,0.18)'
+}
+const glassRowHoverLeave = (e) => {
+  e.currentTarget.style.background  = glassRow.background
+  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+}
+
 export default function DashboardPage() {
   const [financial, setFinancial] = useState(null)
   const [projects,  setProjects]  = useState([])
@@ -47,12 +64,10 @@ export default function DashboardPage() {
   useEffect(() => {
     Promise.all([
       getFinancialDashboard(),
-      // Busca todos os projetos ativos (não só in_progress)
       getProjects({ limit: 50 }),
       getTasks({ status: 'open', limit: 6 })
     ]).then(([fin, proj, tsk]) => {
       setFinancial(fin.data)
-      // Filtra apenas os não concluídos e não cancelados para o dashboard
       const active = (proj.data.data || []).filter(
         p => !['completed', 'cancelled'].includes(p.status)
       )
@@ -79,7 +94,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-7 fade-in">
-      {/* Header */}
+
+      {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
           <Zap size={16} style={{ color: '#7C5CFC' }} />
@@ -97,7 +113,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* KPIs */}
+      {/* ── KPIs ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard title="Receita do Mês"     value={formatCompact(netRevenue)}            icon={DollarSign}  color="green"  subtitle="Recebimentos confirmados" />
         <StatCard title="Projetos Ativos"    value={projects.length}                      icon={FolderKanban}color="purple" subtitle="Em andamento agora" />
@@ -105,10 +121,10 @@ export default function DashboardPage() {
         <StatCard title="Receitas a Receber" value={formatCompact(stats.revenue_pending)}  icon={TrendingUp}  color="blue"   subtitle={`${formatCompact(stats.revenue_overdue)} em atraso`} />
       </div>
 
-      {/* Projetos + Resumo */}
+      {/* ── Projetos + Resumo ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
 
-        {/* Projetos ativos — altura fixa com scroll */}
+        {/* Projetos ativos */}
         <div className="xl:col-span-2 card p-6 flex flex-col">
           <div className="flex items-center justify-between mb-5 shrink-0">
             <div>
@@ -125,8 +141,7 @@ export default function DashboardPage() {
             </Link>
           </div>
 
-          {/* Container com altura fixa e scroll interno */}
-          <div className="overflow-y-auto space-y-3 pr-1" style={{ maxHeight: 320 }}>
+          <div className="overflow-y-auto space-y-2.5 pr-1" style={{ maxHeight: 320 }}>
             {projects.length === 0 && (
               <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>
                 Nenhum projeto ativo
@@ -137,15 +152,9 @@ export default function DashboardPage() {
                 key={p.id}
                 to={`/app/projects/${p.id}`}
                 className="group flex items-center justify-between rounded-2xl p-4 transition-all duration-200"
-                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background   = 'rgba(124,92,252,0.06)'
-                  e.currentTarget.style.borderColor  = 'rgba(124,92,252,0.15)'
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background   = 'rgba(255,255,255,0.025)'
-                  e.currentTarget.style.borderColor  = 'rgba(255,255,255,0.04)'
-                }}
+                style={glassRow}
+                onMouseEnter={glassRowHoverEnter}
+                onMouseLeave={glassRowHoverLeave}
               >
                 <div className="flex-1 min-w-0 mr-4">
                   <p className="text-sm font-semibold truncate mb-1"
@@ -187,7 +196,7 @@ export default function DashboardPage() {
               { label: 'A receber',     value: stats.revenue_pending,  color: 'var(--text-secondary)' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between py-3"
-                style={{ borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                style={{ borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
                 <span className="text-sm" style={{ color: item.color, fontWeight: item.bold ? 700 : 600 }}>
                   {formatCurrency(item.value)}
@@ -197,13 +206,20 @@ export default function DashboardPage() {
           </div>
           <Link to="/app/financial"
             className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
-            style={{ background: 'rgba(124,92,252,0.10)', border: '1px solid rgba(124,92,252,0.20)', color: '#A78BFA' }}>
+            style={{
+              background: 'rgba(124,92,252,0.10)',
+              border: '1px solid rgba(124,92,252,0.22)',
+              color: '#A78BFA',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.18)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.10)' }}
+          >
             Ver financeiro completo <ArrowRight size={13} />
           </Link>
         </div>
       </div>
 
-      {/* Gráfico */}
+      {/* ── Gráfico de Fluxo de Caixa ─────────────────────────────────── */}
       <div className="card p-6">
         <div className="mb-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
@@ -216,11 +232,11 @@ export default function DashboardPage() {
           <AreaChart data={cashflow} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#34D399" stopOpacity={0.25} />
+                <stop offset="5%"  stopColor="#34D399" stopOpacity={0.30} />
                 <stop offset="95%" stopColor="#34D399" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#FB7185" stopOpacity={0.25} />
+                <stop offset="5%"  stopColor="#FB7185" stopOpacity={0.30} />
                 <stop offset="95%" stopColor="#FB7185" stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -236,8 +252,10 @@ export default function DashboardPage() {
         </ResponsiveContainer>
       </div>
 
-      {/* Tarefas + Despesas */}
+      {/* ── Tarefas + Despesas ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        {/* Tarefas abertas */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -252,7 +270,7 @@ export default function DashboardPage() {
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {tasks.length === 0 && (
               <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>
                 Nenhuma tarefa aberta
@@ -280,6 +298,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Despesas a vencer */}
         <div className="card p-6">
           <div className="flex items-center justify-between mb-5">
             <div>
@@ -301,7 +320,7 @@ export default function DashboardPage() {
               { label: 'Pago este mês', sub: 'Confirmados', value: stats.expenses_month,   color: '#34D399' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between py-3"
-                style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.label}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>
