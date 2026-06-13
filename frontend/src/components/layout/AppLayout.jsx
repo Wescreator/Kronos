@@ -9,10 +9,12 @@ export default function AppLayout() {
   useAuth()
 
   return (
-    <div className="min-h-screen text-white overflow-hidden" style={{ background: '#5926f5' }}>
+    <div className="min-h-screen text-white overflow-hidden">
 
       {/* ── Background decorativo (fixed, atrás de tudo) ─────────────────── */}
-      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: 'radial-gradient(circle at center, #24104d 0%, #140a2f 40%, #090512 100%)' }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{background: ` radial-gradient(ellipse at center, #2f1766 0%, #1a103d 35%, #0f0a22 70%, #06030d 100%)`,
+  }}
+>
 
         {/* Vinheta escura nas bordas — dá profundidade sem apagar o roxo */}
         <div
@@ -35,7 +37,7 @@ export default function AppLayout() {
             left: '25%',
             width: '700px',
             height: '700px',
-            background: 'radial-gradient(circle, rgba(180,130,255,0.35) 0%, transparent 65%)',
+            background: 'radial-gradient(circle, rgba(180,130,255,0.18) 0%, transparent 65%)',
             filter: 'blur(70px)',
           }}
         />
@@ -48,7 +50,7 @@ export default function AppLayout() {
             right: '-80px',
             width: '550px',
             height: '550px',
-            background: 'radial-gradient(circle, rgba(99,102,241,0.30) 0%, transparent 65%)',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 65%)',
             filter: 'blur(80px)',
           }}
         />
@@ -74,7 +76,7 @@ export default function AppLayout() {
             right: '0',
             width: '450px',
             height: '450px',
-            background: 'radial-gradient(circle, rgba(168,85,247,0.20) 0%, transparent 65%)',
+            background: 'radial-gradient(circle, rgba(168,85,247,0.10) 0%, transparent 65%)',
             filter: 'blur(80px)',
           }}
         />

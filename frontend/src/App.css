@@ -6,7 +6,7 @@
 
 /* ── Tokens globais ─────────────────────────── */
 :root {
-  --bg-primary:     #5926f5;
+  --bg-primary:     #090512;
   --bg-sidebar:     #081024;
   --bg-card:        #0D152B;
   --bg-hover:       #131D37;
@@ -36,7 +36,11 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  background-color: var(--bg-primary);
+  background:radial-gradient(circle at center,
+    #24104d 0%,
+    #140a2f 40%,
+    #090512 100%
+  );
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
