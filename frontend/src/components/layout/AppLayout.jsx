@@ -9,74 +9,77 @@ export default function AppLayout() {
   useAuth()
 
   return (
-    <div className="min-h-screen text-white overflow-hidden" style={{ background: '#070B1A' }}>
+    <div className="min-h-screen text-white overflow-hidden" style={{ background: '#5926f5' }}>
 
-      {/* ── Background decorativo ─────────────────────────────────────────── */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
+      {/* ── Background decorativo (fixed, atrás de tudo) ─────────────────── */}
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#5926f5' }}>
 
-        {/* Glow superior-esquerdo — roxo principal (amplificado) */}
+        {/* Vinheta escura nas bordas — dá profundidade sem apagar o roxo */}
         <div
-          className="absolute rounded-full"
+          className="absolute inset-0"
           style={{
-            top: '-80px',
-            left: '20%',
+            background: `
+              radial-gradient(ellipse 80% 60% at 50% 50%,
+                transparent 30%,
+                rgba(0,0,0,0.35) 100%
+              )
+            `,
+          }}
+        />
+
+        {/* Glow superior claro — lilás brilhante */}
+        <div
+          className="absolute"
+          style={{
+            top: '-120px',
+            left: '25%',
             width: '700px',
             height: '700px',
-            background: 'radial-gradient(circle, rgba(124,92,252,0.18) 0%, transparent 70%)',
-            filter: 'blur(60px)',
-          }}
-        />
-
-        {/* Glow direito — azul (amplificado) */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            top: '10%',
-            right: '-100px',
-            width: '600px',
-            height: '600px',
-            background: 'radial-gradient(circle, rgba(56,189,248,0.10) 0%, transparent 70%)',
-            filter: 'blur(80px)',
-          }}
-        />
-
-        {/* Glow inferior — roxo escuro (novo) */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            bottom: '-100px',
-            left: '10%',
-            width: '800px',
-            height: '500px',
-            background: 'radial-gradient(circle, rgba(107,70,220,0.12) 0%, transparent 70%)',
-            filter: 'blur(90px)',
-          }}
-        />
-
-        {/* Glow inferior-direito — esmeralda sutil (novo) */}
-        <div
-          className="absolute rounded-full"
-          style={{
-            bottom: '0',
-            right: '5%',
-            width: '400px',
-            height: '400px',
-            background: 'radial-gradient(circle, rgba(52,211,153,0.06) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(180,130,255,0.35) 0%, transparent 65%)',
             filter: 'blur(70px)',
           }}
         />
 
-        {/* Ruído de textura sutil para profundidade */}
+        {/* Glow direito — azul-índigo */}
         <div
-          className="absolute inset-0"
+          className="absolute"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-            opacity: 0.018,
-            mixBlendMode: 'overlay',
+            top: '5%',
+            right: '-80px',
+            width: '550px',
+            height: '550px',
+            background: 'radial-gradient(circle, rgba(99,102,241,0.30) 0%, transparent 65%)',
+            filter: 'blur(80px)',
           }}
         />
 
-        {/* Logo Kronos — marca d'água central (mais visível) */}
+        {/* Glow inferior-esquerdo — roxo mais escuro */}
+        <div
+          className="absolute"
+          style={{
+            bottom: '-80px',
+            left: '5%',
+            width: '700px',
+            height: '500px',
+            background: 'radial-gradient(circle, rgba(67,20,180,0.50) 0%, transparent 65%)',
+            filter: 'blur(90px)',
+          }}
+        />
+
+        {/* Glow inferior-direito — magenta sutil */}
+        <div
+          className="absolute"
+          style={{
+            bottom: '0',
+            right: '0',
+            width: '450px',
+            height: '450px',
+            background: 'radial-gradient(circle, rgba(168,85,247,0.20) 0%, transparent 65%)',
+            filter: 'blur(80px)',
+          }}
+        />
+
+        {/* Logo Kronos — marca d'água central */}
         <div className="absolute inset-0 flex items-center justify-center px-6">
           <img
             src={kronosLogo}
@@ -91,12 +94,8 @@ export default function AppLayout() {
               select-none
             "
             style={{
-              opacity: 0.055,
-              filter: `
-                brightness(2.5)
-                saturate(0.4)
-                drop-shadow(0 0 60px rgba(124,92,252,0.35))
-              `,
+              opacity: 0.12,
+              filter: 'brightness(3) saturate(0) drop-shadow(0 0 40px rgba(255,255,255,0.15))',
             }}
             draggable={false}
           />
