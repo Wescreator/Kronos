@@ -320,103 +320,93 @@ export default function FinancialPage() {
           to   { transform: translate(-50%, -50%) rotate(360deg); }
         }
 
-        /* Wrapper base */
+        /* Wrapper: cria a zona de borda via padding */
         .kpi-glow-wrap,
         .nav-glow-wrap {
           position: relative;
           border-radius: 14px;
           overflow: hidden;
-          isolation: isolate;
+          padding: 1.5px;
+          transition: box-shadow 0.35s ease;
         }
 
-        /* Disco giratório — fica atrás de tudo */
+        /* Disco giratório — fica ATRÁS do card filho */
         .kpi-glow-wrap::before,
         .nav-glow-wrap::before {
           content: '';
           position: absolute;
-          width: 220%;
-          aspect-ratio: 1;
+          width: 250%;
+          aspect-ratio: 1 / 1;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%) rotate(0deg);
           opacity: 0;
-          transition: opacity 0.35s ease;
+          transition: opacity 0.4s ease;
           will-change: transform, opacity;
           z-index: 0;
           pointer-events: none;
         }
 
-        /* Tampa central — restaura o fundo do card */
-        .kpi-glow-wrap::after,
-        .nav-glow-wrap::after {
-          content: '';
-          position: absolute;
-          inset: 1.5px;
-          border-radius: 12px;
-          background: var(--card-bg);
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        /* Conteúdo acima da tampa */
+        /* Card filho cobre o centro do disco — apenas a borda fica visível */
         .kpi-glow-wrap > *,
         .nav-glow-wrap > * {
           position: relative;
-          z-index: 2;
+          z-index: 1;
         }
 
-        /* Ativa animação no hover */
+        /* Ativa ao hover */
         .kpi-glow-wrap:hover::before,
         .nav-glow-wrap:hover::before {
           opacity: 1;
-          animation: kronosBorderSpin 2s linear infinite;
+          animation: kronosBorderSpin 2.5s linear infinite;
         }
 
-        /* ── Cores por card ── */
+        /* ── Cores — KPIs ── */
         .kpi-glow-wrap.glow-emerald::before {
-          background: conic-gradient(from 0deg, transparent 0%, #34D399 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #34D399 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-emerald:hover {
           box-shadow: 0 0 18px rgba(52,211,153,.35);
         }
 
         .kpi-glow-wrap.glow-rose::before {
-          background: conic-gradient(from 0deg, transparent 0%, #FB7185 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #FB7185 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-rose:hover {
           box-shadow: 0 0 18px rgba(251,113,133,.35);
         }
 
         .kpi-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-violet:hover {
           box-shadow: 0 0 18px rgba(124,92,252,.35);
         }
 
         .kpi-glow-wrap.glow-sky::before {
-          background: conic-gradient(from 0deg, transparent 0%, #38BDF8 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #38BDF8 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-sky:hover {
           box-shadow: 0 0 18px rgba(56,189,248,.35);
         }
 
+        /* ── Cores — Navegação ── */
         .nav-glow-wrap.glow-rose::before {
-          background: conic-gradient(from 0deg, transparent 0%, #FB7185 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #FB7185 14%, transparent 28%);
         }
         .nav-glow-wrap.glow-rose:hover {
           box-shadow: 0 0 18px rgba(251,113,133,.35);
         }
 
         .nav-glow-wrap.glow-emerald::before {
-          background: conic-gradient(from 0deg, transparent 0%, #34D399 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #34D399 14%, transparent 28%);
         }
         .nav-glow-wrap.glow-emerald:hover {
           box-shadow: 0 0 18px rgba(52,211,153,.35);
         }
 
         .nav-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 18%, transparent 36%);
+          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 14%, transparent 28%);
         }
         .nav-glow-wrap.glow-violet:hover {
           box-shadow: 0 0 18px rgba(124,92,252,.35);
