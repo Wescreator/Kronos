@@ -12,7 +12,7 @@ export default function AppLayout() {
     <div className="min-h-screen text-white overflow-hidden" style={{ background: '#5926f5' }}>
 
       {/* ── Background decorativo (fixed, atrás de tudo) ─────────────────── */}
-      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: '#5926f5' }}>
+      <div className="pointer-events-none fixed inset-0 -z-10" style={{ background: 'radial-gradient(circle at center, #24104d 0%, #140a2f 40%, #090512 100%)' }}>
 
         {/* Vinheta escura nas bordas — dá profundidade sem apagar o roxo */}
         <div
@@ -78,6 +78,9 @@ export default function AppLayout() {
             filter: 'blur(80px)',
           }}
         />
+        <div className="kronos-fog" />
+        <div className="kronos-depth-lines" />
+        <div className="kronos-depth-grid" />
 
         {/* Logo Kronos — marca d'água central */}
         <div className="absolute inset-0 flex items-center justify-center px-6">
@@ -94,8 +97,8 @@ export default function AppLayout() {
               select-none
             "
             style={{
-              opacity: 0.12,
-              filter: 'brightness(3) saturate(0) drop-shadow(0 0 40px rgba(255,255,255,0.15))',
+              opacity: 0.05,
+              filter: 'brightness(2.2) saturate(0) drop-shadow(0 0 40px rgba(255,255,255,0.15))',
             }}
             draggable={false}
           />
