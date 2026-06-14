@@ -392,21 +392,22 @@ export default function ProjectDetailPage() {
   }
 
   const handleFileUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setUploading(true)
-    try {
-      const fd = new FormData(); fd.append('file', file)
-      await api.post(`/tasks/files-upload`, fd)
-      toast.success('Arquivo enviado!'); loadFiles()
-    } catch {
-      setFiles(prev => [...prev, { id: Date.now(), file_name: file.name, created_at: new Date().toISOString(), local: true }])
-      toast.success('Arquivo registrado')
-    } finally {
-      setUploading(false)
-      if (fileRef.current) fileRef.current.value = ''
-    }
+  const file = e.target.files[0]
+  if (!file) return
+  setUploading(true)
+  try {
+    const fd = new FormData()
+    fd.append('file', file)
+    await api.post(`/projects/${id}/files`, fd)   // endpoint correto
+    toast.success('Arquivo enviado!')
+    loadFiles()
+  } catch (err) {
+    toast.error(err?.response?.data?.message || 'Erro ao enviar arquivo')
+  } finally {
+    setUploading(false)
+    if (fileRef.current) fileRef.current.value = ''
   }
+}
 
   const nonMembers = allUsers.filter(u => !(project?.members || []).some(m => m.id === u.id))
 
@@ -641,24 +642,49 @@ export default function ProjectDetailPage() {
           ) : (
             <div className="space-y-2">
               {files.map(f => (
-                <div key={f.id} className="flex items-center gap-3 p-3 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}>
-                  <File size={16} style={{ color: '#A78BFA' }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                      {f.file_name || f.name}
-                    </p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{formatDate(f.created_at)}</p>
-                  </div>
-                  {f.file_url && (
-                    <a href={f.file_url} target="_blank" rel="noopener noreferrer"
-                      className="text-xs px-2.5 py-1 rounded-lg font-semibold"
-                      style={{ background: 'rgba(124,92,252,0.10)', color: '#A78BFA' }}>
-                      Baixar
-                    </a>
-                  )}
-                </div>
-              ))}
+  <div
+    key={f.id}
+    className="flex items-center gap-3 p-3 rounded-xl"
+    style={{
+      background: 'rgba(255,255,255,0.025)',
+      border: '1px solid rgba(255,255,255,0.04)'
+    }}
+  >
+    <File size={16} style={{ color: '#A78BFA' }} />
+
+    <div className="flex-1 min-w-0">
+      <p
+        className="text-sm font-medium truncate"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        {f.file_name}
+      </p>
+
+      <p
+        className="text-xs"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        {f.uploaded_by_name} · {formatDate(f.created_at)}
+      </p>
+    </div>
+
+    {/* era f.file_url */}
+    {f.drive_url && (
+      <a
+        href={f.drive_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-xs px-2.5 py-1 rounded-lg font-semibold"
+        style={{
+          background: 'rgba(124,92,252,0.10)',
+          color: '#A78BFA'
+        }}
+      >
+        Abrir
+      </a>
+    )}
+  </div>
+))}
             </div>
           )}
         </div>
