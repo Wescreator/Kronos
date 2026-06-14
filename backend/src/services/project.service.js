@@ -1,5 +1,6 @@
 const projectRepo = require('../repositories/project.repository')
 const pool        = require('../config/database')
+const driveService = require('./drive.service')   // novo
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 const DEFAULT_STAGES = [
@@ -37,6 +38,7 @@ const getById = async (id) => {
 }
 
 const create = async (data, userId) => {
+  // Cria o projeto no banco
   const project = await projectRepo.create({
     title:        data.title,
     client:       data.client,
@@ -50,11 +52,27 @@ const create = async (data, userId) => {
 
   await projectRepo.addMember(project.id, userId, 'manager')
   await projectRepo.addStatusHistory(project.id, null, 'in_progress', userId, 'Projeto criado')
-
-  // Cria automaticamente as 5 etapas padrão
   await createDefaultStages(project.id)
 
-  return project
+  // Cria pasta no Google Drive (aguarda conclusão antes de salvar o ID)
+  try {
+    console.log(`[Project] Criando pasta no Google Drive para: "${project.title}"`)
+    const driveFolder = await driveService.createProjectFolder(project.title)
+
+    // Salva drive_folder_id e drive_folder_url no projeto
+    const updated = await projectRepo.update(project.id, {
+      drive_folder_id:  driveFolder.id,
+      drive_folder_url: driveFolder.url,
+    })
+
+    console.log(`[Project] drive_folder_id salvo: ${driveFolder.id}`)
+    return updated
+  } catch (err) {
+    // Falha no Drive não bloqueia criação do projeto
+    // Upload posterior irá retornar erro orientado ao usuário
+    console.error(`[Project] Falha ao criar pasta no Drive: ${err.message}`)
+    return project
+  }
 }
 
 const update = async (id, data, userId) => {

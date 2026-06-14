@@ -2,6 +2,7 @@ const multer = require('multer')
 const path   = require('path')
 const crypto = require('crypto')
 
+// ─── diskStorage (comportamento atual — inalterado) ───────────────────────────
 function buildStorage(subfolder) {
   return multer.diskStorage({
     destination: (req, file, cb) => {
@@ -32,6 +33,11 @@ const fileFilter = (req, file, cb) => {
 const MAX = parseInt(process.env.UPLOAD_MAX_SIZE) || 10 * 1024 * 1024
 
 module.exports = {
+  // Existentes — não alterados
   uploadImage: multer({ storage: buildStorage('images'), fileFilter: imageFilter, limits: { fileSize: MAX } }),
-  uploadFile:  multer({ storage: buildStorage('files'),  fileFilter: fileFilter,  limits: { fileSize: MAX } })
+  uploadFile:  multer({ storage: buildStorage('files'),  fileFilter: fileFilter,  limits: { fileSize: MAX } }),
+
+  // Novo — para uploads ao Google Drive (sem gravação local)
+  // Usa memoryStorage: arquivo disponível em req.file.buffer
+  uploadDriveFile: multer({ storage: multer.memoryStorage(), fileFilter: fileFilter, limits: { fileSize: MAX } }),
 }
