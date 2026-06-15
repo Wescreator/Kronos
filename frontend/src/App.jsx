@@ -20,7 +20,7 @@ import TeamMemberPage     from './pages/team/TeamMemberPage'
 import RoleRoute          from './routes/RoleRoute'
 // ── Agenda (novo módulo — aditivo) ──────────────────────────────────────────
 import CalendarPage       from './pages/calendar/CalendarPage'
-import ProposalPage from './pages/proposals/ProposalPage'
+import ProposalsPage from './pages/proposals/ProposalsPage'
 
 export default function App() {
   return (
@@ -53,7 +53,7 @@ export default function App() {
           <Route path="team/:id"           element={<TeamMemberPage />} />
           {/* ── Agenda ── */}
           <Route path="agenda"             element={<CalendarPage />} />
-          <Route path="proposals"          element={<ProposalPage />} />
+          <Route path="proposals"          element={<ProposalsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
