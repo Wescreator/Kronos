@@ -30,6 +30,7 @@ const NAV_LINKS = [
   { to: '/app/tasks',     icon: CheckSquare,      label: 'Tarefas'    },
   { to: '/app/chat',      icon: MessageSquare,    label: 'Chat'       },
   { to: '/app/team',      icon: Users,            label: 'Equipe'     },
+  { to: '/app/proposals', icon: LayoutDashboard, label: 'Propostas' },
 ]
 
 export default function Topbar() {
