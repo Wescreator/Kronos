@@ -4,8 +4,8 @@ const helmet  = require('helmet')
 const path    = require('path')
 require('dotenv').config()
 const { authenticate } = require('./middlewares/auth.middleware')
+
 const app = express()
-const proposalRoutes = require('./routes/proposals.routes')
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -13,7 +13,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://kronos-neon.vercel.app',
   process.env.FRONTEND_URL,
-].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i) // remove duplicatas
+].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i)
 
 app.use(cors({
   origin: true,
@@ -22,7 +22,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
 
-// Responde OPTIONS imediatamente (preflight)
 app.options('*', cors({
   origin: true,
   credentials: true
@@ -37,10 +36,7 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
-  res.json({
-  status: 'ok',
-  ts: new Date().toISOString()
-})
+  res.json({ status: 'ok', ts: new Date().toISOString() })
 })
 
 // ── Rotas ─────────────────────────────────────────────────────────────────────
@@ -51,8 +47,8 @@ app.use('/api/tasks',         require('./routes/tasks.routes'))
 app.use('/api/financial',     require('./routes/financial.routes'))
 app.use('/api/chat',          require('./routes/chat.routes'))
 app.use('/api/notifications', require('./routes/notifications.routes'))
-app.use('/api/calendar',      authenticate,require('./routes/calendarRoutes'))
-app.use('/api/proposals', proposalRoutes)
+app.use('/api/calendar',      authenticate, require('./routes/calendarRoutes'))
+app.use('/api/proposals',     require('./routes/proposals.routes'))
 
 // ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
