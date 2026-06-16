@@ -86,7 +86,6 @@ function ServicesTable({ items, onChange, disabled }) {
 
   return (
     <div>
-      {/* Cabeçalho */}
       <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: '1fr 130px 100px 36px' }}>
         {['Serviço', 'Valor (R$)', 'Prazo (dias)', ''].map(h => (
           <span key={h} className="label" style={{ marginBottom: 0 }}>{h}</span>
@@ -154,7 +153,6 @@ function ServicesTable({ items, onChange, disabled }) {
         </button>
       )}
 
-      {/* Total */}
       {items.length > 0 && (
         <div className="flex justify-end mt-3 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <span className="text-sm font-bold" style={{ color: '#34D399' }}>
@@ -248,7 +246,7 @@ function PaymentTermsTable({ items, onChange, disabled }) {
   )
 }
 
-// ── Seção com título colapsável dentro do modal ─────────────────
+// ── Seção com título ────────────────────────────────────────────
 function Section({ title, children }) {
   return (
     <div>
@@ -262,27 +260,26 @@ function Section({ title, children }) {
 
 // ── MODAL PRINCIPAL ─────────────────────────────────────────────
 const EMPTY_FORM = {
-  title:           '',
-  client_id:       '',
-  client_name:     '',
-  service_object:  '',
-  scope_items:     [],
-  services:        [],
-  payment_terms:   [],
-  payment_message: '',
-  final_notes:     '',
-  service_deadline:'',
-  valid_until:     '',
+  title:            '',
+  client_id:        '',
+  client_name:      '',
+  service_object:   '',
+  scope_items:      [],
+  services:         [],
+  payment_terms:    [],
+  payment_message:  '',
+  final_notes:      '',
+  service_deadline: '',
+  valid_until:      '',
 }
 
 export default function ProposalFormModal({ open, onClose, onSuccess, proposal }) {
-  const [form,    setForm]    = useState(EMPTY_FORM)
+  const [form,   setForm]   = useState(EMPTY_FORM)
   const [clients, setClients] = useState([])
   const [saving,  setSaving]  = useState(false)
 
   const isEdit = !!proposal
 
-  // Carregar clientes disponíveis
   useEffect(() => {
     if (!open) return
     api.get('/clients?limit=200').then(({ data }) => {
@@ -290,21 +287,20 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
     }).catch(() => setClients([]))
   }, [open])
 
-  // Popular form ao editar
   useEffect(() => {
     if (open && proposal) {
       setForm({
-        title:           proposal.title           || '',
-        client_id:       proposal.client_id       || '',
-        client_name:     proposal.client_name     || '',
-        service_object:  proposal.service_object  || '',
-        scope_items:     proposal.scope_items     || [],
-        services:        proposal.services        || [],
-        payment_terms:   proposal.payment_terms   || [],
-        payment_message: proposal.payment_message || '',
-        final_notes:     proposal.final_notes     || '',
-        service_deadline:proposal.service_deadline|| '',
-        valid_until:     proposal.valid_until ? proposal.valid_until.slice(0,10) : '',
+        title:            proposal.title            || '',
+        client_id:        proposal.client_id        || '',
+        client_name:      proposal.client_name      || '',
+        service_object:   proposal.service_object   || '',
+        scope_items:      proposal.scope_items      || [],
+        services:         proposal.services         || [],
+        payment_terms:    proposal.payment_terms    || [],
+        payment_message:  proposal.payment_message  || '',
+        final_notes:      proposal.final_notes      || '',
+        service_deadline: proposal.service_deadline || '',
+        valid_until:      proposal.valid_until ? proposal.valid_until.slice(0, 10) : '',
       })
     } else if (open && !proposal) {
       setForm(EMPTY_FORM)
@@ -347,9 +343,10 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
       title={isEdit ? `Editar Proposta — ${proposal?.proposal_number}` : 'Nova Proposta'}
       size="xl"
     >
-      <div className="space-y-6">
+      {/* ── Conteúdo scrollável ── */}
+      <div className="space-y-6 pb-2">
 
-        {/* ── Campo 1: Título ── */}
+        {/* Campo 1: Título */}
         <div>
           <label className="label">Título <span style={{ color: '#FB7185' }}>*</span></label>
           <input
@@ -360,7 +357,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           />
         </div>
 
-        {/* ── Campo 2: Cliente ── */}
+        {/* Campo 2: Cliente */}
         <div>
           <label className="label">Cliente</label>
           {clients.length > 0 ? (
@@ -401,7 +398,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           )}
         </div>
 
-        {/* ── Campo 3: Objeto do Serviço ── */}
+        {/* Campo 3: Objeto do Serviço */}
         <div>
           <label className="label">Objeto do Serviço <span style={{ color: '#FB7185' }}>*</span></label>
           <input
@@ -412,7 +409,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           />
         </div>
 
-        {/* ── Campo 4: Descrição dos Serviços (escopo) ── */}
+        {/* Campo 4: Escopo */}
         <Section title="▸ Descrição dos Serviços">
           <ScopeList
             items={form.scope_items}
@@ -420,7 +417,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           />
         </Section>
 
-        {/* ── Campo 5: Cálculo Técnico ── */}
+        {/* Campo 5: Cálculo Técnico */}
         <Section title="▸ Cálculo Técnico dos Serviços">
           <ServicesTable
             items={form.services}
@@ -428,7 +425,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           />
         </Section>
 
-        {/* ── Campo 6: Condições de Pagamento ── */}
+        {/* Campo 6: Condições de Pagamento */}
         <Section title="▸ Condições de Pagamento">
           <PaymentTermsTable
             items={form.payment_terms}
@@ -447,7 +444,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           </div>
         </Section>
 
-        {/* ── Campo 7: Considerações Finais ── */}
+        {/* Campo 7: Considerações Finais */}
         <div>
           <label className="label">Considerações Finais</label>
           <RichTextArea
@@ -457,7 +454,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           />
         </div>
 
-        {/* ── Campo 8 + 9: Prazo e Validade ── */}
+        {/* Campos 8 + 9: Prazo e Validade */}
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="label">Prazo dos Serviços</label>
@@ -478,16 +475,31 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
             />
           </div>
         </div>
+      </div>
 
-        {/* ── Ações ── */}
-        <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <button type="button" onClick={onClose} className="btn-secondary">
-            Cancelar
-          </button>
-          <button type="button" onClick={handleSubmit} disabled={saving} className="btn-primary">
-            {saving ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Criar Proposta'}
-          </button>
-        </div>
+      {/* ── Footer fixo — sempre visível ── */}
+      <div
+        className="flex justify-end gap-3 pt-4 mt-2"
+        style={{
+          borderTop:       '1px solid rgba(255,255,255,0.06)',
+          position:        'sticky',
+          bottom:          0,
+          background:      'rgba(8,16,36,0.95)',
+          backdropFilter:  'blur(12px)',
+          marginLeft:      '-24px',
+          marginRight:     '-24px',
+          paddingLeft:     '24px',
+          paddingRight:    '24px',
+          paddingBottom:   '20px',
+          zIndex:          10,
+        }}
+      >
+        <button type="button" onClick={onClose} className="btn-secondary">
+          Cancelar
+        </button>
+        <button type="button" onClick={handleSubmit} disabled={saving} className="btn-primary">
+          {saving ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Criar Proposta'}
+        </button>
       </div>
     </Modal>
   )
