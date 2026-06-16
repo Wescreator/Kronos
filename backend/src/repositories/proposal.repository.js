@@ -20,8 +20,7 @@ const findAll = async ({ limit, offset, search }) => {
     conditions.push(
       `(p.proposal_number ILIKE $${params.length}
         OR p.title ILIKE $${params.length}
-        OR p.client_name ILIKE $${params.length}
-        OR c.name ILIKE $${params.length})`
+        OR p.client_name ILIKE $${params.length})`
     )
   }
 
@@ -33,7 +32,7 @@ const findAll = async ({ limit, offset, search }) => {
        p.id, p.proposal_number, p.title, p.status,
        p.service_object, p.service_deadline, p.valid_until,
        p.created_at, p.updated_at,
-       COALESCE(c.name, p.client_name) AS client_name,
+       p.client_name,
        p.client_id,
        u.name AS created_by_name,
        COALESCE(
@@ -41,8 +40,7 @@ const findAll = async ({ limit, offset, search }) => {
          0
        ) AS total_amount
      FROM proposals p
-     LEFT JOIN clients c ON c.id = p.client_id
-     LEFT JOIN users   u ON u.id = p.created_by
+     LEFT JOIN users u ON u.id = p.created_by
      ${where}
      ORDER BY p.created_at DESC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
@@ -50,45 +48,38 @@ const findAll = async ({ limit, offset, search }) => {
   )
 
   const { rows: cnt } = await pool.query(
-    `SELECT COUNT(*) FROM proposals p
-     LEFT JOIN clients c ON c.id = p.client_id
-     ${where}`,
+    `SELECT COUNT(*) FROM proposals p ${where}`,
     params.slice(0, -2)
   )
 
   return { rows, total: parseInt(cnt[0].count) }
 }
 
-// ── Buscar proposta por ID (com todos os relacionamentos) ─────
+// ── Buscar proposta por ID ────────────────────────────────────
 const findById = async (id) => {
-  // Proposta principal
   const { rows: propRows } = await pool.query(
     `SELECT
        p.*,
-       COALESCE(c.name, p.client_name) AS client_display_name,
+       p.client_name AS client_display_name,
        u.name AS created_by_name
      FROM proposals p
-     LEFT JOIN clients c ON c.id = p.client_id
-     LEFT JOIN users   u ON u.id = p.created_by
+     LEFT JOIN users u ON u.id = p.created_by
      WHERE p.id = $1`,
     [id]
   )
   if (!propRows[0]) return null
   const proposal = propRows[0]
 
-  // Itens de escopo
   const { rows: scopeRows } = await pool.query(
     'SELECT * FROM proposal_scope_items WHERE proposal_id = $1 ORDER BY order_index',
     [id]
   )
 
-  // Serviços (cálculo técnico)
   const { rows: serviceRows } = await pool.query(
     'SELECT * FROM proposal_services WHERE proposal_id = $1 ORDER BY order_index',
     [id]
   )
 
-  // Condições de pagamento
   const { rows: paymentRows } = await pool.query(
     'SELECT * FROM proposal_payment_terms WHERE proposal_id = $1 ORDER BY order_index',
     [id]
@@ -96,9 +87,9 @@ const findById = async (id) => {
 
   return {
     ...proposal,
-    scope_items:    scopeRows,
-    services:       serviceRows,
-    payment_terms:  paymentRows,
+    scope_items:   scopeRows,
+    services:      serviceRows,
+    payment_terms: paymentRows,
   }
 }
 
@@ -137,7 +128,7 @@ const update = async (id, fields) => {
   return rows[0]
 }
 
-// ── Excluir proposta (cascateia pelos ON DELETE CASCADE) ──────
+// ── Excluir proposta ──────────────────────────────────────────
 const remove = async (id) => {
   await pool.query('DELETE FROM proposals WHERE id = $1', [id])
 }
