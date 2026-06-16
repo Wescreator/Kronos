@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -184,17 +185,19 @@ export default function ProposalsPage() {
       `}</style>
 
       <PageHeader
-        title="Propostas"
-        tag="Comercial"
-        subtitle="Gerencie propostas e orçamentos"
-        actions={
-          canCreate && (
-            <button onClick={() => setShowModal(true)} className="btn-primary">
-              <Plus size={15} /> Nova Proposta
-            </button>
-          )
-        }
-      />
+  title="Propostas"
+  subtitle="Gerencie propostas comerciais"
+  action={
+    canCreate && (
+      <button
+        onClick={() => setShowModal(true)}
+        className="btn-primary"
+      >
+        Nova Proposta
+      </button>
+    )
+  }
+/>
 
       {/* ── Stats ── */}
       {!loading && proposals.length > 0 && (
