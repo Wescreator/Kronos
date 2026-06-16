@@ -151,8 +151,8 @@ const formatDateBR = (dateString) => {
   </div>
   <div class="meta-grid">
     <div class="meta-item"><div class="meta-label">Cliente</div><div class="meta-value">${proposal.client_display_name || proposal.client_name || '—'}</div></div>
-    <div class="meta-item"><div class="meta-label">Validade</div><div class="meta-value">${proposal.valid_until ? formatDateBR(proposal.valid_until) : '—'}</div></div>
-    <div class="meta-item"><div class="meta-label">Prazo</div><div class="meta-value">${proposal.service_deadline || '—'}</div></div>
+    <div class="meta-item"><div class="meta-label">Validade da Proposta</div><div class="meta-value">${proposal.valid_until ? formatDateBR(proposal.valid_until) : '—'}</div></div>
+    <div class="meta-item"><div class="meta-label">Prazo Para Execução do Serviço</div><div class="meta-value">${proposal.service_deadline || '—'}</div></div>
   </div>
   ${proposal.service_object ? `<div class="section"><div class="section-title">Objeto do Serviço</div><p class="section-text">${proposal.service_object}</p></div>` : ''}
   ${(proposal.scope_items || []).length > 0 ? `<div class="section"><div class="section-title">Descrição dos Serviços</div><ul class="scope-list">${proposal.scope_items.map(i => `<li>${i.description}</li>`).join('')}</ul></div>` : ''}
