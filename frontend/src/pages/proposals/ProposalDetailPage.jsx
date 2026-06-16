@@ -204,18 +204,6 @@ const formatDateBR = (dateString) => {
 
   </div>
 
-  <div class="footer-info">
-    <p>Emitida em: ${new Date().toLocaleDateString('pt-BR')}</p>
-    <p>
-      Válida até:
-      ${
-        proposal.valid_until
-          ? formatDateBR(proposal.valid_until)
-          : '—'
-      }
-    </p>
-  </div>
-
 </div>
 </div>
 
