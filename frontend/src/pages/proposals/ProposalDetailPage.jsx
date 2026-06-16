@@ -165,7 +165,7 @@ const formatDateBR = (dateString) => {
   ${proposal.final_notes ? `<div class="section"><div class="section-title">Considerações Finais</div><div class="notes-box"><p class="section-text">${proposal.final_notes.replace(/\n/g, '<br>')}</p></div></div>` : ''}
  <div class="footer">
   <div class="footer-left">
-    <p>Emitida em: ${new Date().toLocaleDateString('pt-BR')}</p>
+    <p>Emitida em: ${formatDateBR(proposal.valid_until)}</p>
     <p>Documento: ${proposal.proposal_number}</p>
   </div>
 
@@ -218,7 +218,7 @@ ${(proposal.payment_terms || []).length > 0 ? `\\pard\\b\\cf1 CONDICOES DE PAGAM
 ${proposal.payment_message ? `\\pard\\i ${proposal.payment_message}\\i0\\par\\par` : ''}
 ${proposal.final_notes ? `\\pard\\b\\cf1 CONSIDERACOES FINAIS:\\cf0\\b0\\par\\pard ${proposal.final_notes.replace(/\n/g, '\\par\\pard ')}\\par\\par` : ''}
 \\pard\\par
-\\pard\\b Emitida em:\\b0  ${new Date().toLocaleDateString('pt-BR')}\\par
+\\pard\\b Emitida em:\\b0  ${formatDateBR(proposal.valid_until)}\\par
 }`
 
   const blob = new Blob([rtf], { type: 'application/rtf' })
