@@ -69,30 +69,30 @@ function generatePDF(proposal) {
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; }
   .page { max-width: 800px; margin: 0 auto; padding: 40px; }
-  .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 24px; border-bottom: 2px solid #7C5CFC; margin-bottom: 28px; }
-  .logo-name { font-size: 22px; font-weight: 800; color: #7C5CFC; letter-spacing: -0.03em; }
-  .logo-sub { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 0.12em; }
+  .header {display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:24px; border-bottom:3px solid #0F172A; margin-bottom:32px;}
+  .logo-name{ font-size:28px; font-weight:800; color:#0F172A; letter-spacing:-0.04em;}
+  .logo-sub{ font-size:11px; color:#64748B; text-transform:uppercase; letter-spacing:.12em; margin-top:4px;}
   .prop-number { text-align: right; }
-  .prop-number p:first-child { font-size: 11px; color: #999; text-transform: uppercase; letter-spacing: 0.08em; }
-  .prop-number p:last-child { font-size: 18px; font-weight: 700; color: #7C5CFC; }
-  .title-band { background: linear-gradient(135deg, #7C5CFC15, #A78BFA08); border-left: 4px solid #7C5CFC; padding: 14px 18px; border-radius: 0 12px 12px 0; margin-bottom: 24px; }
-  .title-band h1 { font-size: 16px; font-weight: 700; color: #1a1a2e; }
-  .title-band p { font-size: 11px; color: #666; margin-top: 3px; }
+  .prop-number p:first-child{ font-size:11px; color:#64748B; text-transform:uppercase;}
+  .prop-number p:last-child{ font-size:20px; font-weight:700; color:#0F172A;}
+  .title-band{ background:#F8FAFC; border-left:5px solid #0F172A; padding:18px; border-radius:0 12px 12px 0; margin-bottom:28px;}
+  .title-band h1{ font-size:20px; color:#0F172A; font-weight:700;}
+  .title-band p{ margin-top:6px; color:#64748B;}
   .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
   .meta-item { background: #f8f7ff; border: 1px solid #e8e5ff; border-radius: 10px; padding: 12px; }
   .meta-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #888; margin-bottom: 4px; }
   .meta-value { font-size: 13px; font-weight: 600; color: #1a1a2e; }
   .section { margin-bottom: 24px; }
-  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #7C5CFC; border-bottom: 1px solid #e8e5ff; padding-bottom: 6px; margin-bottom: 12px; }
+  .section-title{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#0F172A; border-bottom:2px solid #CBD5E1; padding-bottom:6px; margin-bottom:12px;}
   .section-text { color: #333; line-height: 1.65; font-size: 12px; }
   ul.scope-list { padding-left: 20px; }
   ul.scope-list li { margin-bottom: 4px; color: #333; font-size: 12px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  th { background: #7C5CFC; color: #fff; padding: 9px 12px; text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+  th{background:#0F172A; color:#FFF; padding:10px 12px; text-align:left;}
   td { padding: 9px 12px; border-bottom: 1px solid #f0eeff; color: #333; }
   tr:last-child td { border-bottom: none; }
   tr:nth-child(even) td { background: #faf9ff; }
-  .total-row td { font-weight: 700; background: #f0eeff !important; color: #7C5CFC; border-top: 2px solid #7C5CFC; }
+  .total-row td{font-weight:700; background:#EEF2FF !important; color:#0F172A; border-top:2px solid #0F172A;}
   .text-right { text-align: right; }
   .notes-box { background: #f8f7ff; border: 1px solid #e8e5ff; border-radius: 10px; padding: 16px; }
   .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-end; }
@@ -100,11 +100,31 @@ function generatePDF(proposal) {
   .footer-sig { text-align: center; }
   .footer-sig .sig-line { width: 200px; border-top: 1px solid #333; margin: 0 auto 6px; }
   .footer-sig p { font-size: 10px; color: #555; }
+  .cover{min-height:280px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-bottom:2px solid #E2E8F0; margin-bottom:40px;}
+.cover-title{font-size:34px; font-weight:800; color:#0F172A; margin-bottom:10px;}
+.cover-client{font-size:18px;color:#475569;}
+.total-box{margin-top:18px; border:2px solid #0F172A; border-radius:14px; padding:18px; text-align:right;}
+.total-box span{display:block; font-size:12px; color:#64748B; text-transform:uppercase; letter-spacing:.12em;}
+.total-box strong{display:block; margin-top:8px; font-size:28px; color:#0F172A;}
+.footer-fixed{margin-top:30px; display:flex; justify-content:space-between; font-size:10px; color:#64748B;}
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
 </style>
 </head>
 <body>
 <div class="page">
+<div class="cover">
+  <div class="cover-title">
+    PROPOSTA COMERCIAL
+  </div>
+
+  <div class="cover-client">
+    ${proposal.client_display_name || proposal.client_name || 'Cliente'}
+  </div>
+
+  <div style="margin-top:12px;color:#64748B;">
+    ${proposal.proposal_number}
+  </div>
+</div>
   <div class="header">
     <div>
       <div class="logo-name">KRONOS</div>
@@ -126,20 +146,35 @@ function generatePDF(proposal) {
   </div>
   ${proposal.service_object ? `<div class="section"><div class="section-title">Objeto do Serviço</div><p class="section-text">${proposal.service_object}</p></div>` : ''}
   ${(proposal.scope_items || []).length > 0 ? `<div class="section"><div class="section-title">Descrição dos Serviços</div><ul class="scope-list">${proposal.scope_items.map(i => `<li>${i.description}</li>`).join('')}</ul></div>` : ''}
-  ${(proposal.services || []).length > 0 ? `<div class="section"><div class="section-title">Cálculo Técnico dos Serviços</div><table><tr><th>Serviço</th><th class="text-right">Valor</th><th class="text-right">Prazo</th></tr>${proposal.services.map(s => `<tr><td>${s.description}</td><td class="text-right">R$ ${parseFloat(s.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td class="text-right">${s.deadline_days} dias</td></tr>`).join('')}<tr class="total-row"><td>TOTAL</td><td class="text-right">R$ ${totalServices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td></td></tr></table></div>` : ''}
+  ${(proposal.services || []).length > 0 ? `<div class="section"><div class="section-title">Cálculo Técnico dos Serviços</div><table><tr><th>Serviço</th><th class="text-right">Valor</th><th class="text-right">Prazo</th></tr>${proposal.services.map(s => `<tr><td>${s.description}</td><td class="text-right">R$ ${parseFloat(s.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td class="text-right">${s.deadline_days} dias</td></tr>`).join('')}<tr class="total-row"><td>TOTAL</td><td class="text-right">R$ ${totalServices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td></td></tr></table><div class="total-box">
+  <span>Valor Total da Proposta</span>
+
+  <strong>
+    R$ ${totalServices.toLocaleString('pt-BR',{
+      minimumFractionDigits:2
+    })}
+  </strong>
+</div></div>` : ''}
   ${(proposal.payment_terms || []).length > 0 ? `<div class="section"><div class="section-title">Condições de Pagamento</div><table><tr><th>Condição</th><th class="text-right">Valor</th></tr>${proposal.payment_terms.map(pt => `<tr><td>${pt.description}</td><td class="text-right">R$ ${parseFloat(pt.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td></tr>`).join('')}</table>${proposal.payment_message ? `<p style="margin-top:10px;font-size:11px;color:#666;font-style:italic;">${proposal.payment_message}</p>` : ''}</div>` : ''}
   ${proposal.final_notes ? `<div class="section"><div class="section-title">Considerações Finais</div><div class="notes-box"><p class="section-text">${proposal.final_notes.replace(/\n/g, '<br>')}</p></div></div>` : ''}
-  <div class="footer">
-    <div class="footer-left">
-      <p>Emitida em: ${new Date().toLocaleDateString('pt-BR')}</p>
-      <p>Válida até: ${proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('pt-BR') : '—'}</p>
-    </div>
-    <div class="footer-sig">
-      <div class="sig-line"></div>
-      <p>Responsável Técnico</p>
-      <p>KRONOS Arquitetura</p>
-    </div>
+ <div class="footer">
+  <div class="footer-left">
+    <p>Emitida em: ${new Date().toLocaleDateString('pt-BR')}</p>
+    <p>Documento: ${proposal.proposal_number}</p>
   </div>
+
+  <div class="footer-sig">
+    <div class="sig-line"></div>
+    <p>Responsável Técnico</p>
+    <p><strong>Wesley Carlos da Silva Santos</strong></p>
+    <p>Kronos Engenharia</p>
+  </div>
+</div>
+
+<div class="footer-fixed">
+  <span>${proposal.proposal_number}</span>
+  <span>KRONOS</span>
+</div>
 </div>
 </body>
 </html>`
