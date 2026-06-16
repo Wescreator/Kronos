@@ -105,11 +105,14 @@ const formatDateBR = (dateString) => {
   .total-row td{font-weight:700; background:#EEF2FF !important; color:#0F172A; border-top:2px solid #0F172A;}
   .text-right { text-align: right; }
   .notes-box { background: #f8f7ff; border: 1px solid #e8e5ff; border-radius: 10px; padding: 16px; }
-  .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: flex-end; }
-  .footer-left p { font-size: 10px; color: #999; }
-  .footer-sig { text-align: center; }
-  .footer-sig .sig-line { width: 200px; border-top: 1px solid #333; margin: 0 auto 6px; }
-  .footer-sig p { font-size: 10px; color: #555; }
+  .footer {margin-top: 50px; padding-top: 20px; border-top: 1px solid #eee;}
+.signatures {display: flex; justify-content: space-between; gap: 40px; margin-top: 30px;}
+.signature-box {flex: 1; text-align: center;}
+.signature-line {border-top: 1px solid #333; margin-bottom: 8px; width: 100%;}
+.signature-name {font-size: 11px; font-weight: 600; color: #1a1a2e;}
+.signature-role {font-size: 10px; color: #666; margin-top: 2px;}
+.footer-info {margin-top: 20px;}
+.footer-info p {font-size: 10px; color: #999;}
   .cover{min-height:280px; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; border-bottom:2px solid #E2E8F0; margin-bottom:40px;}
 .cover-title{font-size:34px; font-weight:800; color:#0F172A; margin-bottom:10px;}
 .cover-client{font-size:18px;color:#475569;}
@@ -173,12 +176,46 @@ const formatDateBR = (dateString) => {
     <p>Documento: ${proposal.proposal_number}</p>
   </div>
 
-  <div class="footer-sig">
-    <div class="sig-line"></div>
-    <p>Responsável Técnico</p>
-    <p><strong>Romulo Sandes</strong></p>
-    <p>4Lados Arquitetura</p>
+  <div class="footer">
+
+  <div class="signatures">
+
+    <div class="signature-box">
+      <div class="signature-line"></div>
+      <div class="signature-name">
+        ${proposal.client_display_name || proposal.client_name || 'Cliente'}
+      </div>
+      <div class="signature-role">
+        Contratante
+      </div>
+    </div>
+
+    <div class="signature-box">
+      <div class="signature-line"></div>
+      <div class="signature-name">
+        Responsável Técnico
+        Romulo Sandes
+      </div>
+      <div class="signature-role">
+        4Lados Arquitetura
+      </div>
+    </div>
+
   </div>
+
+  <div class="footer-info">
+    <p>Emitida em: ${new Date().toLocaleDateString('pt-BR')}</p>
+    <p>
+      Válida até:
+      ${
+        proposal.valid_until
+          ? formatDateBR(proposal.valid_until)
+          : '—'
+      }
+    </p>
+  </div>
+
+</div>
 </div>
 
 <div class="footer-fixed">
