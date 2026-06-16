@@ -5,6 +5,7 @@ const path    = require('path')
 require('dotenv').config()
 const { authenticate } = require('./middlewares/auth.middleware')
 const app = express()
+const proposalRoutes = require('./routes/proposals.routes')
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
@@ -50,7 +51,9 @@ app.use('/api/tasks',         require('./routes/tasks.routes'))
 app.use('/api/financial',     require('./routes/financial.routes'))
 app.use('/api/chat',          require('./routes/chat.routes'))
 app.use('/api/notifications', require('./routes/notifications.routes'))
-app.use('/api/calendar',      authenticate,require('./routes/calendarRoutes'))
+app.use('/api/calendar',      authenticate,require('./routes/calendarRoutes'))const proposalRoutes = require('./routes/proposals.routes')
+// ...
+app.use('/api/proposals', proposalRoutes)
 
 // ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
