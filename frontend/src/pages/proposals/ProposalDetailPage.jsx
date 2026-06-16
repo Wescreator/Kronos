@@ -59,7 +59,13 @@ function InfoBlock({ label, children }) {
 // ── Geração de PDF ─────────────────────────────────────────────
 function generatePDF(proposal) {
   const totalServices = (proposal.services || []).reduce((s, x) => s + parseFloat(x.amount || 0), 0)
+const formatDateBR = (dateString) => {
+  if (!dateString) return '—'
 
+  const [year, month, day] = dateString.split('-')
+
+  return `${day}/${month}/${year}`
+}
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -141,7 +147,7 @@ function generatePDF(proposal) {
   </div>
   <div class="meta-grid">
     <div class="meta-item"><div class="meta-label">Cliente</div><div class="meta-value">${proposal.client_display_name || proposal.client_name || '—'}</div></div>
-    <div class="meta-item"><div class="meta-label">Validade</div><div class="meta-value">${proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('pt-BR') : '—'}</div></div>
+    <div class="meta-item"><div class="meta-label">Validade</div><div class="meta-value">${proposal.valid_until ? formatDateBR(proposal.valid_until) : '—'}</div></div>
     <div class="meta-item"><div class="meta-label">Prazo</div><div class="meta-value">${proposal.service_deadline || '—'}</div></div>
   </div>
   ${proposal.service_object ? `<div class="section"><div class="section-title">Objeto do Serviço</div><p class="section-text">${proposal.service_object}</p></div>` : ''}
@@ -166,8 +172,8 @@ function generatePDF(proposal) {
   <div class="footer-sig">
     <div class="sig-line"></div>
     <p>Responsável Técnico</p>
-    <p><strong>Wesley Carlos da Silva Santos</strong></p>
-    <p>Kronos Engenharia</p>
+    <p><strong>Romulo Sandes</strong></p>
+    <p>4Lados Arquitetura</p>
   </div>
 </div>
 
@@ -202,7 +208,7 @@ function generateDOCX(proposal) {
 \\par
 \\pard\\b\\cf1 TITULO:\\cf0\\b0  ${proposal.title}\\par
 \\pard\\b Cliente:\\b0  ${proposal.client_display_name || proposal.client_name || '-'}\\par
-\\pard\\b Validade:\\b0  ${proposal.valid_until ? new Date(proposal.valid_until).toLocaleDateString('pt-BR') : '-'}\\par
+\\pard\\b Validade:\\b0  ${proposal.valid_until ? formatDateBR(proposal.valid_until) : '-'}\\par
 \\pard\\b Prazo dos Servicos:\\b0  ${proposal.service_deadline || '-'}\\par
 \\par
 ${proposal.service_object ? `\\pard\\b\\cf1 OBJETO DO SERVICO:\\cf0\\b0\\par\\pard ${proposal.service_object}\\par\\par` : ''}
