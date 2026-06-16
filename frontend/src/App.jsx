@@ -18,9 +18,9 @@ import ChatPage           from './pages/chat/ChatPage'
 import TeamPage           from './pages/team/TeamPage'
 import TeamMemberPage     from './pages/team/TeamMemberPage'
 import RoleRoute          from './routes/RoleRoute'
-// ── Agenda (novo módulo — aditivo) ──────────────────────────────────────────
 import CalendarPage       from './pages/calendar/CalendarPage'
-import ProposalsPage from './pages/proposals/ProposalsPage'
+import ProposalsPage      from './pages/proposals/ProposalsPage'
+import ProposalDetailPage from './pages/proposals/ProposalDetailPage'
 
 export default function App() {
   return (
@@ -32,7 +32,7 @@ export default function App() {
         <Route path="/reset-password"   element={<ResetPasswordPage />} />
         <Route path="/"                 element={<Navigate to="/app/dashboard" replace />} />
 
-        {/* Rotas protegidas — inalteradas */}
+        {/* Rotas protegidas */}
         <Route path="/app" element={
           <ProtectedRoute>
             <AppLayout />
@@ -51,9 +51,9 @@ export default function App() {
           <Route path="chat"               element={<ChatPage />} />
           <Route path="team"               element={<TeamPage />} />
           <Route path="team/:id"           element={<TeamMemberPage />} />
-          {/* ── Agenda ── */}
           <Route path="agenda"             element={<CalendarPage />} />
           <Route path="proposals"          element={<ProposalsPage />} />
+          <Route path="proposals/:id"      element={<ProposalDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
