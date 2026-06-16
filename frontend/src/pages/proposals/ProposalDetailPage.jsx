@@ -193,9 +193,10 @@ const formatDateBR = (dateString) => {
     <div class="signature-box">
       <div class="signature-line"></div>
       <div class="signature-name">
-        Responsável Técnico
         Romulo Sandes
       </div>
+      <div class="signature-role">
+        Responsável Técnico      
       <div class="signature-role">
         4Lados Arquitetura
       </div>
