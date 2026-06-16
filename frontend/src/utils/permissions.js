@@ -35,9 +35,9 @@ export const ROLE_STYLES = {
 // ─────────────────────────────────────────────────────────────────
 
 export const VISIBLE_MODULES = {
-  admin:   ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team' , 'agenda'],
-  manager: ['projects',  'tasks',    'chat',  'team' , 'agenda'],
-  member:  ['projects',  'tasks',    'chat',  'team' , 'agenda'],
+  admin:   ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team' , 'agenda' , 'proposals'],
+  manager: ['projects',  'tasks',    'chat',  'team' , 'agenda' , 'proposals'],
+  member:  ['projects',  'tasks',    'chat',  'team' , 'agenda' , 'proposals'],
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -91,7 +91,13 @@ export const PERMISSIONS = {
     edit:   ['admin', 'manager'],
     delete: ['admin'],
   },
-}
+proposals: {
+  view:      ['admin', 'manager', 'member'],
+  create:    ['admin', 'manager'],
+  edit:      ['admin', 'manager'],
+  duplicate: ['admin', 'manager'],
+  delete:    ['admin'],
+},}
 
 // ─────────────────────────────────────────────────────────────────
 // FUNÇÕES DE VERIFICAÇÃO
