@@ -186,7 +186,7 @@ export default function ProposalsPage() {
       <PageHeader
   title="Propostas"
   subtitle="Gerencie propostas comerciais"
-  action={
+  actions={
     canCreate && (
       <button
         onClick={() => setShowModal(true)}
