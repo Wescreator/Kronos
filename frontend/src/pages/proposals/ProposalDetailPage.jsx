@@ -62,10 +62,14 @@ function generatePDF(proposal) {
 const formatDateBR = (dateString) => {
   if (!dateString) return '—'
 
-  const [year, month, day] = dateString.split('-')
+  const cleanDate = String(dateString).split('T')[0]
+
+  const [year, month, day] = cleanDate.split('-')
 
   return `${day}/${month}/${year}`
 }
+
+
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
