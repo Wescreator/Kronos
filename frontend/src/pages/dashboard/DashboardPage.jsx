@@ -99,7 +99,7 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <Zap size={16} style={{ color: '#c5a30d' }} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#A78BFA' }}>
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#c5a30d' }}>
             Visão Executiva
           </span>
         </div>
