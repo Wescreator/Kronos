@@ -8,10 +8,10 @@ export default {
       },
       colors: {
         kronos: {
-          bg:      '#050816',
-          sidebar: '#081024',
-          card:    '#0D152B',
-          hover:   '#131D37',
+          bg:      '#0A0A0A',
+          sidebar: '#111111',
+          card:    '#1B1B1B',
+          hover:   '#232323',
           primary: '#7C5CFC',
           glow:    '#A78BFA',
           success: '#34D399',
@@ -26,12 +26,12 @@ export default {
         '4xl': '32px',
       },
       boxShadow: {
-        'soft':   '0 10px 30px rgba(0,0,0,0.35)',
-        'medium': '0 20px 40px rgba(0,0,0,0.45)',
-        'large':  '0 25px 60px rgba(0,0,0,0.55)',
-        'purple': '0 0 40px rgba(124,92,252,0.18)',
-        'blue':   '0 0 40px rgba(56,189,248,0.15)',
-        'green':  '0 0 40px rgba(52,211,153,0.15)',
+        'soft':   '0 8px 24px rgba(0,0,0,0.30)',
+        'medium': '0 16px 40px rgba(0,0,0,0.40)',
+        'large':  '0 24px 60px rgba(0,0,0,0.50)',
+        'purple': '0 0 40px rgba(124,92,252,0.10)',
+        'blue':   '0 0 40px rgba(56,189,248,0.08)',
+        'green':  '0 0 40px rgba(52,211,153,0.08)',
       },
       animation: {
         'fade-in': 'fadeInUp 0.4s ease forwards',
