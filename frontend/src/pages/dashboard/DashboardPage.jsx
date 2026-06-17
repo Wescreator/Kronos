@@ -98,7 +98,7 @@ export default function DashboardPage() {
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Zap size={16} style={{ color: '#7C5CFC' }} />
+          <Zap size={16} style={{ color: '#c5a30d' }} />
           <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#A78BFA' }}>
             Visão Executiva
           </span>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
             </div>
             <Link to="/app/projects"
               className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#A78BFA' }}>
+              style={{ color: '#ffffff' }}>
               Ver todos <ArrowRight size={13} />
             </Link>
           </div>
@@ -208,8 +208,8 @@ export default function DashboardPage() {
             className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
             style={{
               background: 'rgba(124,92,252,0.10)',
-              border: '1px solid rgba(124,92,252,0.22)',
-              color: '#A78BFA',
+              border: '1px solid rgba(201, 187, 255, 0.22)',
+              color: '#ffffff',
             }}
             onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.18)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.10)' }}
@@ -266,7 +266,7 @@ export default function DashboardPage() {
               </h3>
             </div>
             <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#A78BFA' }}>
+              style={{ color: '#ffffff' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
@@ -309,7 +309,7 @@ export default function DashboardPage() {
               </h3>
             </div>
             <Link to="/app/financial/expenses" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#A78BFA' }}>
+              style={{ color: '#ffffff' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
