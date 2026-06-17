@@ -1,46 +1,40 @@
 const proposalService = require('../services/proposal.service')
 const R = require('../utils/response')
 
-const getAll = async (req, res) => {
-  try {
-    const result = await proposalService.getAll(req.query)
-    return R.success(res, result)
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const asyncHandler = fn => (req, res) =>
+  Promise.resolve(fn(req, res)).catch(err =>
+    R.error(res, err.message, err.status || 500)
+  )
 
-const getById = async (req, res) => {
-  try {
-    const proposal = await proposalService.getById(req.params.id)
-    return R.success(res, { proposal })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const getAll = asyncHandler(async (req, res) => {
+  const result = await proposalService.getAll(req.query)
+  return R.success(res, result)
+})
 
-const create = async (req, res) => {
-  try {
-    const proposal = await proposalService.create(req.body, req.user.id)
-    return R.created(res, { proposal })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const getById = asyncHandler(async (req, res) => {
+  const proposal = await proposalService.getById(req.params.id)
+  return R.success(res, { proposal })
+})
 
-const update = async (req, res) => {
-  try {
-    const proposal = await proposalService.update(req.params.id, req.body)
-    return R.success(res, { proposal })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const create = asyncHandler(async (req, res) => {
+  const proposal = await proposalService.create(req.body, req.user.id)
+  return R.created(res, { proposal })
+})
 
-const duplicate = async (req, res) => {
-  try {
-    const proposal = await proposalService.duplicate(req.params.id, req.user.id)
-    return R.created(res, { proposal })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const update = asyncHandler(async (req, res) => {
+  const proposal = await proposalService.update(req.params.id, req.body)
+  return R.success(res, { proposal })
+})
 
-const remove = async (req, res) => {
-  try {
-    await proposalService.remove(req.params.id)
-    return R.success(res, { message: 'Proposta excluída' })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const duplicate = asyncHandler(async (req, res) => {
+  const proposal = await proposalService.duplicate(req.params.id, req.user.id)
+  return R.created(res, { proposal })
+})
 
-module.exports = { getAll, getById, create, update, duplicate, remove }
+const remove = asyncHandler(async (req, res) => {
+  await proposalService.remove(req.params.id)
+  return R.success(res, { message: 'Proposta excluída' })
+})
+
+module.exports = {getAll, getById, create, update, duplicate, remove
+}

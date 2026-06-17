@@ -44,20 +44,16 @@ const deleteExpense = async (req, res) => {
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
-/* ─── Análise avançada — leitura pura ─── */
 const getExpensesByCategory = async (req, res) => {
   try {
     const { month, year } = req.query
-    const categories = await financialService.getExpensesByCategory(month, year)
-    return R.success(res, { categories })
+    return R.success(res, { categories: await financialService.getExpensesByCategory(month, year) })
   } catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getForecast = async (req, res) => {
-  try {
-    const forecast = await financialService.getForecast()
-    return R.success(res, forecast)
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
+  try { return R.success(res, await financialService.getForecast()) }
+  catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getRevenues = async (req, res) => {
@@ -67,6 +63,11 @@ const getRevenues = async (req, res) => {
 
 const createRevenue = async (req, res) => {
   try { return R.created(res, { revenue: await financialService.createRevenue(req.body, req.user.id) }) }
+  catch (err) { return R.error(res, err.message, err.status || 500) }
+}
+
+const deleteRevenue = async (req, res) => {
+  try { await financialService.deleteRevenue(req.params.id); return R.success(res, { message: 'Receita excluída' }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
@@ -104,6 +105,6 @@ module.exports = {
   getDashboard, getDRE, getProjectFinancials,
   getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
   getExpensesByCategory, getForecast,
-  getRevenues, createRevenue, confirmReceipt, updateInstallment,
+  getRevenues, createRevenue, deleteRevenue, confirmReceipt, updateInstallment,
   getCategories, createCategory, updateCategory, deleteCategory,
 }

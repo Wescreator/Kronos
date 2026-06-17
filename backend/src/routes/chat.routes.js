@@ -1,80 +1,32 @@
-const router = require('express').Router()
-const pool   = require('../config/database')
+const router      = require('express').Router()
+const chatService = require('../services/chat.service')
 const { authenticate } = require('../middlewares/auth.middleware')
-const R      = require('../utils/response')
+const R           = require('../utils/response')
 
 router.use(authenticate)
 
 // ── GET /chat/rooms ─────────────────────────────────────────────
 router.get('/rooms', async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      `SELECT cr.*, crm2.user_id AS other_user_id, u.name AS other_user_name, u.avatar_url AS other_user_avatar,
-              (SELECT content FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) AS last_message,
-              (SELECT created_at FROM chat_messages cm WHERE cm.room_id = cr.id ORDER BY cm.created_at DESC LIMIT 1) AS last_message_at
-       FROM chat_rooms cr
-       JOIN chat_room_members crm  ON crm.room_id = cr.id AND crm.user_id = $1
-       LEFT JOIN chat_room_members crm2 ON crm2.room_id = cr.id AND crm2.user_id != $1
-       LEFT JOIN users u ON u.id = crm2.user_id
-       ORDER BY last_message_at DESC NULLS LAST`,
-      [req.user.id]
-    )
-    return R.success(res, { rooms: rows })
+    const rooms = await chatService.getRooms(req.user.id)
+    return R.success(res, { rooms })
   } catch (err) { return R.error(res, err.message) }
 })
 
 // ── POST /chat/rooms ────────────────────────────────────────────
 router.post('/rooms', async (req, res) => {
   try {
-    const { name, type = 'private', members = [] } = req.body
-    const { rows } = await pool.query(
-      'INSERT INTO chat_rooms (name, type, created_by) VALUES ($1,$2,$3) RETURNING *',
-      [name, type, req.user.id]
-    )
-    const room = rows[0]
-    const allMembers = [...new Set([req.user.id, ...members])]
-    for (const uid of allMembers) {
-      await pool.query(
-        'INSERT INTO chat_room_members (room_id, user_id) VALUES ($1,$2) ON CONFLICT DO NOTHING',
-        [room.id, uid]
-      )
-    }
+    const room = await chatService.createRoom(req.body, req.user.id)
     return R.created(res, { room })
-  } catch (err) { return R.error(res, err.message) }
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
 })
 
 // ── DELETE /chat/rooms/:id ──────────────────────────────────────
-// Apenas o criador da sala ou admin pode excluir
 router.delete('/rooms/:id', async (req, res) => {
   try {
-    const { id } = req.params
-
-    // Verifica se a sala existe e se o usuário é membro
-    const { rows: roomRows } = await pool.query(
-      `SELECT cr.* FROM chat_rooms cr
-       JOIN chat_room_members crm ON crm.room_id = cr.id AND crm.user_id = $1
-       WHERE cr.id = $2`,
-      [req.user.id, id]
-    )
-
-    if (roomRows.length === 0) {
-      return R.notFound(res, 'Sala não encontrada ou acesso negado')
-    }
-
-    const room = roomRows[0]
-
-    // Apenas criador ou admin pode excluir
-    if (room.created_by !== req.user.id && req.user.role !== 'admin') {
-      return R.forbidden(res, 'Apenas o criador pode excluir esta conversa')
-    }
-
-    // Remove mensagens, membros e sala em cascata (ou confie no ON DELETE CASCADE do schema)
-    await pool.query('DELETE FROM chat_messages      WHERE room_id = $1', [id])
-    await pool.query('DELETE FROM chat_room_members  WHERE room_id = $1', [id])
-    await pool.query('DELETE FROM chat_rooms         WHERE id      = $1', [id])
-
+    await chatService.deleteRoom(req.params.id, req.user.id, req.user.role)
     return R.success(res, { deleted: true })
-  } catch (err) { return R.error(res, err.message) }
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
 })
 
 // ── GET /chat/rooms/:id/messages ────────────────────────────────
@@ -82,37 +34,19 @@ router.get('/rooms/:id/messages', async (req, res) => {
   try {
     const limit  = parseInt(req.query.limit)  || 50
     const offset = parseInt(req.query.offset) || 0
-    const { rows } = await pool.query(
-      `SELECT cm.*, u.name AS user_name, u.avatar_url
-       FROM chat_messages cm
-       JOIN users u ON u.id = cm.user_id
-       WHERE cm.room_id = $1 AND cm.is_deleted = FALSE
-       ORDER BY cm.created_at DESC
-       LIMIT $2 OFFSET $3`,
-      [req.params.id, limit, offset]
-    )
-    return R.success(res, { messages: rows.reverse() })
+    const messages = await chatService.getMessages(req.params.id, limit, offset)
+    return R.success(res, { messages })
   } catch (err) { return R.error(res, err.message) }
 })
 
 // ── POST /chat/rooms/:id/messages ───────────────────────────────
 router.post('/rooms/:id/messages', async (req, res) => {
   try {
-    const { content } = req.body
-    const { rows } = await pool.query(
-      `INSERT INTO chat_messages (room_id, user_id, content)
-       VALUES ($1,$2,$3) RETURNING *`,
-      [req.params.id, req.user.id, content]
-    )
-    const message = rows[0]
-
-    const { rows: members } = await pool.query(
-      'SELECT user_id FROM chat_room_members WHERE room_id = $1',
-      [req.params.id]
-    )
-    const memberIds = members.map(m => m.user_id).filter(id => id !== req.user.id)
-    global.broadcastToRoom(memberIds, { type: 'new_message', roomId: req.params.id, message })
-
+    const message = await chatService.createMessage({
+      roomId:  req.params.id,
+      userId:  req.user.id,
+      content: req.body.content,
+    })
     return R.created(res, { message })
   } catch (err) { return R.error(res, err.message) }
 })

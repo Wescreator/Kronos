@@ -1,37 +1,55 @@
 const taskService = require('../services/task.service')
 const R = require('../utils/response')
 
-const getAll     = async (req, res) => {
-  try { return R.success(res, await taskService.getAll(req.query)) }
-  catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const asyncHandler = fn => (req, res) =>
+  Promise.resolve(fn(req, res)).catch(err =>
+    R.error(res, err.message, err.status || 500)
+  )
 
-const getById    = async (req, res) => {
-  try { return R.success(res, { task: await taskService.getById(req.params.id) }) }
-  catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const getAll = asyncHandler(async (req, res) => {
+  const result = await taskService.getAll(req.query)
+  return R.success(res, result)
+})
 
-const create     = async (req, res) => {
-  try { return R.created(res, { task: await taskService.create(req.body, req.user.id) }) }
-  catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const getById = asyncHandler(async (req, res) => {
+  const task = await taskService.getById(req.params.id)
+  return R.success(res, { task })
+})
 
-const update     = async (req, res) => {
-  try { return R.success(res, { task: await taskService.update(req.params.id, req.body, req.user.id) }) }
-  catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const create = asyncHandler(async (req, res) => {
+  const task = await taskService.create(req.body, req.user.id)
+  return R.created(res, { task })
+})
 
-const addComment = async (req, res) => {
-  try {
-    const fileUrl = req.file ? `/uploads/files/${req.file.filename}` : null
-    const comment = await taskService.addComment(req.params.id, req.user.id, req.body.content, fileUrl)
-    return R.created(res, { comment })
-  } catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+const update = asyncHandler(async (req, res) => {
+  const task = await taskService.update(
+    req.params.id,
+    req.body,
+    req.user.id
+  )
 
-const getDashboard = async (req, res) => {
-  try { return R.success(res, { stats: await taskService.getDashboardStats() }) }
-  catch (err) { return R.error(res, err.message, err.status || 500) }
-}
+  return R.success(res, { task })
+})
 
-module.exports = { getAll, getById, create, update, addComment, getDashboard }
+const addComment = asyncHandler(async (req, res) => {
+  const fileUrl = req.file
+    ? `/uploads/files/${req.file.filename}`
+    : null
+
+  const comment = await taskService.addComment(
+    req.params.id,
+    req.user.id,
+    req.body.content,
+    fileUrl
+  )
+
+  return R.created(res, { comment })
+})
+
+const getDashboard = asyncHandler(async (req, res) => {
+  const stats = await taskService.getDashboardStats()
+  return R.success(res, { stats })
+})
+
+module.exports = {getAll, getById, create, update, addComment, getDashboard
+}

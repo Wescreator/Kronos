@@ -32,23 +32,28 @@ const me = async (req, res) => {
   try {
     const userRepo = require('../repositories/user.repository')
     const user = await userRepo.findById(req.user.id)
-    if (!user) return R.notFound(res, 'Usuário não encontrado')
+
+    if (!user) {
+      return R.notFound(res, 'Usuário não encontrado')
+    }
+
     return R.success(res, { user })
   } catch (err) {
-    return R.error(res, err.message)
+    return R.error(res, err.message, err.status || 500)
   }
 }
-
-/* ─── Recuperação de senha ─── */
 
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body
+
     if (!email || typeof email !== 'string') {
       return R.error(res, 'Email é obrigatório.', 400)
     }
+
     const result = await authService.forgotPassword(email.toLowerCase().trim())
     return R.success(res, result)
+
   } catch (err) {
     return R.error(res, err.message, err.status || 500)
   }
@@ -57,14 +62,18 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body
+
     if (!token || !password) {
       return R.error(res, 'Token e nova senha são obrigatórios.', 400)
     }
+
     const result = await authService.resetPassword(token, password)
     return R.success(res, result)
+
   } catch (err) {
     return R.error(res, err.message, err.status || 500)
   }
 }
 
-module.exports = { login, register, refresh, me, forgotPassword, resetPassword }
+module.exports = {login, register, refresh, me, forgotPassword, resetPassword
+}

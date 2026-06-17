@@ -133,6 +133,12 @@ const confirmReceipt    = async (installmentId, receivedDate) => {
 }
 const updateInstallment = async (id, data) => repo.updateInstallment(id, data)
 
+const deleteRevenue = async (id) => {
+  const revenue = await repo.findRevenueById(id)
+  if (!revenue) throw { status: 404, message: 'Receita não encontrada' }
+  await repo.deleteRevenue(id)
+}
+
 const getCategories  = async ()             => repo.findCategories()
 const createCategory = async (data, userId) => repo.createCategory(data.name, data.color, userId)
 const updateCategory = async (id, data)     => repo.updateCategory(id, data.name, data.color)
@@ -140,11 +146,10 @@ const deleteCategory = async (id)           => repo.deleteCategory(id)
 
 const getDashboard = async (query = {}) => {
   const today = new Date()
-  const month = query.month? parseInt(query.month): today.getMonth() + 1
-  const year = query.year? parseInt(query.year): today.getFullYear()
-  const stats = await repo.getDashboardStats(month, year)
+  const month = query.month ? parseInt(query.month) : today.getMonth() + 1
+  const year  = query.year  ? parseInt(query.year)  : today.getFullYear()
+  const stats    = await repo.getDashboardStats(month, year)
   const cashflow = await repo.getCashflow(year)
-
   return { stats, cashflow }
 }
 
@@ -154,7 +159,7 @@ const getProjectFinancials = async ()            => repo.getProjectFinancials()
 module.exports = {
   getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
   getExpensesByCategory, getForecast,
-  getRevenues, createRevenue, confirmReceipt, updateInstallment,
+  getRevenues, createRevenue, confirmReceipt, updateInstallment, deleteRevenue,
   getCategories, createCategory, updateCategory, deleteCategory,
   getDashboard, getDRE, getProjectFinancials,
 }

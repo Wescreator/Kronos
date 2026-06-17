@@ -1,95 +1,110 @@
-// backend/controllers/calendarController.js
-// Módulo Agenda — Kronos
+const calendarService = require('../services/calendarService')
+const R = require('../utils/response')
 
-const service = require('../services/calendarService');
-
-function handleError(res, err) {
-  const status = err.message?.includes('não encontrado') ? 404 : 400;
-  return res.status(status).json({ error: err.message });
-}
-
-// GET /calendar
-async function getAll(req, res) {
+const getAll = async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
-    const events = await service.getAll({ startDate, endDate });
-    return res.json(events);
+    const { startDate, endDate } = req.query
+
+    const events = await calendarService.getAll({
+      startDate,
+      endDate
+    })
+
+    return R.success(res, { events })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// GET /calendar/month?year=2026&month=6
-async function getByMonth(req, res) {
+const getByMonth = async (req, res) => {
   try {
-    const { year, month } = req.query;
-    const events = await service.getByMonth(year, month);
-    return res.json(events);
+    const { year, month } = req.query
+
+    const events = await calendarService.getByMonth(year, month)
+
+    return R.success(res, { events })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// GET /calendar/week?startOfWeek=...&endOfWeek=...
-async function getByWeek(req, res) {
+const getByWeek = async (req, res) => {
   try {
-    const { startOfWeek, endOfWeek } = req.query;
-    const events = await service.getByWeek(startOfWeek, endOfWeek);
-    return res.json(events);
+    const { startOfWeek, endOfWeek } = req.query
+
+    const events = await calendarService.getByWeek(startOfWeek, endOfWeek)
+
+    return R.success(res, { events })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// GET /calendar/agenda?fromDate=...
-async function getAgenda(req, res) {
+const getAgenda = async (req, res) => {
   try {
-    const { fromDate } = req.query;
-    const events = await service.getAgenda(fromDate);
-    return res.json(events);
+    const { fromDate } = req.query
+
+    const events = await calendarService.getAgenda(fromDate)
+
+    return R.success(res, { events })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// GET /calendar/:id
-async function getById(req, res) {
+const getById = async (req, res) => {
   try {
-    const event = await service.getById(req.params.id);
-    return res.json(event);
+    const event = await calendarService.getById(req.params.id)
+
+    if (!event) {
+      return R.notFound(res, 'Evento não encontrado')
+    }
+
+    return R.success(res, { event })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// POST /calendar
-async function create(req, res) {
+const create = async (req, res) => {
   try {
-    const event = await service.createEvent(req.body, req.user.id);
-    return res.status(201).json(event);
+    const event = await calendarService.createEvent(req.body, req.user.id)
+
+    return R.created(res, { event })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// PATCH /calendar/:id
-async function update(req, res) {
+const update = async (req, res) => {
   try {
-    const event = await service.updateEvent(req.params.id, req.body);
-    return res.json(event);
+    const event = await calendarService.updateEvent(req.params.id, req.body)
+
+    return R.success(res, { event })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-// DELETE /calendar/:id
-async function remove(req, res) {
+const remove = async (req, res) => {
   try {
-    await service.deleteEvent(req.params.id);
-    return res.status(204).send();
+    await calendarService.deleteEvent(req.params.id)
+
+    return R.success(res, {
+      message: 'Evento removido com sucesso.'
+    })
+
   } catch (err) {
-    handleError(res, err);
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-module.exports = { getAll, getByMonth, getByWeek, getAgenda, getById, create, update, remove };
+module.exports = {getAll, getByMonth, getByWeek, getAgenda, getById, create, update, remove
+}
