@@ -32,7 +32,6 @@ const NAV_LINKS = [
   { to: '/app/chat',      icon: MessageSquare,    label: 'Chat'       },
   { to: '/app/team',      icon: Users,            label: 'Equipe'     },
   { to: '/app/proposals', icon: FileText,        label: 'Propostas' }
-
 ]
 
 export default function Topbar() {
@@ -72,7 +71,7 @@ export default function Topbar() {
         fixed top-0 left-0 right-0
         z-50 h-16
         border-b border-white/5
-        bg-[#050816]/70
+        bg-[#111111]/90
         backdrop-blur-xl
       "
     >
@@ -93,9 +92,9 @@ export default function Topbar() {
             className="
               flex h-8 w-8 items-center justify-center
               rounded-xl
-              bg-violet-500/15
-              text-sm font-bold text-violet-300
-              shadow-[0_0_20px_rgba(124,92,252,0.20)]
+              bg-white/[0.06]
+              text-sm font-bold text-white
+              border border-white/[0.08]
             "
           >
             K
@@ -106,10 +105,9 @@ export default function Topbar() {
         </NavLink>
 
         {/* ── SEPARADOR ────────────────────────────────────────────── */}
-        <div className="hidden lg:block h-5 w-px shrink-0 bg-white/10" />
+        <div className="hidden lg:block h-5 w-px shrink-0 bg-white/8" />
 
-        {/* ── NAVEGAÇÃO DESKTOP (lg+) ───────────────────────────────
-            Ícone + label, indicador ativo com ring violet           */}
+        {/* ── NAVEGAÇÃO DESKTOP (lg+) ───────────────────────────────*/}
         <nav className="hidden lg:flex items-center gap-0.5">
           {NAV_LINKS.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -121,8 +119,8 @@ export default function Topbar() {
                 text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-violet-500/10 text-white ring-1 ring-violet-500/25 shadow-[0_0_20px_rgba(124,92,252,0.08)]'
-                  : 'text-white/55 hover:bg-white/[0.04] hover:text-white'
+                  ? 'bg-white/[0.07] text-white ring-1 ring-white/10'
+                  : 'text-white/50 hover:bg-white/[0.04] hover:text-white'
                 }
               `}
             >
@@ -132,8 +130,7 @@ export default function Topbar() {
           ))}
         </nav>
 
-        {/* ── NAVEGAÇÃO TABLET (md → lg) ────────────────────────────
-            Apenas ícones com tooltip nativo (title)                 */}
+        {/* ── NAVEGAÇÃO TABLET (md → lg) ────────────────────────────*/}
         <nav className="hidden md:flex lg:hidden items-center gap-0.5">
           {NAV_LINKS.map(({ to, icon: Icon, label }) => (
             <NavLink
@@ -145,7 +142,7 @@ export default function Topbar() {
                 rounded-xl
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/25'
+                  ? 'bg-white/[0.07] text-white ring-1 ring-white/10'
                   : 'text-white/50 hover:bg-white/[0.04] hover:text-white'
                 }
               `}
@@ -155,26 +152,25 @@ export default function Topbar() {
           ))}
         </nav>
 
-        {/* ── BUSCA (md+) ───────────────────────────────────────────
-            HTML idêntico ao original, apenas reposicionado          */}
+        {/* ── BUSCA (md+) ───────────────────────────────────────────*/}
         <div className="hidden md:flex flex-1 justify-end">
           <div
             className="
               flex h-9 w-full max-w-xs items-center gap-3
               rounded-xl
-              border border-white/5
+              border border-white/[0.06]
               bg-white/[0.03]
               px-3
             "
           >
-            <Search size={15} className="shrink-0 text-white/40" />
+            <Search size={15} className="shrink-0 text-white/35" />
             <input
               placeholder="Buscar projetos, tarefas, membros..."
               className="
                 flex-1 min-w-0
                 bg-transparent
                 text-sm text-white
-                placeholder:text-white/35
+                placeholder:text-white/30
                 outline-none
               "
             />
@@ -182,10 +178,10 @@ export default function Topbar() {
               className="
                 shrink-0
                 rounded-md
-                border border-white/10
+                border border-white/[0.08]
                 bg-white/[0.03]
                 px-1.5 py-0.5
-                text-xs text-white/40
+                text-xs text-white/35
               "
             >
               ⌘K
@@ -207,9 +203,9 @@ export default function Topbar() {
               className="
                 relative flex h-9 w-9 items-center justify-center
                 rounded-xl
-                text-white/60
+                text-white/55
                 transition-all duration-200
-                hover:bg-white/[0.04] hover:text-white
+                hover:bg-white/[0.05] hover:text-white
               "
             >
               <Bell size={18} />
@@ -229,19 +225,19 @@ export default function Topbar() {
                   absolute right-0 top-12
                   w-[380px]
                   overflow-hidden rounded-3xl
-                  border border-white/5
-                  bg-[#0D152B]/95
+                  border border-white/[0.06]
+                  bg-[#1B1B1B]/97
                   backdrop-blur-xl
-                  shadow-[0_20px_50px_rgba(0,0,0,0.45)]
+                  shadow-[0_20px_50px_rgba(0,0,0,0.50)]
                 "
               >
-                <div className="flex items-center justify-between border-b border-white/5 p-4">
+                <div className="flex items-center justify-between border-b border-white/[0.06] p-4">
                   <h3 className="font-semibold text-white">
                     Notificações
                   </h3>
                   <button
                     onClick={handleMarkAll}
-                    className="text-xs text-violet-300 hover:text-violet-200"
+                    className="text-xs text-white/50 hover:text-white/80"
                   >
                     Marcar todas
                   </button>
@@ -249,7 +245,7 @@ export default function Topbar() {
 
                 <div className="max-h-[420px] overflow-y-auto">
                   {notifs.length === 0 ? (
-                    <div className="p-8 text-center text-sm text-white/40">
+                    <div className="p-8 text-center text-sm text-white/35">
                       Nenhuma notificação
                     </div>
                   ) : (
@@ -257,21 +253,21 @@ export default function Topbar() {
                       <div
                         key={n.id}
                         className={`
-                          border-b border-white/5 p-4
+                          border-b border-white/[0.05] p-4
                           transition-colors
                           hover:bg-white/[0.03]
-                          ${!n.is_read ? 'bg-violet-500/[0.05]' : ''}
+                          ${!n.is_read ? 'bg-white/[0.03]' : ''}
                         `}
                       >
                         <p className="text-sm font-medium text-white">
                           {n.title}
                         </p>
                         {n.body && (
-                          <p className="mt-1 text-xs text-white/55">
+                          <p className="mt-1 text-xs text-white/50">
                             {n.body}
                           </p>
                         )}
-                        <p className="mt-2 text-xs text-white/35">
+                        <p className="mt-2 text-xs text-white/30">
                           {formatDateTime(n.created_at)}
                         </p>
                       </div>
@@ -294,7 +290,7 @@ export default function Topbar() {
                 flex items-center gap-2
                 rounded-2xl px-2 py-1.5
                 transition-all duration-200
-                hover:bg-white/[0.04]
+                hover:bg-white/[0.05]
               "
             >
               <Avatar
@@ -306,7 +302,7 @@ export default function Topbar() {
                 <p className="text-sm font-medium leading-tight text-white">
                   {user?.name}
                 </p>
-                <p className="text-xs leading-tight text-white/40">
+                <p className="text-xs leading-tight text-white/38">
                   {user?.email}
                 </p>
               </div>
@@ -318,17 +314,17 @@ export default function Topbar() {
                   absolute right-0 top-12
                   w-60
                   overflow-hidden rounded-3xl
-                  border border-white/5
-                  bg-[#0D152B]/95
+                  border border-white/[0.06]
+                  bg-[#1B1B1B]/97
                   backdrop-blur-xl
-                  shadow-[0_20px_50px_rgba(0,0,0,0.45)]
+                  shadow-[0_20px_50px_rgba(0,0,0,0.50)]
                 "
               >
-                <div className="border-b border-white/5 p-4">
+                <div className="border-b border-white/[0.06] p-4">
                   <p className="font-semibold text-white">
                     {user?.name}
                   </p>
-                  <p className="text-xs text-white/45">
+                  <p className="text-xs text-white/40">
                     {user?.email}
                   </p>
                 </div>
@@ -357,9 +353,9 @@ export default function Topbar() {
             className="
               flex md:hidden h-9 w-9 items-center justify-center
               rounded-xl
-              text-white/60
+              text-white/55
               transition-all duration-200
-              hover:bg-white/[0.04] hover:text-white
+              hover:bg-white/[0.05] hover:text-white
             "
           >
             {showMobileMenu ? <X size={18} /> : <Menu size={18} />}
@@ -367,37 +363,36 @@ export default function Topbar() {
         </div>
       </div>
 
-      {/* ── MENU MOBILE ──────────────────────────────────────────────
-          Dropdown abaixo do header, visível apenas em <md           */}
+      {/* ── MENU MOBILE ──────────────────────────────────────────────*/}
       {showMobileMenu && (
         <div
           className="
             absolute left-0 right-0 top-16
             z-50
-            border-b border-white/5
-            bg-[#050816]/95
+            border-b border-white/[0.06]
+            bg-[#111111]/97
             backdrop-blur-xl
             md:hidden
           "
         >
           {/* Busca mobile */}
-          <div className="border-b border-white/5 px-4 py-3">
+          <div className="border-b border-white/[0.06] px-4 py-3">
             <div
               className="
                 flex h-10 items-center gap-3
                 rounded-xl
-                border border-white/5
+                border border-white/[0.06]
                 bg-white/[0.03]
                 px-3
               "
             >
-              <Search size={15} className="shrink-0 text-white/40" />
+              <Search size={15} className="shrink-0 text-white/35" />
               <input
                 placeholder="Buscar projetos, tarefas, membros..."
                 className="
                   flex-1 bg-transparent
                   text-sm text-white
-                  placeholder:text-white/35
+                  placeholder:text-white/30
                   outline-none
                 "
               />
@@ -417,8 +412,8 @@ export default function Topbar() {
                   text-sm font-medium
                   transition-all duration-200
                   ${isActive
-                    ? 'bg-violet-500/10 text-white ring-1 ring-violet-500/25'
-                    : 'text-white/60 hover:bg-white/[0.04] hover:text-white'
+                    ? 'bg-white/[0.07] text-white ring-1 ring-white/10'
+                    : 'text-white/55 hover:bg-white/[0.04] hover:text-white'
                   }
                 `}
               >
