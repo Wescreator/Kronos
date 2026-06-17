@@ -61,9 +61,9 @@ function ScopeList({ items, onChange, disabled }) {
           type="button"
           onClick={add}
           className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl w-full transition-all"
-          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.10)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#A78BFA'; e.currentTarget.style.borderColor = 'rgba(124,92,252,0.30)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.08)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
         >
           <Plus size={13} /> Adicionar item
         </button>
@@ -145,9 +145,9 @@ function ServicesTable({ items, onChange, disabled }) {
           type="button"
           onClick={add}
           className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl w-full mt-2 transition-all"
-          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.10)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#A78BFA'; e.currentTarget.style.borderColor = 'rgba(124,92,252,0.30)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.08)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
         >
           <Plus size={13} /> Adicionar serviço
         </button>
@@ -227,9 +227,9 @@ function PaymentTermsTable({ items, onChange, disabled }) {
           type="button"
           onClick={add}
           className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl w-full mt-2 transition-all"
-          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.10)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = '#A78BFA'; e.currentTarget.style.borderColor = 'rgba(124,92,252,0.30)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.10)' }}
+          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.08)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
         >
           <Plus size={13} /> Adicionar condição
         </button>
@@ -250,7 +250,7 @@ function PaymentTermsTable({ items, onChange, disabled }) {
 function Section({ title, children }) {
   return (
     <div>
-      <p className="label mb-3" style={{ fontSize: 11, color: '#A78BFA', letterSpacing: '0.12em' }}>
+      <p className="label mb-3" style={{ fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.12em' }}>
         {title}
       </p>
       {children}
@@ -484,8 +484,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           borderTop:       '1px solid rgba(255,255,255,0.06)',
           position:        'sticky',
           bottom:          0,
-          background:      'rgba(8,16,36,0.95)',
-          backdropFilter:  'blur(12px)',
+          background:      '#171717',
           marginLeft:      '-24px',
           marginRight:     '-24px',
           paddingLeft:     '24px',

@@ -84,7 +84,7 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
                   className="flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-150"
                   style={form.priority === opt.value
                     ? { background: `${opt.color}20`, color: opt.color, border: `1px solid ${opt.color}40` }
-                    : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+                    : { background: 'rgba(255,255,255,0.03)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
                   }
                 >
                   {opt.label}
@@ -108,8 +108,8 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
                 onClick={() => toggleAssignee(u.id)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
                 style={form.assignees.includes(u.id)
-                  ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-                  : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+                  ? { background: 'rgba(255,255,255,0.08)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.14)' }
+                  : { background: 'rgba(255,255,255,0.03)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
                 }
               >
                 {u.name}

@@ -127,14 +127,14 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
               Data de início
               {blockedUntil && (
                 <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded"
-                  style={{ background: 'rgba(251,191,36,0.15)', color: '#FBBF24' }}>
+                  style={{ background: 'rgba(251,191,36,0.12)', color: '#FBBF24' }}>
                   bloqueada
                 </span>
               )}
             </label>
             <input type="date" className="input" min={minStartDate}
               value={form.start_date} onChange={e => handleStartDateChange(e.target.value)}
-              style={blockedUntil ? { borderColor: 'rgba(251,191,36,0.35)' } : {}} />
+              style={blockedUntil ? { borderColor: 'rgba(251,191,36,0.30)' } : {}} />
           </div>
           <div>
             <label className="label">Previsão de entrega</label>
@@ -147,7 +147,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         <div>
           <label className="label">Capa do projeto</label>
           <div className="relative rounded-2xl text-center py-5 px-4"
-            style={{ background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.12)' }}>
+            style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)' }}>
             <input type="file" accept="image/*"
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={e => setCover(e.target.files[0])} />
