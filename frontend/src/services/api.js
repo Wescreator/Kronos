@@ -14,13 +14,24 @@ const api = axios.create({
   withCredentials: false,
 })
 
-/* ─── Helper: lê token de qualquer storage ─── */
+/* ─── Helpers de storage ─── */
 const getAccessToken  = () => localStorage.getItem('accessToken')  || sessionStorage.getItem('accessToken')
 const getRefreshToken = () => localStorage.getItem('refreshToken') || sessionStorage.getItem('refreshToken')
 
 api.interceptors.request.use((config) => {
   const token = getAccessToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
+
+  /* ── Developer: impersonação de empresa ──────────────────────────
+   * Quando o developer impersona uma empresa, o company_id fica
+   * gravado no sessionStorage e é injetado como header em cada
+   * requisição. O TenantMiddleware no backend usa este valor.
+   */
+  const impersonateCompany = sessionStorage.getItem('impersonateCompany')
+  if (impersonateCompany) {
+    config.headers['X-Impersonate-Company'] = impersonateCompany
+  }
+
   return config
 })
 
@@ -43,7 +54,6 @@ api.interceptors.response.use(
 
         const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken })
 
-        // Salva no mesmo storage que já estava sendo usado
         if (localStorage.getItem('refreshToken')) {
           localStorage.setItem('accessToken', data.accessToken)
         } else {
@@ -53,10 +63,8 @@ api.interceptors.response.use(
         original.headers.Authorization = `Bearer ${data.accessToken}`
         return api(original)
       } catch {
-        localStorage.removeItem('accessToken')
-        localStorage.removeItem('refreshToken')
-        sessionStorage.removeItem('accessToken')
-        sessionStorage.removeItem('refreshToken')
+        localStorage.clear()
+        sessionStorage.clear()
         window.location.href = '/login'
         return Promise.reject(error)
       }

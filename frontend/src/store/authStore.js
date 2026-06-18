@@ -1,11 +1,23 @@
 import { create } from 'zustand'
 
-/* ─── Helpers de storage ───
- * "Lembre-me" marcado  → localStorage  (persiste ao fechar o navegador)
- * "Lembre-me" desmarcado → sessionStorage (limpa ao fechar o navegador)
+/* ─── Helpers de storage ──────────────────────────────────────────
+ * "Lembrar-me" marcado    → localStorage  (persiste ao fechar)
+ * "Lembrar-me" desmarcado → sessionStorage (limpa ao fechar)
  */
 const getStoredToken = (key) =>
   localStorage.getItem(key) || sessionStorage.getItem(key)
+
+/* ─── Normalização do usuário ─────────────────────────────────────
+ * Compatível com formato antigo (id, role) e novo multi-tenant
+ * (user_id, scope, company_id, role).
+ */
+const normalizeUser = (user) => ({
+  ...user,
+  user_id:    user.user_id    || user.id    || null,
+  scope:      user.scope      || 'company',
+  company_id: user.company_id || null,
+  role:       user.role       || 'employee',
+})
 
 const useAuthStore = create((set) => ({
   user:            null,
@@ -20,7 +32,6 @@ const useAuthStore = create((set) => ({
    * @param {boolean} remember — true = localStorage, false = sessionStorage
    */
   setAuth: (user, accessToken, refreshToken, remember = false) => {
-    // Limpa ambos antes de gravar — evita tokens órfãos
     localStorage.clear()
     sessionStorage.clear()
 
@@ -29,18 +40,21 @@ const useAuthStore = create((set) => ({
     storage.setItem('refreshToken', refreshToken)
 
     set({
-      user,
+      user:            normalizeUser(user),
       accessToken,
       refreshToken,
       isAuthenticated: true,
     })
   },
 
-  setUser: (user) => set({ user }),
+  setUser: (user) => set((state) => ({
+    user: normalizeUser({ ...state.user, ...user }),
+  })),
 
   logout: () => {
     localStorage.clear()
     sessionStorage.clear()
+    sessionStorage.removeItem('impersonateCompany')
     set({
       user:            null,
       accessToken:     null,
@@ -50,13 +64,32 @@ const useAuthStore = create((set) => ({
   },
 
   updateToken: (accessToken) => {
-    // Atualiza no storage onde o token atual está gravado
     if (localStorage.getItem('accessToken')) {
       localStorage.setItem('accessToken', accessToken)
     } else {
       sessionStorage.setItem('accessToken', accessToken)
     }
     set({ accessToken })
+  },
+
+  /* ── Developer: impersonar empresa ──────────────────────────────
+   * Grava o company_id no sessionStorage para o interceptor do
+   * axios injetar X-Impersonate-Company nas requisições.
+   */
+  startImpersonation: (companyId) => {
+    sessionStorage.setItem('impersonateCompany', companyId)
+    set((state) => ({
+      user: { ...state.user, _impersonating: companyId },
+    }))
+  },
+
+  stopImpersonation: () => {
+    sessionStorage.removeItem('impersonateCompany')
+    set((state) => {
+      const user = { ...state.user }
+      delete user._impersonating
+      return { user }
+    })
   },
 }))
 
