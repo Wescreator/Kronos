@@ -2,6 +2,10 @@ const jwt       = require('jsonwebtoken')
 const jwtConfig = require('../config/jwt')
 const R         = require('../utils/response')
 
+// Roles que possuem acesso total, independente da lista de roles
+// permitidas em authorize(). Usado pelo Developer da plataforma.
+const BYPASS_ROLES = ['developer']
+
 const authenticate = (req, res, next) => {
   const header = req.headers.authorization
   if (!header || !header.startsWith('Bearer ')) {
@@ -21,6 +25,9 @@ const authenticate = (req, res, next) => {
 }
 
 const authorize = (...roles) => (req, res, next) => {
+  if (BYPASS_ROLES.includes(req.user.role)) {
+    return next()
+  }
   if (!roles.includes(req.user.role)) {
     return R.forbidden(res, 'Você não tem permissão para esta ação')
   }

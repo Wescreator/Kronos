@@ -1,4 +1,5 @@
 const authService = require('../services/auth.service')
+const userRepo    = require('../repositories/user.repository')
 const R = require('../utils/response')
 
 const login = async (req, res) => {
@@ -30,14 +31,22 @@ const refresh = async (req, res) => {
 
 const me = async (req, res) => {
   try {
-    const userRepo = require('../repositories/user.repository')
-    const user = await userRepo.findById(req.user.id)
+    const user = await userRepo.findById(req.user.user_id)
 
     if (!user) {
       return R.notFound(res, 'Usuário não encontrado')
     }
 
-    return R.success(res, { user })
+    // Enriquece com dados de escopo/tenant vindos do próprio JWT —
+    // evita uma segunda consulta a company_users.
+    return R.success(res, {
+      user: {
+        ...user,
+        scope:      req.user.scope,
+        role:       req.user.role,
+        company_id: req.user.company_id,
+      },
+    })
   } catch (err) {
     return R.error(res, err.message, err.status || 500)
   }
@@ -75,5 +84,4 @@ const resetPassword = async (req, res) => {
   }
 }
 
-module.exports = {login, register, refresh, me, forgotPassword, resetPassword
-}
+module.exports = { login, register, refresh, me, forgotPassword, resetPassword }
