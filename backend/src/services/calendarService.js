@@ -71,13 +71,4 @@ async function deleteEvent(id) {
   return deleted;
 }
 
-module.exports = {
-  getAll,
-  getById,
-  getByMonth,
-  getByWeek,
-  getAgenda,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-};
+module.exports = {getAll, getById, getByMonth, getByWeek, getAgenda, createEvent, updateEvent, deleteEvent,};

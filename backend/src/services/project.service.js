@@ -87,7 +87,4 @@ const removeMember = async (projectId, userId, companyId) => {
   await projectRepo.removeMember(projectId, userId)
 }
 
-module.exports = {
-  getAll, getById, create, update, updateCover,
-  getStatusHistory, addMember, removeMember,
-}
+module.exports = {getAll, getById, create, update, updateCover, getStatusHistory, addMember, removeMember,}

@@ -156,10 +156,6 @@ const getDashboard = async (query = {}) => {
 const getDRE               = async (start, end) => repo.getDRE(start, end)
 const getProjectFinancials = async ()            => repo.getProjectFinancials()
 
-module.exports = {
-  getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
-  getExpensesByCategory, getForecast,
-  getRevenues, createRevenue, confirmReceipt, updateInstallment, deleteRevenue,
-  getCategories, createCategory, updateCategory, deleteCategory,
-  getDashboard, getDRE, getProjectFinancials,
-}
+module.exports = {getExpenses, createExpense, confirmPayment, updateExpense, deleteExpense,
+  getExpensesByCategory, getForecast, getRevenues, createRevenue, confirmReceipt, updateInstallment, deleteRevenue,
+  getCategories, createCategory, updateCategory, deleteCategory, getDashboard, getDRE, getProjectFinancials,}
