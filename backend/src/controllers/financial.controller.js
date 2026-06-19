@@ -25,7 +25,7 @@ const getExpenses = async (req, res) => {
 }
 
 const createExpense = async (req, res) => {
-  try { return R.created(res, { expense: await financialService.createExpense(req.body, req.user.id) }) }
+  try { return R.created(res, { expense: await financialService.createExpense(req.body, req.user.user_id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
@@ -62,7 +62,7 @@ const getRevenues = async (req, res) => {
 }
 
 const createRevenue = async (req, res) => {
-  try { return R.created(res, { revenue: await financialService.createRevenue(req.body, req.user.id) }) }
+  try { return R.created(res, { revenue: await financialService.createRevenue(req.body, req.user.user_id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
@@ -87,7 +87,7 @@ const getCategories  = async (req, res) => {
 }
 
 const createCategory = async (req, res) => {
-  try { return R.created(res, { category: await financialService.createCategory(req.body, req.user.id) }) }
+  try { return R.created(res, { category: await financialService.createCategory(req.body, req.user.user_id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 

@@ -1,14 +1,15 @@
 const router      = require('express').Router()
 const ctrl        = require('../controllers/project.controller')
 const stageCtrl   = require('../controllers/stage.controller')
-const fileCtrl    = require('../controllers/project-file.controller')   // novo
+const fileCtrl    = require('../controllers/project-file.controller')
 const { authenticate } = require('../middlewares/auth.middleware')
+const tenantMiddleware = require('../middlewares/tenant.middleware')
 const validate    = require('../middlewares/validate.middleware')
 const V           = require('../validators/project.validator')
-const { uploadImage, uploadDriveFile } = require('../config/multer')   // adicionado uploadDriveFile
+const { uploadImage, uploadFile } = require('../config/multer')
 const logger      = require('../middlewares/logger.middleware')
 
-router.use(authenticate, logger)
+router.use(authenticate, tenantMiddleware, logger)
 
 // Projetos
 router.get('/',                       ctrl.getAll)
@@ -20,9 +21,9 @@ router.get('/:id/history',            ctrl.getStatusHistory)
 router.post('/:id/members',           ctrl.addMember)
 router.delete('/:id/members/:userId', ctrl.removeMember)
 
-// Arquivos do projeto (Google Drive)
+// Arquivos do projeto (Cloudflare R2)
 router.get('/:id/files',              fileCtrl.listFiles)
-router.post('/:id/files', uploadDriveFile.single('file'), fileCtrl.uploadFile)
+router.post('/:id/files', uploadFile.single('file'), fileCtrl.uploadFile)
 
 // Etapas e fases
 router.get('/:id/stages',                             stageCtrl.getStages)

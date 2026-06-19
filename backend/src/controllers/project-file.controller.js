@@ -1,73 +1,29 @@
-const driveService = require('../services/drive.service')
-const fileRepo = require('../repositories/project-file.repository')
-const projectRepo = require('../repositories/project.repository')
+const fileService    = require('../services/file.service')
+const projectService = require('../services/project.service')
 const R = require('../utils/response')
 
 const uploadFile = async (req, res) => {
   try {
-    if (!req.file) {
-      return R.badRequest(res, 'Nenhum arquivo enviado.')
-    }
+    if (!req.file) return R.badRequest(res, 'Nenhum arquivo enviado')
 
     const projectId = req.params.id
 
-    if (!projectId) {
-      return R.badRequest(res, 'ID do projeto é obrigatório.')
-    }
+    // Garante que o projeto existe e pertence ao tenant antes de aceitar o upload
+    await projectService.getById(projectId, req.tenant.id)
 
-    const project = await projectRepo.findById(projectId)
-
-    if (!project) {
-      return R.notFound(res, 'Projeto não encontrado.')
-    }
-
-    if (!project.drive_folder_id) {
-      return R.error(
-        res,
-        'Projeto não possui pasta no Google Drive. Contate o administrador.',
-        500
-      )
-    }
-
-    console.log(
-      `[FileUpload] Projeto: ${projectId} | Pasta Drive: ${project.drive_folder_id}`
-    )
-
-    console.log(
-      `[FileUpload] Arquivo: "${req.file.originalname}" | ${req.file.size} bytes | ${req.file.mimetype}`
-    )
-
-    const driveFile = await driveService.uploadFile(
-      req.file.buffer,
-      req.file.originalname,
-      req.file.mimetype,
-      project.drive_folder_id
-    )
-
-    const file = await fileRepo.create({
+    const file = await fileService.uploadForProject({
+      buffer:           req.file.buffer,
+      originalFilename: req.file.originalname,
+      mimeType:         req.file.mimetype,
+      uploadedBy:       req.user.user_id,
       projectId,
-      uploadedBy: req.user.id,
-      fileName: req.file.originalname,
-      fileSize: req.file.size,
-      mimeType: req.file.mimetype,
-      driveFileId: driveFile.id,
-      driveUrl: driveFile.url
     })
 
-    console.log(
-      `[FileUpload] Sucesso | DB ID: ${file.id} | Drive ID: ${driveFile.id}`
-    )
+    const url = await fileService.getUrlFromKey(file.object_key)
 
-    return R.created(res, { file })
-
+    return R.created(res, { file: { ...file, url } })
   } catch (err) {
-    console.error('[FileUpload]', err)
-
-    return R.error(
-      res,
-      err.message || 'Erro ao realizar upload do arquivo.',
-      err.status || 500
-    )
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
@@ -75,24 +31,14 @@ const listFiles = async (req, res) => {
   try {
     const projectId = req.params.id
 
-    if (!projectId) {
-      return R.badRequest(res, 'ID do projeto é obrigatório.')
-    }
+    // Garante que o projeto existe e pertence ao tenant antes de listar
+    await projectService.getById(projectId, req.tenant.id)
 
-    const files = await fileRepo.findByProject(projectId)
-
+    const files = await fileService.listByProject(projectId)
     return R.success(res, { files })
-
   } catch (err) {
-    return R.error(
-      res,
-      err.message || 'Erro ao listar arquivos.',
-      err.status || 500
-    )
+    return R.error(res, err.message, err.status || 500)
   }
 }
 
-module.exports = {
-  uploadFile,
-  listFiles
-}
+module.exports = { uploadFile, listFiles }
