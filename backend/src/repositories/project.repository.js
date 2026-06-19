@@ -1,4 +1,3 @@
-const router      = require('express').Router()
 const ctrl        = require('../controllers/project.controller')
 const stageCtrl   = require('../controllers/stage.controller')
 const fileCtrl    = require('../controllers/project-file.controller')
@@ -9,26 +8,120 @@ const V           = require('../validators/project.validator')
 const { uploadImage, uploadFile } = require('../config/multer')
 const logger      = require('../middlewares/logger.middleware')
 
-router.use(authenticate, tenantMiddleware, logger)
+const pool = require('../config/database')
 
-// Projetos
-router.get('/',                       ctrl.getAll)
-router.get('/:id',                    ctrl.getById)
-router.post('/',    validate(V.create), ctrl.create)
-router.patch('/:id', validate(V.update), ctrl.update)
-router.post('/:id/cover', uploadImage.single('cover'), ctrl.uploadCover)
-router.get('/:id/history',            ctrl.getStatusHistory)
-router.post('/:id/members',           ctrl.addMember)
-router.delete('/:id/members/:userId', ctrl.removeMember)
+// ───────── PROJECTS ─────────
+const findAll = async ({ companyId, limit, offset, status, search }) => {
+  const conditions = ['p.company_id = $1']
+  const params = [companyId]
+  if (status) {
+    params.push(status)
+    conditions.push(`p.status = $${params.length}`)
+  }
 
-// Arquivos do projeto (Cloudflare R2)
-router.get('/:id/files',              fileCtrl.listFiles)
-router.post('/:id/files', uploadFile.single('file'), fileCtrl.uploadFile)
+  if (search) {
+    params.push(`%${search}%`)
+    conditions.push(`p.title ILIKE $${params.length}`)
+  }
 
-// Etapas e fases
-router.get('/:id/stages',                             stageCtrl.getStages)
-router.post('/:id/stages/:stageId/phases',            stageCtrl.addPhase)
-router.patch('/:id/stages/:stageId/phases/:phaseId',  stageCtrl.updatePhase)
-router.delete('/:id/stages/:stageId/phases/:phaseId', stageCtrl.deletePhase)
+  params.push(limit, offset)
 
-module.exports = router
+  const { rows } = await pool.query(
+    `SELECT p.*
+    FROM projects p
+    WHERE ${conditions.join(' AND ')}
+    ORDER BY p.created_at DESC
+    LIMIT $${params.length - 1}
+    OFFSET $${params.length}
+    `,
+    params
+  )
+
+  const { rows: count } = await pool.query(
+    `
+    SELECT COUNT(*)
+    FROM projects p
+    WHERE ${conditions.join(' AND ')}
+    `,
+    params.slice(0, -2)
+  )
+
+  return {
+    rows,
+    total: Number(count[0].count)
+  }
+}
+
+const findById = async (id, companyId) => {
+  const { rows } = await pool.query(
+    `
+    SELECT *
+    FROM projects
+    WHERE id = $1 AND company_id = $2
+    `,
+    [id, companyId]
+  )
+
+  return rows[0] || null
+}
+
+const create = async (data) => {
+  const { rows } = await pool.query(
+    `
+    INSERT INTO projects (
+      company_id,
+      title,
+      client,
+      description,
+      budget,
+      start_date,
+      expected_date,
+      owner_id,
+      created_by
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    RETURNING *
+    `,
+    [
+      data.companyId,
+      data.title,
+      data.client,
+      data.description,
+      data.budget,
+      data.startDate,
+      data.expectedDate,
+      data.ownerId,
+      data.createdBy
+    ]
+  )
+
+  return rows[0]
+}
+
+const update = async (id, companyId, fields) => {
+  const keys = Object.keys(fields)
+  const values = Object.values(fields)
+
+  const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
+  values.push(id, companyId)
+
+  const { rows } = await pool.query(
+    `
+    UPDATE projects
+    SET ${sets}, updated_at = NOW()
+    WHERE id = $${values.length - 1}
+      AND company_id = $${values.length}
+    RETURNING *
+    `,
+    values
+  )
+
+  return rows[0]
+}
+
+module.exports = {
+  findAll,
+  findById,
+  create,
+  update
+}
