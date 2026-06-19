@@ -34,7 +34,7 @@ const listFiles = async (req, res) => {
     // Garante que o projeto existe e pertence ao tenant antes de listar
     await projectService.getById(projectId, req.tenant.id)
 
-    const files = await fileService.listByProject(projectId)
+    const files = await fileService.listByProject(projectId, req.tenant.id)
     return R.success(res, { files })
   } catch (err) {
     return R.error(res, err.message, err.status || 500)
