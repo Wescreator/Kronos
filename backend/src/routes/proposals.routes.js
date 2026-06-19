@@ -1,7 +1,7 @@
 const router = require('express').Router()
 
 const ctrl = require('../controllers/proposal.controller')
-const fileCtrl = require('../controllers/proposal-file.controller')
+const fileCtrl = require('../controllers/proposal.file.controller')
 
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const { uploadDriveFile } = require('../config/multer')
