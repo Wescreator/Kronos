@@ -4,25 +4,21 @@
 // Roles do sistema:
 //   ESCOPO GLOBAL:
 //     developer → acesso total à plataforma, sem vínculo de empresa
-//     support   → leitura global (preparado, não ativo)
 //
 //   ESCOPO EMPRESA:
 //     owner    → proprietário da empresa
 //     admin    → administrador (ex-admin)
 //     manager  → gestor (ex-manager / Arquiteto)
-//     employee → colaborador (ex-member / Estagiário)
+//     employee → colaborador (Estagiário)
 //
-// Compatibilidade: 'member' continua funcionando como 'employee'
 // ─────────────────────────────────────────────────────────────────
 
 export const ROLE_LABELS = {
   developer: 'Developer',
-  support:   'Suporte',
   owner:     'Owner',
   admin:     'Administrador',
   manager:   'Arquiteto',
-  employee:  'Estagiário',
-  member:    'Estagiário',     // backward compat
+  employee:  'Estagiário',   
 }
 
 export const ROLE_STYLES = {
@@ -56,30 +52,20 @@ export const ROLE_STYLES = {
     color:      '#34D399',
     border:     '1px solid rgba(52,211,153,0.20)',
   },
-  support: {
-    background: 'rgba(251,146,60,0.10)',
-    color:      '#FB923C',
-    border:     '1px solid rgba(251,146,60,0.20)',
-  },
 }
 
 // ─────────────────────────────────────────────────────────────────
 // MÓDULOS VISÍVEIS POR PERFIL
 // ─────────────────────────────────────────────────────────────────
 
+const ALL_MODULES = ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals']
 export const VISIBLE_MODULES = {
-  developer: ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals'],
-  owner:     ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals'],
-  admin:     ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals'],
+  developer: ALL_MODULES,
+  owner:     ALL_MODULES,
+  admin:     ALL_MODULES,
   manager:   ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals'],
   employee:  ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals'],
-  member:    ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals'],  // backward compat
 }
-
-// ─────────────────────────────────────────────────────────────────
-// PERMISSÕES GRANULARES POR MÓDULO E AÇÃO
-// developer e owner herdam tudo de admin
-// employee herda tudo de member
 // ─────────────────────────────────────────────────────────────────
 
 const ADMIN_ROLES = ['developer', 'owner', 'admin']

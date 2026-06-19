@@ -52,6 +52,21 @@ const findAll = async ({ companyId, limit, offset, status, search }) => {
   }
 }
 
+const findStatusHistory = async (projectId, companyId) => {
+  const { rows } = await pool.query(
+    `
+    SELECT *
+    FROM project_status_history
+    WHERE project_id = $1
+      AND company_id = $2
+    ORDER BY created_at DESC
+    `,
+    [projectId, companyId]
+  )
+
+  return rows
+}
+
 const findById = async (id, companyId) => {
   const { rows } = await pool.query(
     `
@@ -119,9 +134,4 @@ const update = async (id, companyId, fields) => {
   return rows[0]
 }
 
-module.exports = {
-  findAll,
-  findById,
-  create,
-  update
-}
+module.exports = {findAll, findById, create, update, findStatusHistory}

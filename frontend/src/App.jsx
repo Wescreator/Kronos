@@ -2,13 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './routes/ProtectedRoute'
 import ScopeRoute    from './routes/ScopeRoute'
 import AppLayout     from './components/layout/AppLayout'
-
 import LoginPage          from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage  from './pages/auth/ResetPasswordPage'
-
 import AdminPage          from './pages/admin/AdminPage'
-
 import DashboardPage      from './pages/dashboard/DashboardPage'
 import ProjectsPage       from './pages/projects/ProjectsPage'
 import ProjectDetailPage  from './pages/projects/ProjectDetailPage'

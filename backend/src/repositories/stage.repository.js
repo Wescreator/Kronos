@@ -101,14 +101,4 @@ const deletePhase = async (phaseId) => {
   await pool.query(`DELETE FROM project_phases WHERE id = $1`, [phaseId])
 }
 
-module.exports = {
-  DEFAULT_STAGES,
-  createDefaultStages,
-  findStagesByProject,
-  hasStages,
-  findPhasesByStageIds,
-  findPhaseById,
-  createPhase,
-  updatePhase,
-  deletePhase,
-}
+module.exports = {DEFAULT_STAGES, createDefaultStages, findStagesByProject, hasStages, findPhasesByStageIds, findPhaseById, createPhase, updatePhase, deletePhase,}
