@@ -1,11 +1,12 @@
 const router   = require('express').Router()
 const ctrl     = require('../controllers/financial.controller')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
+const tenantMiddleware = require('../middlewares/tenant.middleware')
 const validate = require('../middlewares/validate.middleware')
 const V        = require('../validators/financial.validator')
 const logger   = require('../middlewares/logger.middleware')
 
-router.use(authenticate, authorize('admin'), logger)
+router.use(authenticate, tenantMiddleware, authorize('admin'), logger)
 
 router.get('/dashboard',            ctrl.getDashboard)
 router.get('/dre',                  ctrl.getDRE)
