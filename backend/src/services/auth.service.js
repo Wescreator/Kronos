@@ -18,30 +18,37 @@ const GLOBAL_ROLES = ['developer', 'support']
  * o role e company_id de lá (fonte de verdade para usuários de empresa).
  */
 async function buildAuthPayload(user) {
+  // 🔴 USUÁRIOS GLOBAIS (DEV / SUPORTE)
   if (GLOBAL_ROLES.includes(user.role)) {
     return {
-      user_id:    user.id,
+      user_id: user.id,
       company_id: null,
-      scope:      'global',
-      role:       user.role,
+      scope: 'global',
+      role: user.role,
     }
   }
 
   const companyUser = await companyRepo.findActiveCompanyUserByUserId(user.id)
 
-  if (!companyUser) {
-    throw { status: 403, message: 'Usuário sem vínculo com nenhuma empresa ativa.' }
-  }
+  /**
+   * REGRA DE SEGURANÇA:
+   * - prioridade: company_users (fonte oficial multi-tenant)
+   * - fallback: users.company_id (apenas compatibilidade pós-migração)
+   */
+  const companyId =
+    companyUser?.company_id ||
+    user.company_id ||
+    null
 
-  if (!companyUser.company_is_active) {
-    throw { status: 403, message: 'Empresa inativa ou suspensa.' }
+  if (!companyId) {
+    throw { status: 403, message: 'Usuário sem empresa vinculada.' }
   }
 
   return {
-    user_id:    user.id,
-    company_id: companyUser.company_id,
-    scope:      'company',
-    role:       companyUser.role,
+    user_id: user.id,
+    company_id: companyId,
+    scope: 'company',
+    role: companyUser?.role || user.role,
   }
 }
 
