@@ -167,6 +167,8 @@ Todas: Auth + `authorize('developer')` (escopo global). Operam apenas sobre empr
 | PATCH | `/companies/:id/active` | Ativa/desativa empresa (`{ is_active }`) |
 | GET | `/companies/:id/users` | Lista usuarios da empresa |
 | POST | `/companies/:id/users` | Cria usuario na empresa (`{ name, email, password, role, position? }`) |
+| PATCH | `/companies/:id/users/:userId` | Edita usuario (`{ name?, position?, role?, isActive?, password? }`) |
+| DELETE | `/companies/:id/users/:userId` | Exclui usuario (bloqueado se houver registros associados - use `isActive:false` para desativar) |
 
 ---
 

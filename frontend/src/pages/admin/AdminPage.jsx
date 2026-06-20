@@ -25,6 +25,10 @@ export default function AdminPage() {
   const [savingCompany, setSavingCompany] = useState(false)
   const [savingUser, setSavingUser]       = useState(false)
 
+  const [editingUser, setEditingUser] = useState(null) // { id, name, position, role, password }
+  const [savingEdit, setSavingEdit]   = useState(false)
+  const [busyUserId, setBusyUserId]   = useState(null)
+
   const loadCompanies = async () => {
     try {
       setLoading(true)
@@ -88,6 +92,43 @@ export default function AdminPage() {
     }
   }
 
+  const startEdit = (u) => setEditingUser({
+    id: u.id, name: u.name, position: u.position || '', role: u.role, password: '',
+  })
+
+  const handleSaveEdit = async () => {
+    if (!editingUser) return
+    try {
+      setSavingEdit(true)
+      const payload = {
+        name:     editingUser.name,
+        position: editingUser.position,
+        role:     editingUser.role,
+      }
+      if (editingUser.password) payload.password = editingUser.password
+      await platformService.updateCompanyUser(selected.id, editingUser.id, payload)
+      toast.success('Usuário atualizado')
+      setEditingUser(null)
+      await loadUsers(selected.id)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erro ao atualizar usuário')
+    } finally {
+      setSavingEdit(false)
+    }
+  }
+
+  const handleToggleActive = async (u) => {
+    try {
+      setBusyUserId(u.id)
+      await platformService.updateCompanyUser(selected.id, u.id, { isActive: u.is_active === false })
+      await loadUsers(selected.id)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erro ao alterar status')
+    } finally {
+      setBusyUserId(null)
+    }
+  }
+
   // ── estilos ──────────────────────────────────────────────────
   const S = {
     page:  { minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, #0b0d20, #060816)', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '32px' },
@@ -100,6 +141,7 @@ export default function AdminPage() {
     row:   (active) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 10, marginBottom: 8, cursor: 'pointer', border: '1px solid', borderColor: active ? 'rgba(124,92,252,0.5)' : 'rgba(255,255,255,0.08)', background: active ? 'rgba(124,92,252,0.12)' : 'rgba(255,255,255,0.03)' }),
     tag:   { fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(52,211,153,0.12)', color: '#34D399' },
     muted: { color: 'rgba(255,255,255,0.4)', fontSize: 13 },
+    act:   (color) => ({ background: 'none', border: `1px solid ${color}33`, color, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }),
   }
 
   return (
@@ -153,7 +195,7 @@ export default function AdminPage() {
               <div key={c.id} style={S.row(selected?.id === c.id)} onClick={() => selectCompany(c)}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
-                  <div style={S.muted}>{c.slug} · {c.plan} · {c.users_count} usuário(s)</div>
+                  <div style={S.muted}>{c.plan} · {c.users_count} usuário(s)</div>
                 </div>
                 {c.is_active === false
                   ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativa</span>
@@ -198,15 +240,51 @@ export default function AdminPage() {
                 <p style={S.muted}>Nenhum usuário nesta empresa.</p>
               ) : (
                 users.map(u => (
-                  <div key={u.id} style={S.row(false)}>
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 600 }}>{u.name}</div>
-                      <div style={S.muted}>{u.email} · {u.role}</div>
+                  editingUser?.id === u.id ? (
+                    /* ── modo edição ── */
+                    <div key={u.id} style={{ ...S.row(true), display: 'block', cursor: 'default' }}>
+                      <div style={S.muted}>{u.email}</div>
+                      <input style={{ ...S.input, marginTop: 8 }} placeholder="Nome" value={editingUser.name}
+                        onChange={e => setEditingUser({ ...editingUser, name: e.target.value })} />
+                      <input style={S.input} placeholder="Cargo (opcional)" value={editingUser.position}
+                        onChange={e => setEditingUser({ ...editingUser, position: e.target.value })} />
+                      <select style={S.input} value={editingUser.role}
+                        onChange={e => setEditingUser({ ...editingUser, role: e.target.value })}>
+                        <option value="owner">Owner</option>
+                        <option value="admin">Administrador</option>
+                        <option value="manager">Gestor / Arquiteto</option>
+                        <option value="employee">Colaborador</option>
+                      </select>
+                      <input style={S.input} type="password" placeholder="Nova senha (opcional, mín. 8)" value={editingUser.password}
+                        onChange={e => setEditingUser({ ...editingUser, password: e.target.value })} />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button style={S.btn} disabled={savingEdit} onClick={handleSaveEdit}>
+                          {savingEdit ? 'Salvando...' : 'Salvar'}
+                        </button>
+                        <button style={{ ...S.btn, background: 'none', border: '1px solid rgba(255,255,255,0.2)' }}
+                          disabled={savingEdit} onClick={() => setEditingUser(null)}>
+                          Cancelar
+                        </button>
+                      </div>
                     </div>
-                    {u.is_active === false
-                      ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativo</span>
-                      : <span style={S.tag}>ativo</span>}
-                  </div>
+                  ) : (
+                    /* ── modo exibição ── */
+                    <div key={u.id} style={{ ...S.row(false), cursor: 'default' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>{u.name}</div>
+                        <div style={S.muted}>{u.email} · {u.role}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {u.is_active === false
+                          ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativo</span>
+                          : <span style={S.tag}>ativo</span>}
+                        <button style={S.act('#A78BFA')} disabled={busyUserId === u.id} onClick={() => startEdit(u)}>Editar</button>
+                        <button style={S.act('#38BDF8')} disabled={busyUserId === u.id} onClick={() => handleToggleActive(u)}>
+                          {u.is_active === false ? 'Ativar' : 'Desativar'}
+                        </button>
+                      </div>
+                    </div>
+                  )
                 ))
               )}
             </>

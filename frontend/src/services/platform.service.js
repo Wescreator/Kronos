@@ -21,6 +21,12 @@ const platformService = {
 
   createCompanyUser: (companyId, payload) =>
     api.post(`/platform/companies/${companyId}/users`, payload).then(r => r.data.user),
+
+  updateCompanyUser: (companyId, userId, payload) =>
+    api.patch(`/platform/companies/${companyId}/users/${userId}`, payload).then(r => r.data.user),
+
+  deleteCompanyUser: (companyId, userId) =>
+    api.delete(`/platform/companies/${companyId}/users/${userId}`).then(r => r.data),
 }
 
 export default platformService

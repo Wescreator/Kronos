@@ -19,7 +19,9 @@ router.post('/companies',           ctrl.createCompany)
 router.patch('/companies/:id/active', ctrl.setCompanyActive)
 
 // Usuarios de uma empresa
-router.get('/companies/:id/users',  ctrl.listCompanyUsers)
-router.post('/companies/:id/users', ctrl.createCompanyUser)
+router.get('/companies/:id/users',             ctrl.listCompanyUsers)
+router.post('/companies/:id/users',            ctrl.createCompanyUser)
+router.patch('/companies/:id/users/:userId',   ctrl.updateCompanyUser)
+router.delete('/companies/:id/users/:userId',  ctrl.deleteCompanyUser)
 
 module.exports = router

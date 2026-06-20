@@ -34,10 +34,22 @@ const createCompanyUser = asyncHandler(async (req, res) => {
   return R.created(res, { user })
 })
 
+const updateCompanyUser = asyncHandler(async (req, res) => {
+  const user = await platformService.updateCompanyUser(req.params.id, req.params.userId, req.body)
+  return R.success(res, { user })
+})
+
+const deleteCompanyUser = asyncHandler(async (req, res) => {
+  await platformService.deleteCompanyUser(req.params.id, req.params.userId)
+  return R.success(res, { deleted: true })
+})
+
 module.exports = {
   listCompanies,
   createCompany,
   setCompanyActive,
   listCompanyUsers,
   createCompanyUser,
+  updateCompanyUser,
+  deleteCompanyUser,
 }

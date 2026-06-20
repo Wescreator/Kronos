@@ -41,10 +41,15 @@ const listCompanies = async () => {
 const createCompany = async ({ name, slug, plan }) => {
   if (!name || !name.trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
 
-  const finalSlug = (slug && slug.trim()) ? slugify(slug) : slugify(name)
-
-  const existing = await prisma.company.findUnique({ where: { slug: finalSlug } })
-  if (existing) throw { status: 409, message: 'Ja existe uma empresa com este slug.' }
+  // O slug e interno (coluna NOT NULL UNIQUE), gerado a partir do nome.
+  // Garante unicidade automaticamente, sem expor isso ao usuario.
+  const base = (slug && slug.trim() ? slugify(slug) : slugify(name)) || 'empresa'
+  let finalSlug = base
+  let n = 1
+  while (await prisma.company.findUnique({ where: { slug: finalSlug } })) {
+    n += 1
+    finalSlug = `${base}-${n}`
+  }
 
   const company = await prisma.company.create({
     data: { name: name.trim(), slug: finalSlug, plan: plan || 'free', isActive: true },
@@ -126,10 +131,59 @@ const setCompanyActive = async (companyId, isActive) => {
   return { id: companyId, is_active: !!isActive }
 }
 
+const updateCompanyUser = async (companyId, userId, { name, position, role, isActive, password }) => {
+  const link = await prisma.companyUser.findFirst({ where: { companyId, userId } })
+  if (!link) throw { status: 404, message: 'Usuario nao encontrado nesta empresa.' }
+
+  const userData = {}
+  if (name     !== undefined) userData.name     = name.trim()
+  if (position !== undefined) userData.position = position || null
+  if (role     !== undefined) userData.role     = role
+  if (isActive !== undefined) userData.isActive = !!isActive
+  if (password) {
+    if (password.length < 8) throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+    userData.passwordHash = await bcrypt.hash(password, 12)
+  }
+
+  const linkData = {}
+  if (role     !== undefined) linkData.role     = role
+  if (isActive !== undefined) linkData.isActive = !!isActive
+
+  await prisma.$transaction(async (tx) => {
+    if (Object.keys(userData).length) await tx.user.update({ where: { id: userId }, data: userData })
+    if (Object.keys(linkData).length) await tx.companyUser.update({ where: { id: link.id }, data: linkData })
+  })
+
+  const users = await listCompanyUsers(companyId)
+  return users.find(u => u.id === userId)
+}
+
+const deleteCompanyUser = async (companyId, userId) => {
+  const link = await prisma.companyUser.findFirst({ where: { companyId, userId } })
+  if (!link) throw { status: 404, message: 'Usuario nao encontrado nesta empresa.' }
+
+  try {
+    // O vinculo em company_users sai por cascata ao remover o usuario.
+    await prisma.user.delete({ where: { id: userId } })
+    return { deleted: true }
+  } catch (err) {
+    // 23503 / P2003 = FK RESTRICT (usuario tem registros associados)
+    if (err.code === 'P2003' || err.code === '23503') {
+      throw {
+        status: 409,
+        message: 'Este usuario possui registros associados (projetos, tarefas, etc.). Desative-o em vez de excluir.',
+      }
+    }
+    throw err
+  }
+}
+
 module.exports = {
   listCompanies,
   createCompany,
   listCompanyUsers,
   createCompanyUser,
   setCompanyActive,
+  updateCompanyUser,
+  deleteCompanyUser,
 }
