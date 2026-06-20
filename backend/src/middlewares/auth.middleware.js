@@ -1,6 +1,7 @@
 const jwt       = require('jsonwebtoken')
 const jwtConfig = require('../config/jwt')
 const R         = require('../utils/response')
+const { runWithTenant } = require('../config/tenantContext')
 
 // Roles que possuem acesso total, independente da lista de roles
 // permitidas em authorize(). Usado pelo Developer da plataforma.
@@ -14,8 +15,22 @@ const authenticate = (req, res, next) => {
 
   const token = header.split(' ')[1]
   try {
-    req.user = jwt.verify(token, jwtConfig.secret)
-    next()
+    const decoded = jwt.verify(token, jwtConfig.secret)
+    req.user = decoded
+
+    // Abre o contexto de tenant para toda a cadeia da requisicao.
+    // A extensao do Prisma usa este contexto para isolar por empresa.
+    // Para escopo global (developer), companyId so e definido se houver
+    // impersonacao ativa (tratada no tenantMiddleware).
+    return runWithTenant(
+      {
+        userId:    decoded.user_id,
+        companyId: decoded.company_id || null,
+        scope:     decoded.scope,
+        role:      decoded.role,
+      },
+      () => next()
+    )
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       return R.unauthorized(res, 'Token expirado')

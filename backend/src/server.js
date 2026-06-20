@@ -5,6 +5,10 @@ const path    = require('path')
 require('dotenv').config()
 const { authenticate } = require('./middlewares/auth.middleware')
 
+// Permite serializar BigInt em respostas JSON (o Prisma retorna BigInt
+// para colunas int8/COUNT em consultas raw).
+BigInt.prototype.toJSON = function () { return Number(this) }
+
 const app = express()
 
 // ── CORS ─────────────────────────────────────────────────────────────────────
@@ -15,17 +19,21 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i)
 
-app.use(cors({
-  origin: true,
+const corsOptions = {
+  origin: (origin, cb) => {
+    // Permite requisições sem Origin (curl, health checks, server-to-server)
+    if (!origin || allowedOrigins.includes(origin)) {
+      return cb(null, true)
+    }
+    return cb(new Error('Origin não permitida pelo CORS'))
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}))
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Impersonate-Company'],
+}
 
-app.options('*', cors({
-  origin: true,
-  credentials: true
-}))
+app.use(cors(corsOptions))
+app.options('*', cors(corsOptions))
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
 app.use(express.json({ limit: '10mb' }))
@@ -49,14 +57,18 @@ app.use('/api/chat',          require('./routes/chat.routes'))
 app.use('/api/notifications', require('./routes/notifications.routes'))
 app.use('/api/calendar',      authenticate, require('./routes/calendarRoutes'))
 app.use('/api/proposals',     require('./routes/proposals.routes'))
+app.use('/api/platform',      require('./routes/platform.routes'))
 
 // ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('[ERROR]', err.message)
-  res.status(err.status || 500).json({
-    success: false,
-    message: err.message || 'Erro interno do servidor'
-  })
+  console.error('[ERROR]', err.stack || err.message)
+  const status = err.status || 500
+  // Em produção não expõe detalhes internos para erros 5xx
+  const isClientError = status < 500
+  const message = (isClientError || process.env.NODE_ENV !== 'production')
+    ? (err.message || 'Erro interno do servidor')
+    : 'Erro interno do servidor'
+  res.status(status).json({ success: false, message })
 })
 
 // ── Start ─────────────────────────────────────────────────────────────────────

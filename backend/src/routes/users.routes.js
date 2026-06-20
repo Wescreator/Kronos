@@ -40,7 +40,7 @@ router.get(
  */
 router.get('/:id', async (req, res) => {
   try {
-    const isOwner = req.user.id === req.params.id
+    const isOwner = req.user.user_id === req.params.id
     const isAdmin = req.user.role === 'admin'
 
     if (!isOwner && !isAdmin) {
@@ -65,7 +65,7 @@ router.get('/:id', async (req, res) => {
  */
 router.patch('/:id', async (req, res) => {
   try {
-    const isOwner = req.user.id === req.params.id
+    const isOwner = req.user.user_id === req.params.id
     const isAdmin = req.user.role === 'admin'
 
     if (!isOwner && !isAdmin) {
@@ -105,7 +105,7 @@ router.patch('/:id', async (req, res) => {
  */
 router.post('/:id/avatar', uploadImage.single('avatar'), async (req, res) => {
   try {
-    const isOwner = req.user.id === req.params.id
+    const isOwner = req.user.user_id === req.params.id
     const isAdmin = req.user.role === 'admin'
 
     if (!isOwner && !isAdmin) {

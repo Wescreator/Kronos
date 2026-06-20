@@ -1,0 +1,681 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                                                String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name                                              String                 @db.VarChar(150)
+  email                                             String                 @unique @db.VarChar(255)
+  passwordHash                                      String                 @map("password_hash") @db.VarChar(255)
+  role                                              String                 @default("member") @db.VarChar(50)
+  position                                          String?                @db.VarChar(100)
+  phone                                             String?                @db.VarChar(30)
+  avatarUrl                                         String?                @map("avatar_url")
+  admittedAt                                        DateTime?              @map("admitted_at") @db.Date
+  isActive                                          Boolean                @default(true) @map("is_active")
+  lastLoginAt                                       DateTime?              @map("last_login_at") @db.Timestamptz(6)
+  createdAt                                         DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                                         DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  resetToken                                        String?                @map("reset_token") @db.VarChar(255)
+  resetTokenExpiresAt                               DateTime?              @map("reset_token_expires_at") @db.Timestamptz(6)
+  companyId                                         String?                @map("company_id") @db.Uuid
+  activity_logs                                     activity_logs[]
+  calendar_events_calendar_events_created_byTousers CalendarEvent[]        @relation("calendar_events_created_byTousers")
+  calendar_events_calendar_events_user_idTousers    CalendarEvent[]        @relation("calendar_events_user_idTousers")
+  chat_messages                                     chat_messages[]
+  chat_room_members                                 chat_room_members[]
+  chat_rooms                                        ChatRoom[]
+  company_users                                     CompanyUser[]
+  expense_categories                                ExpenseCategory[]
+  expenses                                          Expense[]
+  notifications                                     Notification[]
+  project_files                                     project_files[]
+  project_members                                   project_members[]
+  project_phases_project_phases_completed_byTousers project_phases[]       @relation("project_phases_completed_byTousers")
+  project_phases_project_phases_created_byTousers   project_phases[]       @relation("project_phases_created_byTousers")
+  project_status_history                            ProjectStatusHistory[]
+  projects_projects_created_byTousers               Project[]              @relation("projects_created_byTousers")
+  projects_projects_owner_idTousers                 Project[]              @relation("projects_owner_idTousers")
+  proposals                                         Proposal[]
+  revenues                                          Revenue[]
+  task_assignments                                  task_assignments[]
+  task_comments                                     task_comments[]
+  tasks                                             Task[]
+  companies                                         Company?               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_company")
+
+  @@index([companyId], map: "idx_users_company")
+  @@index([email], map: "idx_users_email")
+  @@index([isActive], map: "idx_users_is_active")
+  @@map("users")
+}
+
+model Company {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                   String                   @db.VarChar(150)
+  trade_name             String?                  @db.VarChar(150)
+  document               String?                  @unique @db.VarChar(20)
+  email                  String?                  @db.VarChar(255)
+  phone                  String?                  @db.VarChar(30)
+  logo_url               String?
+  plan                   String?                  @default("starter") @db.VarChar(30)
+  status                 String?                  @default("active") @db.VarChar(20)
+  createdAt              DateTime?                @default(now()) @map("created_at") @db.Timestamptz(6)
+  updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
+  slug                   String                   @unique(map: "companies_slug_unique")
+  isActive               Boolean                  @default(true) @map("is_active")
+  activity_logs          activity_logs[]
+  calendar_events        CalendarEvent[]
+  chat_messages          chat_messages[]
+  chat_rooms             ChatRoom[]
+  company_users          CompanyUser[]
+  expense_categories     ExpenseCategory[]
+  expenses               Expense[]
+  notifications          Notification[]
+  project_phases         project_phases[]
+  project_stages         project_stages[]
+  project_status_history ProjectStatusHistory[]
+  projects               Project[]
+  proposal_payment_terms proposal_payment_terms[]
+  proposal_scope_items   proposal_scope_items[]
+  proposal_sequences     proposal_sequences[]
+  proposal_services      proposal_services[]
+  proposals              Proposal[]
+  revenue_installments   RevenueInstallment[]
+  revenues               Revenue[]
+  task_assignments       task_assignments[]
+  task_comments          task_comments[]
+  tasks                  Task[]
+  users                  User[]
+
+  @@map("companies")
+}
+
+model CompanyUser {
+  id        String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  role      String   @default("employee") @db.VarChar(50)
+  isActive  Boolean  @default(true) @map("is_active")
+  joinedAt  DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+  companies Company  @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     User     @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([companyId, userId])
+  @@index([companyId], map: "idx_company_users_company")
+  @@index([userId], map: "idx_company_users_user")
+  @@map("company_users")
+}
+
+model Notification {
+  id         String            @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId     String            @map("user_id") @db.Uuid
+  type       notification_type
+  title      String            @db.VarChar(200)
+  body       String?
+  link       String?
+  isRead     Boolean           @default(false) @map("is_read")
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz(6)
+  company_id String            @db.Uuid
+  companies  Company           @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_notifications_company")
+  users      User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([userId, isRead], map: "idx_notif_is_read")
+  @@index([userId], map: "idx_notif_user")
+  @@index([company_id], map: "idx_notifications_company")
+  @@index([company_id, userId], map: "idx_notifications_company_user")
+  @@map("notifications")
+}
+
+model Project {
+  id                               String                 @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title                            String                 @db.VarChar(200)
+  client                           String?                @db.VarChar(200)
+  description                      String?
+  coverUrl                         String?                @map("cover_url")
+  status                           project_status         @default(planning)
+  progress                         Int                    @default(0) @db.SmallInt
+  budget                           Decimal                @default(0) @db.Decimal(15, 2)
+  startDate                        DateTime?              @map("start_date") @db.Date
+  expectedDate                     DateTime?              @map("expected_date") @db.Date
+  completedDate                    DateTime?              @map("completed_date") @db.Date
+  ownerId                          String                 @map("owner_id") @db.Uuid
+  createdBy                        String                 @map("created_by") @db.Uuid
+  createdAt                        DateTime               @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                        DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  drive_folder_id                  String?                @db.VarChar(255)
+  drive_folder_url                 String?
+  companyId                        String                 @map("company_id") @db.Uuid
+  expenses                         Expense[]
+  project_files                    project_files[]
+  project_members                  project_members[]
+  project_stages                   project_stages[]
+  project_status_history           ProjectStatusHistory[]
+  companies                        Company                @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_projects_company")
+  users_projects_created_byTousers User                   @relation("projects_created_byTousers", fields: [createdBy], references: [id], onUpdate: NoAction)
+  users_projects_owner_idTousers   User                   @relation("projects_owner_idTousers", fields: [ownerId], references: [id], onUpdate: NoAction)
+  revenues                         Revenue[]
+  tasks                            Task[]
+
+  @@index([companyId], map: "idx_projects_company")
+  @@index([companyId], map: "idx_projects_company_id")
+  @@index([companyId, status], map: "idx_projects_company_status")
+  @@index([ownerId], map: "idx_projects_owner")
+  @@index([status], map: "idx_projects_status")
+  @@map("projects")
+}
+
+model ProjectStatusHistory {
+  id         String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  projectId  String          @map("project_id") @db.Uuid
+  fromStatus project_status? @map("from_status")
+  toStatus   project_status  @map("to_status")
+  changedBy  String          @map("changed_by") @db.Uuid
+  note       String?
+  changedAt  DateTime        @default(now()) @map("changed_at") @db.Timestamptz(6)
+  companyId  String          @map("company_id") @db.Uuid
+  companies  Company         @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_status_history_company")
+  users      User            @relation(fields: [changedBy], references: [id], onUpdate: NoAction)
+  projects   Project         @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([companyId], map: "idx_project_status_history_company")
+  @@map("project_status_history")
+}
+
+model Task {
+  id               String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title            String             @db.VarChar(300)
+  description      String?
+  projectId        String?            @map("project_id") @db.Uuid
+  status           task_status        @default(open)
+  priority         task_priority      @default(medium)
+  dueDate          DateTime?          @map("due_date") @db.Date
+  completedAt      DateTime?          @map("completed_at") @db.Timestamptz(6)
+  createdBy        String             @map("created_by") @db.Uuid
+  createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  companyId        String             @map("company_id") @db.Uuid
+  task_assignments task_assignments[]
+  task_comments    task_comments[]
+  companies        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_company")
+  users            User               @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  projects         Project?           @relation(fields: [projectId], references: [id], onUpdate: NoAction)
+
+  @@index([companyId], map: "idx_tasks_company")
+  @@index([companyId], map: "idx_tasks_company_id")
+  @@index([companyId, status], map: "idx_tasks_company_status")
+  @@index([priority], map: "idx_tasks_priority")
+  @@index([projectId], map: "idx_tasks_project")
+  @@index([status], map: "idx_tasks_status")
+  @@map("tasks")
+}
+
+model ExpenseCategory {
+  id        String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String    @db.VarChar(100)
+  color     String    @default("#7C5CFC") @db.VarChar(7)
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  companyId String    @map("company_id") @db.Uuid
+  users     User      @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  companies Company   @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_expense_categories_company")
+  expenses  Expense[]
+
+  @@unique([companyId, name], map: "expense_categories_company_name_key")
+  @@index([companyId], map: "idx_expense_categories_company")
+  @@map("expense_categories")
+}
+
+model Expense {
+  id                 String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title              String           @db.VarChar(200)
+  description        String?
+  projectId          String?          @map("project_id") @db.Uuid
+  categoryId         String?          @map("category_id") @db.Uuid
+  amount             Decimal          @db.Decimal(15, 2)
+  dueDate            DateTime         @map("due_date") @db.Date
+  paidDate           DateTime?        @map("paid_date") @db.Date
+  status             expense_status   @default(pending)
+  receiptUrl         String?          @map("receipt_url")
+  createdBy          String           @map("created_by") @db.Uuid
+  createdAt          DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  competenceMonth    DateTime?        @map("competence_month") @db.Date
+  isRecurring        Boolean          @default(false) @map("is_recurring")
+  recurringOriginId  String?          @map("recurring_origin_id") @db.Uuid
+  companyId          String           @map("company_id") @db.Uuid
+  expense_categories ExpenseCategory? @relation(fields: [categoryId], references: [id], onUpdate: NoAction)
+  users              User             @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  projects           Project?         @relation(fields: [projectId], references: [id], onUpdate: NoAction)
+  expenses           Expense?         @relation("expensesToexpenses", fields: [recurringOriginId], references: [id], onUpdate: NoAction)
+  other_expenses     Expense[]        @relation("expensesToexpenses")
+  companies          Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_expenses_company")
+
+  @@index([companyId], map: "idx_expenses_company")
+  @@index([companyId, dueDate], map: "idx_expenses_company_due")
+  @@index([companyId], map: "idx_expenses_company_id")
+  @@index([companyId, status], map: "idx_expenses_company_status")
+  @@index([competenceMonth], map: "idx_expenses_competence_month")
+  @@index([dueDate], map: "idx_expenses_due_date")
+  @@index([status], map: "idx_expenses_status")
+  @@map("expenses")
+}
+
+model Revenue {
+  id                   String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title                String               @db.VarChar(200)
+  client               String?              @db.VarChar(200)
+  projectId            String?              @map("project_id") @db.Uuid
+  totalAmount          Decimal              @map("total_amount") @db.Decimal(15, 2)
+  installments         Int                  @default(1) @db.SmallInt
+  description          String?
+  createdBy            String               @map("created_by") @db.Uuid
+  createdAt            DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  companyId            String               @map("company_id") @db.Uuid
+  revenue_installments RevenueInstallment[]
+  companies            Company              @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_revenues_company")
+  users                User                 @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  projects             Project?             @relation(fields: [projectId], references: [id], onUpdate: NoAction)
+
+  @@index([companyId], map: "idx_revenues_company")
+  @@index([companyId], map: "idx_revenues_company_id")
+  @@map("revenues")
+}
+
+model RevenueInstallment {
+  id              String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  revenueId       String         @map("revenue_id") @db.Uuid
+  installmentNo   Int            @map("installment_no") @db.SmallInt
+  amount          Decimal        @db.Decimal(15, 2)
+  dueDate         DateTime       @map("due_date") @db.Date
+  receivedDate    DateTime?      @map("received_date") @db.Date
+  status          revenue_status @default(pending)
+  note            String?
+  createdAt       DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  competenceMonth DateTime?      @map("competence_month") @db.Date
+  companyId       String         @map("company_id") @db.Uuid
+  companies       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_revenue_installments_company")
+  revenues        Revenue        @relation(fields: [revenueId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([revenueId, installmentNo])
+  @@index([competenceMonth], map: "idx_rev_install_competence")
+  @@index([dueDate], map: "idx_rev_install_due_date")
+  @@index([receivedDate], map: "idx_rev_install_recv")
+  @@index([status], map: "idx_rev_install_status")
+  @@index([companyId], map: "idx_revenue_installments_company")
+  @@map("revenue_installments")
+}
+
+model ChatRoom {
+  id                String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name              String?             @db.VarChar(100)
+  type              room_type           @default(private)
+  avatarUrl         String?             @map("avatar_url")
+  createdBy         String              @map("created_by") @db.Uuid
+  createdAt         DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  companyId         String              @map("company_id") @db.Uuid
+  chat_messages     chat_messages[]
+  chat_room_members chat_room_members[]
+  users             User                @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  companies         Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_chat_rooms_company")
+
+  @@index([companyId], map: "idx_chat_rooms_company")
+  @@map("chat_rooms")
+}
+
+model CalendarEvent {
+  id                                      String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title                                   String    @db.VarChar(255)
+  description                             String?
+  startDate                               DateTime  @map("start_date") @db.Timestamptz(6)
+  endDate                                 DateTime  @map("end_date") @db.Timestamptz(6)
+  location                                String?   @db.VarChar(255)
+  color                                   String?   @default("#4A90E2") @db.VarChar(7)
+  status                                  String    @default("scheduled") @db.VarChar(20)
+  userId                                  String?   @map("user_id") @db.Uuid
+  createdBy                               String    @map("created_by") @db.Uuid
+  created_at                              DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime? @default(now()) @db.Timestamptz(6)
+  companyId                               String    @map("company_id") @db.Uuid
+  users_calendar_events_created_byTousers User      @relation("calendar_events_created_byTousers", fields: [createdBy], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_calendar_events_user_idTousers    User?     @relation("calendar_events_user_idTousers", fields: [userId], references: [id], onUpdate: NoAction)
+  companies                               Company   @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_calendar_events_company")
+
+  @@index([companyId], map: "idx_calendar_events_company")
+  @@index([createdBy], map: "idx_calendar_events_created_by")
+  @@index([startDate], map: "idx_calendar_events_start_date")
+  @@index([status], map: "idx_calendar_events_status")
+  @@index([userId], map: "idx_calendar_events_user_id")
+  @@map("calendar_events")
+}
+
+model Proposal {
+  id                     Int                      @id @default(autoincrement())
+  proposalNumber         String                   @unique @map("proposal_number") @db.VarChar(20)
+  title                  String
+  clientId               Int?                     @map("client_id")
+  clientName             String?                  @map("client_name")
+  serviceObject          String                   @default("") @map("service_object")
+  finalNotes             String?                  @map("final_notes")
+  serviceDeadline        String?                  @map("service_deadline")
+  validUntil             DateTime?                @map("valid_until") @db.Date
+  paymentMessage         String?                  @map("payment_message")
+  status                 String                   @default("draft") @db.VarChar(30)
+  createdBy              String                   @map("created_by") @db.Uuid
+  createdAt              DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime                 @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  companyId              String                   @map("company_id") @db.Uuid
+  proposal_payment_terms proposal_payment_terms[]
+  proposal_scope_items   proposal_scope_items[]
+  proposal_services      proposal_services[]
+  companies              Company                  @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_proposals_company")
+  users                  User                     @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([companyId], map: "idx_proposals_company")
+  @@index([companyId], map: "idx_proposals_company_id")
+  @@index([createdAt(sort: Desc)], map: "idx_proposals_created_at")
+  @@index([createdBy], map: "idx_proposals_created_by")
+  @@index([status], map: "idx_proposals_status")
+  @@map("proposals")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model migrations {
+  id         Int      @id @default(dbgenerated("nextval('_migrations_id_seq'::regclass)"))
+  filename   String   @unique @db.VarChar(255)
+  applied_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@map("_migrations")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model activity_logs {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id     String?  @db.Uuid
+  entity_type String   @db.VarChar(50)
+  entity_id   String?  @db.Uuid
+  action      String   @db.VarChar(50)
+  payload     Json?
+  ip_address  String?  @db.Inet
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  company_id  String   @db.Uuid
+  users       User?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  companies   Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_activity_logs_company")
+
+  @@index([company_id], map: "idx_activity_logs_company")
+  @@index([created_at(sort: Desc)], map: "idx_logs_date")
+  @@index([entity_type, entity_id], map: "idx_logs_entity")
+  @@index([payload], map: "idx_logs_json", type: Gin)
+  @@index([user_id], map: "idx_logs_user")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model chat_messages {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  room_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  content    String?
+  file_url   String?
+  file_name  String?  @db.VarChar(255)
+  file_type  String?  @db.VarChar(100)
+  is_deleted Boolean  @default(false)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  company_id String   @db.Uuid
+  chat_rooms ChatRoom @relation(fields: [room_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+  companies  Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_chat_messages_company")
+
+  @@index([company_id], map: "idx_chat_messages_company")
+  @@index([created_at(sort: Desc)], map: "idx_chat_msg_date")
+  @@index([room_id], map: "idx_chat_msg_room")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model chat_room_members {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  room_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  joined_at  DateTime @default(now()) @db.Timestamptz(6)
+  chat_rooms ChatRoom @relation(fields: [room_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([room_id, user_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model project_files {
+  id            String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_id    String   @db.Uuid
+  uploaded_by   String   @db.Uuid
+  file_name     String   @db.VarChar(255)
+  file_size     BigInt?
+  mime_type     String?  @db.VarChar(127)
+  drive_file_id String?  @db.VarChar(255)
+  drive_url     String?
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  projects      Project  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         User     @relation(fields: [uploaded_by], references: [id], onUpdate: NoAction)
+
+  @@index([project_id], map: "idx_project_files_project_id")
+  @@index([uploaded_by], map: "idx_project_files_uploaded_by")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model project_members {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_id String   @db.Uuid
+  user_id    String   @db.Uuid
+  role       String   @default("member") @db.VarChar(50)
+  joined_at  DateTime @default(now()) @db.Timestamptz(6)
+  projects   Project  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([project_id, user_id])
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model project_phases {
+  id                                       String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_stage_id                         String         @db.Uuid
+  phase_name                               String         @db.VarChar(200)
+  comment                                  String?
+  is_completed                             Boolean        @default(false)
+  created_by                               String?        @db.Uuid
+  completed_by                             String?        @db.Uuid
+  created_at                               DateTime       @default(now()) @db.Timestamptz(6)
+  completed_at                             DateTime?      @db.Timestamptz(6)
+  updated_at                               DateTime       @default(now()) @db.Timestamptz(6)
+  company_id                               String         @db.Uuid
+  companies                                Company        @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_phases_company")
+  users_project_phases_completed_byTousers User?          @relation("project_phases_completed_byTousers", fields: [completed_by], references: [id], onUpdate: NoAction)
+  users_project_phases_created_byTousers   User?          @relation("project_phases_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction)
+  project_stages                           project_stages @relation(fields: [project_stage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_stage_id], map: "idx_proj_phases_stage")
+  @@index([company_id], map: "idx_project_phases_company")
+  @@index([is_completed], map: "idx_project_phases_completed")
+  @@index([project_stage_id], map: "idx_project_phases_stage")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model project_stages {
+  id             String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  project_id     String           @db.Uuid
+  stage_name     String           @db.VarChar(200)
+  stage_order    Int              @default(0) @db.SmallInt
+  created_at     DateTime         @default(now()) @db.Timestamptz(6)
+  company_id     String           @db.Uuid
+  project_phases project_phases[]
+  companies      Company          @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_stages_company")
+  projects       Project          @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id], map: "idx_proj_stages_project")
+  @@index([company_id], map: "idx_project_stages_company")
+  @@index([project_id], map: "idx_project_stages_project")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model proposal_payment_terms {
+  id          Int      @id @default(autoincrement())
+  proposal_id Int
+  description String
+  amount      Decimal  @default(0) @db.Decimal(14, 2)
+  order_index Int      @default(0)
+  company_id  String   @db.Uuid
+  companies   Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_proposal_payment_terms_company")
+  proposals   Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([proposal_id], map: "idx_proposal_payment_proposal")
+  @@index([proposal_id], map: "idx_proposal_payment_terms")
+  @@index([company_id], map: "idx_proposal_payment_terms_company")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model proposal_scope_items {
+  id          Int      @id @default(autoincrement())
+  proposal_id Int
+  description String
+  order_index Int      @default(0)
+  company_id  String   @db.Uuid
+  companies   Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_proposal_scope_items_company")
+  proposals   Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([proposal_id], map: "idx_proposal_scope_items")
+  @@index([company_id], map: "idx_proposal_scope_items_company")
+  @@index([proposal_id], map: "idx_proposal_scope_proposal")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model proposal_sequences {
+  year       Int     @id
+  last_seq   Int     @default(0)
+  company_id String  @db.Uuid
+  companies  Company @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_proposal_sequences_company")
+
+  @@index([company_id], map: "idx_proposal_sequences_company")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model proposal_services {
+  id            Int      @id @default(autoincrement())
+  proposal_id   Int
+  description   String
+  amount        Decimal  @default(0) @db.Decimal(14, 2)
+  deadline_days Int      @default(0)
+  order_index   Int      @default(0)
+  company_id    String   @db.Uuid
+  companies     Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_proposal_services_company")
+  proposals     Proposal @relation(fields: [proposal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([proposal_id], map: "idx_proposal_services")
+  @@index([company_id], map: "idx_proposal_services_company")
+  @@index([proposal_id], map: "idx_proposal_services_proposal")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model task_assignments {
+  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  task_id     String   @db.Uuid
+  user_id     String   @db.Uuid
+  assigned_at DateTime @default(now()) @db.Timestamptz(6)
+  company_id  String   @db.Uuid
+  companies   Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_task_assignments_company")
+  tasks       Task     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       User     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([task_id, user_id])
+  @@index([company_id], map: "idx_task_assignments_company")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model task_comments {
+  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  task_id    String   @db.Uuid
+  user_id    String   @db.Uuid
+  content    String
+  file_url   String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+  company_id String   @db.Uuid
+  companies  Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_task_comments_company")
+  tasks      Task     @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
+
+  @@index([company_id], map: "idx_task_comments_company")
+}
+
+enum calendar_event_status {
+  scheduled
+  confirmed
+  cancelled
+  completed
+}
+
+enum expense_status {
+  pending
+  paid
+  overdue
+  cancelled
+}
+
+enum notification_type {
+  task_assigned
+  task_due
+  project_update
+  financial_due
+  chat_mention
+  system
+}
+
+enum project_status {
+  planning
+  in_progress
+  review
+  paused
+  completed
+  cancelled
+}
+
+enum proposal_status {
+  draft
+  sent
+  approved
+  rejected
+  cancelled
+}
+
+enum revenue_status {
+  pending
+  received
+  overdue
+  cancelled
+}
+
+enum room_type {
+  private
+  group
+}
+
+enum task_priority {
+  low
+  medium
+  high
+  critical
+}
+
+enum task_status {
+  open
+  in_progress
+  review
+  completed
+  cancelled
+}

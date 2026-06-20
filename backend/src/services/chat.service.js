@@ -4,8 +4,8 @@ const getRooms = async (userId) => {
   return chatRepo.findRoomsByUser(userId)
 }
 
-const createRoom = async ({ name, type = 'private', members = [] }, createdBy) => {
-  const room = await chatRepo.createRoom({ name, type, createdBy })
+const createRoom = async ({ name, type = 'private', members = [] }, createdBy, companyId) => {
+  const room = await chatRepo.createRoom({ name, type, createdBy, companyId })
   const allMembers = [...new Set([createdBy, ...members])]
   for (const uid of allMembers) {
     await chatRepo.addMember(room.id, uid)
@@ -22,11 +22,15 @@ const deleteRoom = async (roomId, userId, userRole) => {
   await chatRepo.deleteRoom(roomId)
 }
 
-const getMessages = async (roomId, limit, offset) => {
+const getMessages = async (roomId, userId, limit, offset) => {
+  const room = await chatRepo.findRoomByIdAndMember(roomId, userId)
+  if (!room) throw { status: 403, message: 'Sala não encontrada ou acesso negado' }
   return chatRepo.findMessages(roomId, limit, offset)
 }
 
 const createMessage = async ({ roomId, userId, content }) => {
+  const room = await chatRepo.findRoomByIdAndMember(roomId, userId)
+  if (!room) throw { status: 403, message: 'Sala não encontrada ou acesso negado' }
   const message = await chatRepo.createMessage({ roomId, userId, content })
   const allMemberIds  = await chatRepo.findRoomMemberIds(roomId)
   const otherMemberIds = allMemberIds.filter(id => id !== userId)

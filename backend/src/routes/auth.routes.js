@@ -2,40 +2,20 @@ const router   = require('express').Router()
 const ctrl     = require('../controllers/auth.controller')
 const validate = require('../middlewares/validate.middleware')
 const { authenticate } = require('../middlewares/auth.middleware')
+const rateLimit = require('../middlewares/rateLimit.middleware')
 const V        = require('../validators/auth.validator')
 
-// Rotas existentes — inalteradas
-router.post('/login',    validate(V.login),    ctrl.login)
-router.post('/register', validate(V.register), ctrl.register)
-router.post('/refresh',  ctrl.refresh)
+// Limites mais agressivos nas rotas sensíveis (anti brute force / abuso)
+const authLimiter  = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Muitas tentativas. Aguarde alguns minutos.' })
+const emailLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5,  message: 'Muitas solicitações. Tente novamente mais tarde.' })
+
+router.post('/login',    authLimiter, validate(V.login),    ctrl.login)
+router.post('/register', authLimiter, validate(V.register), ctrl.register)
+router.post('/refresh',  authLimiter, ctrl.refresh)
 router.get('/me',        authenticate,         ctrl.me)
 
-// Novas rotas — recuperação de senha
-router.post('/forgot-password', ctrl.forgotPassword)
-router.post('/reset-password',  ctrl.resetPassword)
-
-router.get('/test-email', async (req, res) => {
-  try {
-    const emailService = require('../services/email.service')
-
-    await emailService.sendPasswordResetEmail({
-      to: process.env.GMAIL_USER,
-      name: 'Wesley',
-      resetLink: 'https://kronos-neon.vercel.app/reset-password?token=teste'
-    })
-
-    return res.json({
-      success: true,
-      message: 'Email enviado'
-    })
-  } catch (err) {
-    console.error(err)
-    return res.status(500).json({
-      success: false,
-      message: err.message
-    })
-  }
-})
-
+// Recuperação de senha
+router.post('/forgot-password', emailLimiter, ctrl.forgotPassword)
+router.post('/reset-password',  authLimiter,  ctrl.resetPassword)
 
 module.exports = router

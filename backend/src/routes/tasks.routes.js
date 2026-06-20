@@ -1,12 +1,13 @@
 const router   = require('express').Router()
 const ctrl     = require('../controllers/task.controller')
 const { authenticate } = require('../middlewares/auth.middleware')
+const tenantMiddleware = require('../middlewares/tenant.middleware')
 const validate = require('../middlewares/validate.middleware')
 const V        = require('../validators/task.validator')
 const { uploadFile } = require('../config/multer')
 const logger   = require('../middlewares/logger.middleware')
 
-router.use(authenticate, logger)
+router.use(authenticate, tenantMiddleware, logger)
 
 router.get('/dashboard', ctrl.getDashboard)
 router.get('/',          ctrl.getAll)

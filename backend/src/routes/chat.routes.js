@@ -16,7 +16,7 @@ router.get('/rooms', async (req, res) => {
 // ── POST /chat/rooms ────────────────────────────────────────────
 router.post('/rooms', async (req, res) => {
   try {
-    const room = await chatService.createRoom(req.body, req.user.user_id)
+    const room = await chatService.createRoom(req.body, req.user.user_id, req.user.company_id)
     return R.created(res, { room })
   } catch (err) { return R.error(res, err.message, err.status || 500) }
 })
@@ -34,9 +34,9 @@ router.get('/rooms/:id/messages', async (req, res) => {
   try {
     const limit  = parseInt(req.query.limit)  || 50
     const offset = parseInt(req.query.offset) || 0
-    const messages = await chatService.getMessages(req.params.id, limit, offset)
+    const messages = await chatService.getMessages(req.params.id, req.user.user_id, limit, offset)
     return R.success(res, { messages })
-  } catch (err) { return R.error(res, err.message) }
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
 })
 
 // ── POST /chat/rooms/:id/messages ───────────────────────────────

@@ -1,231 +1,123 @@
-# 🚀 KRONOS — SISTEMA DE GESTÃO EMPRESARIAL
+# KRONOS - Sistema de Gestao Empresarial
 
-> Plataforma moderna para gestão de projetos, tarefas, comunicação interna e controle financeiro, desenvolvida para escritórios de arquitetura, engenharia e equipes de projetos.
-
----
-
-# 📋 SOBRE O PROJETO
-
-O **Kronos** é um sistema SaaS corporativo desenvolvido para centralizar a operação de escritórios de arquitetura, engenharia e equipes de projetos em uma única plataforma.
-
-O sistema resolve problemas comuns dessas equipes:
-
-* Dificuldade em acompanhar o andamento de múltiplos projetos simultaneamente
-* Falta de visibilidade sobre o controle financeiro por projeto
-* Comunicação fragmentada entre membros da equipe
-* Ausência de controle estruturado de tarefas com prioridades e prazos
-* Dificuldade em gerar uma visão executiva consolidada do negócio
-
-O Kronos oferece uma interface moderna com tema escuro e identidade visual premium, projetada para uso profissional no dia a dia.
+> Plataforma SaaS multi-tenant para gestao de projetos, tarefas, agenda, comunicacao interna, propostas e controle financeiro - voltada a escritorios de arquitetura, engenharia e equipes de projeto.
 
 ---
 
-# 🛠️ TECNOLOGIAS UTILIZADAS
+## Estrutura do repositorio
 
-## FRONTEND
+Este e um monorepo com dois aplicativos independentes:
 
-| Tecnologia        | Descrição                             |
-| ----------------- | ------------------------------------- |
-| React.js          | Biblioteca principal de interface     |
-| Vite              | Bundler e servidor de desenvolvimento |
-| JavaScript ES6+   | Linguagem principal                   |
-| React Router      | Navegação entre módulos               |
-| Axios             | Comunicação com a API                 |
-| Zustand           | Gerenciamento de estado global        |
-| Recharts          | Gráficos e visualizações financeiras  |
-| TailwindCSS       | Estilização utilitária                |
-| Plus Jakarta Sans | Tipografia do sistema                 |
+```
+Kronos/
+  backend/      -> API REST (Node.js + Express + PostgreSQL)
+  frontend/     -> SPA (React + Vite)
+  docs/         -> Documentacao tecnica
+    API.md          -> Referencia de todas as rotas da API
+    ARCHITECTURE.md -> Visao de arquitetura e fluxos
+    SECURITY.md     -> Relatorio de vulnerabilidades e correcoes
+  README.md     -> Este arquivo
+```
 
-## BACKEND
-
-| Tecnologia     | Descrição                      |
-| -------------- | ------------------------------ |
-| Node.js        | Ambiente de execução           |
-| Express.js     | Framework de API REST          |
-| JWT            | Autenticação e autorização     |
-| bcryptjs       | Criptografia de senhas         |
-| WebSocket (ws) | Comunicação em tempo real      |
-| Nodemailer     | Envio de e-mails transacionais |
-| Multer         | Upload de arquivos             |
-| Joi            | Validação de dados de entrada  |
-
-## BANCO DE DADOS E INFRAESTRUTURA
-
-| Tecnologia | Descrição                    |
-| ---------- | ---------------------------- |
-| PostgreSQL | Banco de dados relacional    |
-| Supabase   | Hospedagem do banco de dados |
-| Vercel     | Hospedagem do frontend       |
-| Render     | Hospedagem do backend        |
-| GitHub     | Versionamento do código      |
+> Nota: cada app tem seu proprio `package.json`. Nao existe um workspace npm na raiz - instale e rode `backend/` e `frontend/` separadamente. O `package.json` da raiz e o `node_modules/` na raiz sao vestigios e devem ser removidos.
 
 ---
 
-# ✨ FUNCIONALIDADES DO SISTEMA
+## Visao geral
 
-## 📊 DASHBOARD EXECUTIVO
+O Kronos centraliza a operacao de escritorios de projeto numa unica plataforma multi-empresa (multi-tenant), com perfis de acesso granulares e os seguintes modulos:
 
-* Visão consolidada de métricas do negócio
-* Resumo financeiro do mês
-* Fluxo de caixa anual em gráfico
-* Lista de projetos ativos e tarefas abertas
-
-## 📅 AGENDA
-
-* Calendário corporativo integrado para gestão de compromissos e eventos
-* Três modos de visualização:
-
-  * Mês
-  * Semana
-  * Agenda (lista cronológica)
-    
-* Cadastro de eventos com:
-  * Título
-  * Descrição
-  * Data e horário
-  * Local ou link de reunião
-  * Responsável
-  * Status
-  * Cor de identificação
-    
-* Controle de reuniões, visitas técnicas, entregas, apresentações e prazos de projetos
-* Organização dos compromissos por período e responsável
-  
-* Atualização de status dos eventos:
-  * Agendado
-  * Em andamento
-  * Concluído
-  * Cancelado
-    
-* Administradores podem visualizar, criar, editar e excluir eventos
-* Arquitetos podem visualizar, criar e editar eventos
-* Estagiários possuem acesso apenas para visualização
-
-
-## 📁 GESTÃO DE PROJETOS
-
-* Criação e edição de projetos com capa, orçamento e datas
-* Etapas padrão por projeto:
-
-  * Estudo Preliminar
-  * Projeto Básico
-  * Ante Projeto
-  * Projeto Executivo
-  * Entrega Final
-* Fases dentro de cada etapa com checklist e comentários
-* Histórico de mudanças de status
-* Gerenciamento de membros por projeto
-* Anexo de arquivos por projeto
-
-## ✅ GESTÃO DE TAREFAS
-
-* Criação de tarefas com prioridade, prazo e responsáveis
-* Filtros por status e prioridade
-* Comentários por tarefa
-* Indicador de dias em aberto
-
-## 💬 CHAT INTERNO
-
-* Conversas privadas entre membros
-* Grupos de discussão
-* Comunicação em tempo real via WebSocket
-* Seletor de emojis integrado
-* Indicador de digitação
-* Histórico de mensagens persistido
-
-## 💰 CONTROLE FINANCEIRO
-
-* Dashboard financeiro com KPIs e gráficos
-* Contas a pagar com filtro mensal e por categoria
-* Contas a receber com parcelamento independente por parcela
-* DRE — Demonstrativo de Resultado do Exercício
-* Análise financeira por projeto
-* Despesas recorrentes
-* Paginação e filtros combinados
-
-## 👥 EQUIPE E USUÁRIOS
-
-* Gerenciamento de membros com perfis:
-
-  * Administrador
-  * Arquiteto
-  * Estagiário
-* Sistema de permissões granular por módulo e ação
-* Upload de foto de perfil
-* Ativação e desativação de membros
-
-## 🔐 AUTENTICAÇÃO E SEGURANÇA
-
-* Login com JWT (Access Token + Refresh Token)
-* Recuperação de senha por e-mail
-* Persistência de sessão com "Lembre-me"
-* Senhas criptografadas com bcrypt
-* Controle de acesso por perfil de usuário
+| Modulo | Descricao |
+| ------ | --------- |
+| Dashboard | Metricas executivas e resumo financeiro |
+| Projetos | Projetos com etapas, fases, membros, anexos e historico de status |
+| Tarefas | Tarefas com prioridade, prazo, responsaveis e comentarios |
+| Financeiro | Contas a pagar/receber, DRE, KPIs e analise por projeto |
+| Agenda | Calendario corporativo (mes/semana/agenda) |
+| Chat | Mensagens privadas e em grupo via WebSocket |
+| Propostas | Geracao e gestao de propostas comerciais com anexos |
+| Equipe | Gestao de usuarios, perfis e permissoes |
+| Admin | Painel global da plataforma (escopo `developer`) |
 
 ---
 
-# ⚙️ CONFIGURAÇÃO DO PROJETO
+## Stack
 
-## PRÉ-REQUISITOS
+**Frontend:** React 19, Vite, React Router 7, Zustand, Axios, Recharts, TailwindCSS
+**Backend:** Node.js 18+, Express 4, Prisma ORM, PostgreSQL, JWT, bcryptjs, WebSocket (`ws`), Joi, Multer, Nodemailer/Resend, Google Drive API
+**Infra:** Supabase (PostgreSQL), Vercel (frontend), Render (backend), Cloudflare R2 / Google Drive (arquivos)
 
-* Node.js v18 ou superior
-* npm v9 ou superior
-* Conta Supabase com projeto PostgreSQL criado
+---
 
-## INSTALAÇÃO
+## Setup local
+
+### Pre-requisitos
+- Node.js v18+
+- npm v9+
+- PostgreSQL acessivel (ex.: projeto Supabase)
+
+### 1. Backend
 
 ```bash
+cd backend
+cp .env.example .env          # preencha com seus proprios valores
 npm install
+npm run prisma:pull           # importa o schema REAL do banco (recomendado)
+npm run prisma:generate       # gera o Prisma Client (obrigatorio)
+npm run seed                  # (opcional) popula dados iniciais
+npm run dev                   # sobe a API em http://localhost:3001
 ```
 
-## EXECUTAR O FRONTEND
+### 2. Frontend
 
 ```bash
-npm run dev
+cd frontend
+cp .env.example .env          # defina VITE_API_URL
+npm install
+npm run dev                   # sobe a SPA em http://localhost:5173
 ```
 
-## GERAR BUILD DE PRODUÇÃO
-
-```bash
-npm run build
-```
+Em desenvolvimento, o frontend usa proxy `/api`; em producao usa `VITE_API_URL`.
 
 ---
 
-# 🌐 ESTRUTURA DE DEPLOY
+## Perfis de acesso
 
-| Serviço        | Plataforma |
-| -------------- | ---------- |
-| Frontend       | Vercel     |
-| Backend        | Render     |
-| Banco de Dados | Supabase   |
-| Versionamento  | GitHub     |
+| Escopo | Role | Descricao |
+| ------ | ---- | --------- |
+| Global | `developer` | Super admin: cria empresas e usuarios em `/admin` (`/api/platform`); pode impersonar empresas |
+| Empresa | `owner` | Proprietario da empresa |
+| Empresa | `admin` | Administrador |
+| Empresa | `manager` | Gestor / Arquiteto |
+| Empresa | `employee` | Colaborador / Estagiario |
 
----
-
-# 🔒 SEGURANÇA
-
-* Autenticação baseada em JWT
-* Refresh Tokens para renovação de sessão
-* Criptografia de senhas com bcrypt
-* Recuperação de senha por e-mail
-* Controle de permissões por perfil
-* Proteção de rotas autenticadas
+As regras de permissao por modulo/acao estao em [frontend/src/utils/permissions.js](frontend/src/utils/permissions.js) (cliente) e aplicadas no servidor via `authenticate` / `authorize` / `tenantMiddleware`.
 
 ---
 
-# 💻 IDE RECOMENDADA
+## Documentacao
 
-* Visual Studio Code (VS Code)
+- [docs/API.md](docs/API.md) - referencia completa das rotas REST e WebSocket
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - camadas, fluxos de auth e multi-tenant
+- [docs/SECURITY.md](docs/SECURITY.md) - vulnerabilidades identificadas, correcoes e pendencias
+- [backend/README.md](backend/README.md) - detalhes do backend
+- [frontend/README.md](frontend/README.md) - detalhes do frontend
+
+> Antes de ir a producao, leia [docs/SECURITY.md](docs/SECURITY.md). Ha acoes de operacao obrigatorias (rotacionar credenciais e aplicar a migration multi-tenant).
 
 ---
 
-# 📄 LICENÇA
+## Deploy
 
-Este projeto é de propriedade de seus respectivos desenvolvedores e não pode ser distribuído, reproduzido ou comercializado sem autorização prévia.
+| Servico | Plataforma |
+| ------- | ---------- |
+| Frontend | Vercel |
+| Backend | Render |
+| Banco de Dados | Supabase (PostgreSQL) |
+| Arquivos | Cloudflare R2 / Google Drive |
 
 ---
 
-# 👨‍💻 KRONOS
+## Licenca
 
-Sistema desenvolvido para centralizar a gestão operacional de escritórios de arquitetura, engenharia e equipes de projetos, oferecendo produtividade, organização e comunicação em uma única plataforma.
+Projeto proprietario. Distribuicao, reproducao ou comercializacao somente com autorizacao previa.

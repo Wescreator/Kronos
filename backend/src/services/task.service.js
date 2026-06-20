@@ -1,9 +1,10 @@
 const taskRepo    = require('../repositories/task.repository')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
-const getAll = async (query) => {
+const getAll = async (query, companyId) => {
   const { page, limit, offset } = paginate(query)
   const { rows, total } = await taskRepo.findAll({
+    companyId,
     limit, offset,
     status:    query.status,
     priority:  query.priority,
@@ -13,15 +14,16 @@ const getAll = async (query) => {
   return paginatedResponse(rows, total, page, limit)
 }
 
-const getById = async (id) => {
-  const task = await taskRepo.findById(id)
+const getById = async (id, companyId) => {
+  const task = await taskRepo.findById(id, companyId)
   if (!task) throw { status: 404, message: 'Tarefa não encontrada' }
   const comments = await taskRepo.findComments(id)
   return { ...task, comments }
 }
 
-const create = async (data, userId) => {
+const create = async (data, userId, companyId) => {
   const task = await taskRepo.create({
+    companyId,
     title:       data.title,
     description: data.description,
     projectId:   data.project_id || null,
@@ -34,11 +36,11 @@ const create = async (data, userId) => {
     await taskRepo.setAssignees(task.id, data.assignees)
   }
 
-  return await taskRepo.findById(task.id)
+  return await taskRepo.findById(task.id, companyId)
 }
 
-const update = async (id, data, userId) => {
-  const task = await taskRepo.findById(id)
+const update = async (id, data, userId, companyId) => {
+  const task = await taskRepo.findById(id, companyId)
   if (!task) throw { status: 404, message: 'Tarefa não encontrada' }
 
   const fields = {}
@@ -52,24 +54,24 @@ const update = async (id, data, userId) => {
   }
 
   if (Object.keys(fields).length) {
-    await taskRepo.update(id, fields)
+    await taskRepo.update(id, companyId, fields)
   }
 
   if (data.assignees !== undefined) {
     await taskRepo.setAssignees(id, data.assignees)
   }
 
-  return await taskRepo.findById(id)
+  return await taskRepo.findById(id, companyId)
 }
 
-const addComment = async (taskId, userId, content, fileUrl) => {
-  const task = await taskRepo.findById(taskId)
+const addComment = async (taskId, userId, content, fileUrl, companyId) => {
+  const task = await taskRepo.findById(taskId, companyId)
   if (!task) throw { status: 404, message: 'Tarefa não encontrada' }
   return await taskRepo.addComment(taskId, userId, content, fileUrl)
 }
 
-const getDashboardStats = async () => {
-  return await taskRepo.getDashboardStats()
+const getDashboardStats = async (companyId) => {
+  return await taskRepo.getDashboardStats(companyId)
 }
 
 module.exports = { getAll, getById, create, update, addComment, getDashboardStats }

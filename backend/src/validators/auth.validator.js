@@ -6,7 +6,7 @@ const login = Joi.object({
     'any.required': 'E-mail é obrigatório'
   }),
   password: Joi.string().min(8).required().messages({
-    'string.min':   'Senha deve ter no mínimo 6 caracteres',
+    'string.min':   'Senha deve ter no mínimo 8 caracteres',
     'any.required': 'Senha é obrigatória'
   })
 })
@@ -14,7 +14,10 @@ const login = Joi.object({
 const register = Joi.object({
   name:     Joi.string().min(3).max(150).required(),
   email:    Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
+  password: Joi.string().min(8).required().messages({
+    'string.min':   'Senha deve ter no mínimo 8 caracteres',
+    'any.required': 'Senha é obrigatória'
+  }),
   position: Joi.string().max(100).optional().allow(''),
   phone:    Joi.string().max(30).optional().allow('')
 })

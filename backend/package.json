@@ -8,9 +8,17 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "migrate": "node src/database/migrate.js",
-    "seed": "node src/database/seeds/001_seed_initial_data.js"
+    "seed": "node src/database/seeds/001_seed_initial_data.js",
+    "seed:dev": "node src/database/seeds/003_seed_developer.js",
+    "prisma:generate": "prisma generate",
+    "prisma:pull": "prisma db pull",
+    "prisma:studio": "prisma studio"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   },
   "dependencies": {
+    "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "date-fns": "^3.0.0",
@@ -28,6 +36,7 @@
     "ws": "^8.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.0"
+    "nodemon": "^3.0.0",
+    "prisma": "^5.22.0"
   }
 }

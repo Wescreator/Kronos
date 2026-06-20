@@ -2,22 +2,22 @@ const taskService = require('../services/task.service')
 const R = require('../utils/response')
 
 const getAll     = async (req, res) => {
-  try { return R.success(res, await taskService.getAll(req.query)) }
+  try { return R.success(res, await taskService.getAll(req.query, req.tenant.id)) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getById    = async (req, res) => {
-  try { return R.success(res, { task: await taskService.getById(req.params.id) }) }
+  try { return R.success(res, { task: await taskService.getById(req.params.id, req.tenant.id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const create     = async (req, res) => {
-  try { return R.created(res, { task: await taskService.create(req.body, req.user.user_id) }) }
+  try { return R.created(res, { task: await taskService.create(req.body, req.user.user_id, req.tenant.id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const update     = async (req, res) => {
-  try { return R.success(res, { task: await taskService.update(req.params.id, req.body, req.user.user_id) }) }
+  try { return R.success(res, { task: await taskService.update(req.params.id, req.body, req.user.user_id, req.tenant.id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
@@ -29,14 +29,15 @@ const addComment = async (req, res) => {
       req.params.id,
       req.user.user_id,
       req.body.content,
-      req.file || null
+      req.file || null,
+      req.tenant.id
     )
     return R.created(res, { comment })
   } catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
 const getDashboard = async (req, res) => {
-  try { return R.success(res, { stats: await taskService.getDashboardStats() }) }
+  try { return R.success(res, { stats: await taskService.getDashboardStats(req.tenant.id) }) }
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 

@@ -11,9 +11,9 @@ const nextProposalNumber = async () => {
 }
 
 // ── Buscar todas as propostas ─────────────────────────────────
-const findAll = async ({ limit, offset, search }) => {
-  const conditions = []
-  const params     = []
+const findAll = async ({ companyId, limit, offset, search }) => {
+  const conditions = ['p.company_id = $1']
+  const params     = [companyId]
 
   if (search) {
     params.push(`%${search}%`)
@@ -24,7 +24,7 @@ const findAll = async ({ limit, offset, search }) => {
     )
   }
 
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+  const where = `WHERE ${conditions.join(' AND ')}`
   params.push(limit, offset)
 
   const { rows } = await pool.query(
@@ -56,7 +56,7 @@ const findAll = async ({ limit, offset, search }) => {
 }
 
 // ── Buscar proposta por ID ────────────────────────────────────
-const findById = async (id) => {
+const findById = async (id, companyId) => {
   const { rows: propRows } = await pool.query(
     `SELECT
        p.*,
@@ -64,8 +64,8 @@ const findById = async (id) => {
        u.name AS created_by_name
      FROM proposals p
      LEFT JOIN users u ON u.id = p.created_by
-     WHERE p.id = $1`,
-    [id]
+     WHERE p.id = $1 AND p.company_id = $2`,
+    [id, companyId]
   )
   if (!propRows[0]) return null
   const proposal = propRows[0]
@@ -95,17 +95,17 @@ const findById = async (id) => {
 
 // ── Criar proposta ────────────────────────────────────────────
 const create = async ({
-  proposalNumber, title, clientId, clientName, serviceObject,
+  companyId, proposalNumber, title, clientId, clientName, serviceObject,
   finalNotes, serviceDeadline, validUntil, paymentMessage, createdBy
 }) => {
   const { rows } = await pool.query(
     `INSERT INTO proposals
-       (proposal_number, title, client_id, client_name, service_object,
+       (company_id, proposal_number, title, client_id, client_name, service_object,
         final_notes, service_deadline, valid_until, payment_message, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
      RETURNING *`,
     [
-      proposalNumber, title, clientId || null, clientName || null,
+      companyId, proposalNumber, title, clientId || null, clientName || null,
       serviceObject, finalNotes || null, serviceDeadline || null,
       validUntil || null, paymentMessage || null, createdBy
     ]
@@ -114,23 +114,23 @@ const create = async ({
 }
 
 // ── Atualizar proposta ────────────────────────────────────────
-const update = async (id, fields) => {
+const update = async (id, companyId, fields) => {
   const keys   = Object.keys(fields)
   const values = Object.values(fields)
   const sets   = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
-  values.push(id)
+  values.push(id, companyId)
 
   const { rows } = await pool.query(
     `UPDATE proposals SET ${sets}, updated_at = NOW()
-     WHERE id = $${values.length} RETURNING *`,
+     WHERE id = $${values.length - 1} AND company_id = $${values.length} RETURNING *`,
     values
   )
   return rows[0]
 }
 
 // ── Excluir proposta ──────────────────────────────────────────
-const remove = async (id) => {
-  await pool.query('DELETE FROM proposals WHERE id = $1', [id])
+const remove = async (id, companyId) => {
+  await pool.query('DELETE FROM proposals WHERE id = $1 AND company_id = $2', [id, companyId])
 }
 
 // ── SCOPE ITEMS ───────────────────────────────────────────────

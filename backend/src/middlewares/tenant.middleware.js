@@ -1,5 +1,6 @@
 const companyRepo = require('../repositories/company.repository')
 const R            = require('../utils/response')
+const { setCompanyId } = require('../config/tenantContext')
 
 /**
  * TenantMiddleware
@@ -33,6 +34,8 @@ const tenantMiddleware = async (req, res, next) => {
       if (!company) return R.notFound(res, 'Empresa não encontrada')
       if (!company.is_active) return R.forbidden(res, 'Empresa inativa ou suspensa')
 
+      // Impersonacao: passa a isolar tudo pela empresa-alvo.
+      setCompanyId(company.id)
       req.tenant = { id: company.id, name: company.name, plan: company.plan }
       return next()
     }
@@ -46,6 +49,7 @@ const tenantMiddleware = async (req, res, next) => {
     if (!company) return R.notFound(res, 'Empresa não encontrada')
     if (!company.is_active) return R.forbidden(res, 'Empresa inativa ou suspensa')
 
+    setCompanyId(company.id)
     req.tenant = { id: company.id, name: company.name, plan: company.plan }
     return next()
 

@@ -7,32 +7,32 @@ const asyncHandler = fn => (req, res) =>
   )
 
 const getAll = asyncHandler(async (req, res) => {
-  const result = await proposalService.getAll(req.query)
+  const result = await proposalService.getAll(req.query, req.tenant.id)
   return R.success(res, result)
 })
 
 const getById = asyncHandler(async (req, res) => {
-  const proposal = await proposalService.getById(req.params.id)
+  const proposal = await proposalService.getById(req.params.id, req.tenant.id)
   return R.success(res, { proposal })
 })
 
 const create = asyncHandler(async (req, res) => {
-  const proposal = await proposalService.create(req.body, req.user.id)
+  const proposal = await proposalService.create(req.body, req.user.user_id, req.tenant.id)
   return R.created(res, { proposal })
 })
 
 const update = asyncHandler(async (req, res) => {
-  const proposal = await proposalService.update(req.params.id, req.body)
+  const proposal = await proposalService.update(req.params.id, req.body, req.tenant.id)
   return R.success(res, { proposal })
 })
 
 const duplicate = asyncHandler(async (req, res) => {
-  const proposal = await proposalService.duplicate(req.params.id, req.user.id)
+  const proposal = await proposalService.duplicate(req.params.id, req.user.user_id, req.tenant.id)
   return R.created(res, { proposal })
 })
 
 const remove = asyncHandler(async (req, res) => {
-  await proposalService.remove(req.params.id)
+  await proposalService.remove(req.params.id, req.tenant.id)
   return R.success(res, { message: 'Proposta excluída' })
 })
 

@@ -1,0 +1,26 @@
+import api from './api'
+
+/**
+ * Servico do painel de plataforma (super admin / developer).
+ * Consome /api/platform - restrito ao escopo global.
+ *
+ * O backend responde com envelope plano: { success, ...dados }.
+ */
+const platformService = {
+  listCompanies: () =>
+    api.get('/platform/companies').then(r => r.data.companies),
+
+  createCompany: (payload) =>
+    api.post('/platform/companies', payload).then(r => r.data.company),
+
+  setCompanyActive: (companyId, isActive) =>
+    api.patch(`/platform/companies/${companyId}/active`, { is_active: isActive }).then(r => r.data),
+
+  listCompanyUsers: (companyId) =>
+    api.get(`/platform/companies/${companyId}/users`).then(r => r.data.users),
+
+  createCompanyUser: (companyId, payload) =>
+    api.post(`/platform/companies/${companyId}/users`, payload).then(r => r.data.user),
+}
+
+export default platformService

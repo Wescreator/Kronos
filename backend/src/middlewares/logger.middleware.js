@@ -5,10 +5,11 @@ const logger = (req, res, next) => {
     if (req.user && req.method !== 'GET') {
       try {
         await pool.query(
-          `INSERT INTO activity_logs (user_id, entity_type, action, payload, ip_address)
-           VALUES ($1, $2, $3, $4, $5)`,
+          `INSERT INTO activity_logs (company_id, user_id, entity_type, action, payload, ip_address)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
           [
-            req.user.id,
+            req.user.company_id || null,
+            req.user.user_id,
             req.baseUrl.split('/').pop(),
             req.method,
             JSON.stringify({ url: req.originalUrl, status: res.statusCode }),

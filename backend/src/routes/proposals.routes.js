@@ -4,10 +4,11 @@ const ctrl = require('../controllers/proposal.controller')
 const fileCtrl = require('../controllers/proposal.file.controller')
 
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
+const tenantMiddleware = require('../middlewares/tenant.middleware')
 const { uploadDriveFile } = require('../config/multer')
 
-// Todas as rotas exigem autenticação
-router.use(authenticate)
+// Todas as rotas exigem autenticação e escopo de empresa
+router.use(authenticate, tenantMiddleware)
 
 // Listagem e criação
 router.get('/', ctrl.getAll)

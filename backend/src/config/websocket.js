@@ -12,9 +12,9 @@ module.exports = function initWebSocket(server) {
 
     try {
       const decoded = jwt.verify(token, jwtConfig.secret)
-      ws.userId = decoded.id
-      clients.set(decoded.id, ws)
-      console.log(`WS conectado: ${decoded.id}`)
+      ws.userId = decoded.user_id
+      clients.set(decoded.user_id, ws)
+      console.log(`WS conectado: ${decoded.user_id}`)
     } catch {
       ws.close(1008, 'Token inválido')
       return

@@ -1,8 +1,6 @@
 // backend/repositories/calendarRepository.js
 // Módulo Agenda — Kronos
-// ADITIVO: não altera nenhum outro repositório
-
-// backend/repositories/calendarRepository.js
+// Multi-tenant: todas as consultas sao escopadas por company_id.
 
 const pool = require('../config/database');
 
@@ -21,16 +19,13 @@ const BASE_SELECT = `
 
 // ─── queries ─────────────────────────────────────────────────────────────────
 
-async function findAll({ startDate, endDate } = {}) {
-  let query = BASE_SELECT;
-  const params = [];
+async function findAll({ companyId, startDate, endDate } = {}) {
+  let query = `${BASE_SELECT} WHERE ce.company_id = $1`;
+  const params = [companyId];
 
   if (startDate && endDate) {
-    query += `
-      WHERE ce.start_date >= $1
-        AND ce.start_date <= $2
-    `;
     params.push(startDate, endDate);
+    query += ` AND ce.start_date >= $2 AND ce.start_date <= $3`;
   }
 
   query += ' ORDER BY ce.start_date ASC';
@@ -38,47 +33,48 @@ async function findAll({ startDate, endDate } = {}) {
   return rows;
 }
 
-async function findById(id) {
+async function findById(id, companyId) {
   const { rows } = await pool.query(
-    `${BASE_SELECT} WHERE ce.id = $1`,
-    [id]
+    `${BASE_SELECT} WHERE ce.id = $1 AND ce.company_id = $2`,
+    [id, companyId]
   );
   return rows[0] || null;
 }
 
-async function findByMonth(year, month) {
+async function findByMonth(companyId, year, month) {
   const start = new Date(year, month - 1, 1).toISOString();
   const end   = new Date(year, month, 0, 23, 59, 59).toISOString();
-  return findAll({ startDate: start, endDate: end });
+  return findAll({ companyId, startDate: start, endDate: end });
 }
 
-async function findByWeek(startOfWeek, endOfWeek) {
-  return findAll({ startDate: startOfWeek, endDate: endOfWeek });
+async function findByWeek(companyId, startOfWeek, endOfWeek) {
+  return findAll({ companyId, startDate: startOfWeek, endDate: endOfWeek });
 }
 
-async function findAgenda(fromDate) {
+async function findAgenda(companyId, fromDate) {
   const { rows } = await pool.query(
     `${BASE_SELECT}
-     WHERE ce.start_date >= $1
+     WHERE ce.company_id = $1
+       AND ce.start_date >= $2
      ORDER BY ce.start_date ASC
      LIMIT 50`,
-    [fromDate]
+    [companyId, fromDate]
   );
   return rows;
 }
 
-async function create({ title, description, start_date, end_date, location, color, status, user_id, created_by }) {
+async function create({ companyId, title, description, start_date, end_date, location, color, status, user_id, created_by }) {
   const { rows } = await pool.query(
     `INSERT INTO calendar_events
-       (title, description, start_date, end_date, location, color, status, user_id, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       (company_id, title, description, start_date, end_date, location, color, status, user_id, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
      RETURNING *`,
-    [title, description, start_date, end_date, location, color, status, user_id, created_by]
+    [companyId, title, description, start_date, end_date, location, color, status, user_id, created_by]
   );
   return rows[0];
 }
 
-async function update(id, { title, description, start_date, end_date, location, color, status, user_id }) {
+async function update(id, companyId, { title, description, start_date, end_date, location, color, status, user_id }) {
   const fields = [];
   const values = [];
   let idx = 1;
@@ -94,20 +90,23 @@ async function update(id, { title, description, start_date, end_date, location, 
   add('status',      status);
   add('user_id',     user_id);
 
-  if (fields.length === 0) return findById(id);
+  if (fields.length === 0) return findById(id, companyId);
 
   values.push(id);
+  values.push(companyId);
   const { rows } = await pool.query(
-    `UPDATE calendar_events SET ${fields.join(', ')} WHERE id = $${idx} RETURNING *`,
+    `UPDATE calendar_events SET ${fields.join(', ')}
+      WHERE id = $${idx++} AND company_id = $${idx}
+      RETURNING *`,
     values
   );
   return rows[0];
 }
 
-async function remove(id) {
+async function remove(id, companyId) {
   const { rows } = await pool.query(
-    'DELETE FROM calendar_events WHERE id = $1 RETURNING id',
-    [id]
+    'DELETE FROM calendar_events WHERE id = $1 AND company_id = $2 RETURNING id',
+    [id, companyId]
   );
   return rows[0] || null;
 }

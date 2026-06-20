@@ -1,15 +1,15 @@
 const pool = require('../config/database')
 
-const findAll = async ({ limit, offset, status, priority, projectId, userId }) => {
-  const conditions = []
-  const params     = []
+const findAll = async ({ companyId, limit, offset, status, priority, projectId, userId }) => {
+  const conditions = ['t.company_id = $1']
+  const params     = [companyId]
 
   if (status)    { params.push(status);    conditions.push(`t.status = $${params.length}`) }
   if (priority)  { params.push(priority);  conditions.push(`t.priority = $${params.length}`) }
   if (projectId) { params.push(projectId); conditions.push(`t.project_id = $${params.length}`) }
   if (userId)    { params.push(userId);    conditions.push(`ta.user_id = $${params.length}`) }
 
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+  const where = `WHERE ${conditions.join(' AND ')}`
   params.push(limit, offset)
 
   const { rows } = await pool.query(
@@ -40,7 +40,7 @@ const findAll = async ({ limit, offset, status, priority, projectId, userId }) =
   return { rows, total: parseInt(cnt[0].count) }
 }
 
-const findById = async (id) => {
+const findById = async (id, companyId) => {
   const { rows } = await pool.query(
     `SELECT t.*,
             p.title AS project_title,
@@ -52,31 +52,31 @@ const findById = async (id) => {
      LEFT JOIN users u             ON u.id = t.created_by
      LEFT JOIN task_assignments ta ON ta.task_id = t.id
      LEFT JOIN users au            ON au.id = ta.user_id
-     WHERE t.id = $1
+     WHERE t.id = $1 AND t.company_id = $2
      GROUP BY t.id, p.title, u.name`,
-    [id]
+    [id, companyId]
   )
   return rows[0] || null
 }
 
-const create = async ({ title, description, projectId, priority, dueDate, createdBy }) => {
+const create = async ({ companyId, title, description, projectId, priority, dueDate, createdBy }) => {
   const { rows } = await pool.query(
-    `INSERT INTO tasks (title, description, project_id, priority, due_date, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [title, description, projectId, priority, dueDate, createdBy]
+    `INSERT INTO tasks (company_id, title, description, project_id, priority, due_date, created_by)
+     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [companyId, title, description, projectId, priority, dueDate, createdBy]
   )
   return rows[0]
 }
 
-const update = async (id, fields) => {
+const update = async (id, companyId, fields) => {
   const keys   = Object.keys(fields)
   const values = Object.values(fields)
   const sets   = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
-  values.push(id)
+  values.push(id, companyId)
 
   const { rows } = await pool.query(
     `UPDATE tasks SET ${sets}, updated_at = NOW()
-     WHERE id = $${values.length} RETURNING *`,
+     WHERE id = $${values.length - 1} AND company_id = $${values.length} RETURNING *`,
     values
   )
   return rows[0]
@@ -113,7 +113,7 @@ const addComment = async (taskId, userId, content, fileUrl) => {
   return rows[0]
 }
 
-const getDashboardStats = async () => {
+const getDashboardStats = async (companyId) => {
   const { rows } = await pool.query(`
     SELECT
       COUNT(*)                                            AS total,
@@ -123,7 +123,8 @@ const getDashboardStats = async () => {
       COUNT(*) FILTER (WHERE due_date < NOW()
         AND status NOT IN ('completed','cancelled'))      AS overdue
     FROM tasks
-  `)
+    WHERE company_id = $1
+  `, [companyId])
   return rows[0]
 }
 

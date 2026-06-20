@@ -29,10 +29,10 @@ const findRoomByIdAndMember = async (roomId, userId) => {
   return rows[0] || null
 }
 
-const createRoom = async ({ name, type, createdBy }) => {
+const createRoom = async ({ name, type, createdBy, companyId }) => {
   const { rows } = await pool.query(
-    `INSERT INTO chat_rooms (name, type, created_by) VALUES ($1,$2,$3) RETURNING *`,
-    [name, type, createdBy]
+    `INSERT INTO chat_rooms (name, type, created_by, company_id) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [name, type, createdBy, companyId]
   )
   return rows[0]
 }

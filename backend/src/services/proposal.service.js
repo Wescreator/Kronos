@@ -2,9 +2,10 @@ const proposalRepo = require('../repositories/proposal.repository')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 // ── Listar todas ───────────────────────────────────────────────
-const getAll = async (query) => {
+const getAll = async (query, companyId) => {
   const { page, limit, offset } = paginate(query)
   const { rows, total } = await proposalRepo.findAll({
+    companyId,
     limit, offset,
     search: query.search,
   })
@@ -12,17 +13,18 @@ const getAll = async (query) => {
 }
 
 // ── Buscar por ID ──────────────────────────────────────────────
-const getById = async (id) => {
-  const proposal = await proposalRepo.findById(id)
+const getById = async (id, companyId) => {
+  const proposal = await proposalRepo.findById(id, companyId)
   if (!proposal) throw { status: 404, message: 'Proposta não encontrada' }
   return proposal
 }
 
 // ── Criar ──────────────────────────────────────────────────────
-const create = async (data, userId) => {
+const create = async (data, userId, companyId) => {
   const proposalNumber = await proposalRepo.nextProposalNumber()
 
   const proposal = await proposalRepo.create({
+    companyId,
     proposalNumber,
     title:           data.title,
     clientId:        data.client_id   || null,
@@ -42,12 +44,12 @@ const create = async (data, userId) => {
     proposalRepo.replacePaymentTerms(proposal.id,  data.payment_terms  || []),
   ])
 
-  return proposalRepo.findById(proposal.id)
+  return proposalRepo.findById(proposal.id, companyId)
 }
 
 // ── Atualizar ──────────────────────────────────────────────────
-const update = async (id, data) => {
-  const existing = await proposalRepo.findById(id)
+const update = async (id, data, companyId) => {
+  const existing = await proposalRepo.findById(id, companyId)
   if (!existing) throw { status: 404, message: 'Proposta não encontrada' }
 
   const allowed = [
@@ -61,7 +63,7 @@ const update = async (id, data) => {
   }
 
   if (Object.keys(fields).length > 0) {
-    await proposalRepo.update(id, fields)
+    await proposalRepo.update(id, companyId, fields)
   }
 
   await Promise.all([
@@ -70,17 +72,18 @@ const update = async (id, data) => {
     data.payment_terms !== undefined && proposalRepo.replacePaymentTerms(id, data.payment_terms),
   ])
 
-  return proposalRepo.findById(id)
+  return proposalRepo.findById(id, companyId)
 }
 
 // ── Duplicar ───────────────────────────────────────────────────
-const duplicate = async (id, userId) => {
-  const original = await proposalRepo.findById(id)
+const duplicate = async (id, userId, companyId) => {
+  const original = await proposalRepo.findById(id, companyId)
   if (!original) throw { status: 404, message: 'Proposta não encontrada' }
 
   const proposalNumber = await proposalRepo.nextProposalNumber()
 
   const copy = await proposalRepo.create({
+    companyId,
     proposalNumber,
     title:           `${original.title} (cópia)`,
     clientId:        original.client_id,
@@ -99,14 +102,14 @@ const duplicate = async (id, userId) => {
     proposalRepo.replacePaymentTerms(copy.id, original.payment_terms),
   ])
 
-  return proposalRepo.findById(copy.id)
+  return proposalRepo.findById(copy.id, companyId)
 }
 
 // ── Excluir ────────────────────────────────────────────────────
-const remove = async (id) => {
-  const existing = await proposalRepo.findById(id)
+const remove = async (id, companyId) => {
+  const existing = await proposalRepo.findById(id, companyId)
   if (!existing) throw { status: 404, message: 'Proposta não encontrada' }
-  await proposalRepo.remove(id)
+  await proposalRepo.remove(id, companyId)
 }
 
 module.exports = { getAll, getById, create, update, duplicate, remove }

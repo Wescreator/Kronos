@@ -4,9 +4,10 @@ const baseURL = import.meta.env.PROD
   ? `${import.meta.env.VITE_API_URL}/api`
   : '/api'
 
-console.log('[API] baseURL:', baseURL)
-console.log('[API] PROD:', import.meta.env.PROD)
-console.log('[API] VITE_API_URL:', import.meta.env.VITE_API_URL)
+if (import.meta.env.DEV) {
+  console.log('[API] baseURL:', baseURL)
+  console.log('[API] VITE_API_URL:', import.meta.env.VITE_API_URL)
+}
 
 const api = axios.create({
   baseURL,
@@ -40,11 +41,13 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    console.error('[API Error]', {
-      url:    original?.url,
-      status: error.response?.status,
-      data:   error.response?.data,
-    })
+    if (import.meta.env.DEV) {
+      console.error('[API Error]', {
+        url:    original?.url,
+        status: error.response?.status,
+        data:   error.response?.data,
+      })
+    }
 
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
