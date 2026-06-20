@@ -20,7 +20,9 @@ export default function AdminPage() {
   const [users, setUsers]         = useState([])
   const [loading, setLoading]     = useState(true)
 
-  const [companyForm, setCompanyForm] = useState({ name: '', plan: 'free' })
+  const EMPTY_COMPANY = { name: '', trade_name: '', document: '', email: '', phone: '', plan: 'free' }
+  const [companyForm, setCompanyForm] = useState(EMPTY_COMPANY)
+  const [creating, setCreating]       = useState(false)
   const [userForm, setUserForm]       = useState({ name: '', email: '', password: '', role: 'admin', position: '' })
   const [savingCompany, setSavingCompany] = useState(false)
   const [savingUser, setSavingUser]       = useState(false)
@@ -29,9 +31,14 @@ export default function AdminPage() {
   const [savingEdit, setSavingEdit]   = useState(false)
   const [busyUserId, setBusyUserId]   = useState(null)
 
-  const [editingCompany, setEditingCompany] = useState(null) // { id, name, trade_name, document, email, phone, plan }
+  const [companyEdit, setCompanyEdit] = useState(null) // dados da empresa selecionada (editáveis)
   const [savingCompanyEdit, setSavingCompanyEdit] = useState(false)
   const [busyCompanyId, setBusyCompanyId]   = useState(null)
+
+  const toCompanyEdit = (c) => ({
+    name: c.name || '', trade_name: c.trade_name || '', document: c.document || '',
+    email: c.email || '', phone: c.phone || '', plan: c.plan || '',
+  })
 
   const loadCompanies = async () => {
     try {
@@ -57,19 +64,28 @@ export default function AdminPage() {
   useEffect(() => { loadCompanies() }, [])
 
   const selectCompany = (company) => {
+    setCreating(false)
     setSelected(company)
+    setCompanyEdit(toCompanyEdit(company))
     setUsers([])
     loadUsers(company.id)
   }
 
+  const startCreate = () => {
+    setCreating(true)
+    setSelected(null)
+    setCompanyEdit(null)
+    setCompanyForm(EMPTY_COMPANY)
+  }
+
   const handleCreateCompany = async (e) => {
-    e.preventDefault()
+    e?.preventDefault?.()
     if (!companyForm.name.trim()) return toast.error('Informe o nome da empresa')
     try {
       setSavingCompany(true)
       const created = await platformService.createCompany(companyForm)
       toast.success('Empresa criada')
-      setCompanyForm({ name: '', plan: 'free' })
+      setCompanyForm(EMPTY_COMPANY)
       await loadCompanies()
       selectCompany(created)
     } catch (err) {
@@ -96,27 +112,16 @@ export default function AdminPage() {
     }
   }
 
-  const startEditCompany = (c) => setEditingCompany({
-    id: c.id,
-    name: c.name || '',
-    trade_name: c.trade_name || '',
-    document: c.document || '',
-    email: c.email || '',
-    phone: c.phone || '',
-    plan: c.plan || '',
-  })
-
   const handleSaveCompany = async () => {
-    if (!editingCompany) return
-    if (!editingCompany.name.trim()) return toast.error('Informe o nome da empresa')
+    if (!selected || !companyEdit) return
+    if (!companyEdit.name.trim()) return toast.error('Informe o nome da empresa')
     try {
       setSavingCompanyEdit(true)
-      const { id, ...payload } = editingCompany
-      const updated = await platformService.updateCompany(id, payload)
+      const updated = await platformService.updateCompany(selected.id, companyEdit)
       toast.success('Empresa atualizada')
-      setEditingCompany(null)
       await loadCompanies()
-      if (selected?.id === id) setSelected(updated)
+      setSelected(updated)
+      setCompanyEdit(toCompanyEdit(updated))
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erro ao atualizar empresa')
     } finally {
@@ -127,8 +132,9 @@ export default function AdminPage() {
   const handleToggleCompanyActive = async (c) => {
     try {
       setBusyCompanyId(c.id)
-      await platformService.setCompanyActive(c.id, c.is_active === false)
+      const res = await platformService.setCompanyActive(c.id, c.is_active === false)
       await loadCompanies()
+      if (selected?.id === c.id) setSelected({ ...selected, is_active: res.is_active })
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erro ao alterar status')
     } finally {
@@ -176,16 +182,47 @@ export default function AdminPage() {
   // ── estilos ──────────────────────────────────────────────────
   const S = {
     page:  { minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, #0b0d20, #060816)', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '32px' },
-    head:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, maxWidth: 1100, margin: '0 auto 28px' },
-    grid:  { display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 24, maxWidth: 1100, margin: '0 auto' },
+    head:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto 28px' },
+    grid:  { display: 'grid', gridTemplateColumns: 'minmax(260px, 0.9fr) 1.8fr', gap: 24, maxWidth: 1200, margin: '0 auto', alignItems: 'start' },
     card:  { background: 'rgba(13,21,43,0.9)', border: '1px solid rgba(124,92,252,0.20)', borderRadius: 16, padding: 24 },
     h2:    { fontSize: 16, fontWeight: 700, marginBottom: 16, letterSpacing: '0.02em' },
-    input: { width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14, marginBottom: 10, fontFamily: 'inherit' },
+    label: { fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, display: 'block' },
+    input: { width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14, marginBottom: 10, fontFamily: 'inherit', boxSizing: 'border-box' },
     btn:   { background: '#7C5CFC', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' },
+    btnGhost: { background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' },
     row:   (active) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 10, marginBottom: 8, cursor: 'pointer', border: '1px solid', borderColor: active ? 'rgba(124,92,252,0.5)' : 'rgba(255,255,255,0.08)', background: active ? 'rgba(124,92,252,0.12)' : 'rgba(255,255,255,0.03)' }),
     tag:   { fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(52,211,153,0.12)', color: '#34D399' },
     muted: { color: 'rgba(255,255,255,0.4)', fontSize: 13 },
     act:   (color) => ({ background: 'none', border: `1px solid ${color}33`, color, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }),
+    fieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
+    full: { gridColumn: '1 / -1' },
+  }
+
+  // Campos da empresa em grade (reaproveitado em criar e editar).
+  // Funcao (nao componente) para nao perder foco do input a cada tecla.
+  const renderCompanyFields = (value, onChange) => {
+    const field = (key, label, opts = {}) => (
+      <div style={opts.full ? S.full : undefined}>
+        <label style={S.label}>{label}</label>
+        <input
+          style={{ ...S.input, marginBottom: 0 }}
+          type={opts.type || 'text'}
+          placeholder={label}
+          value={value[key] || ''}
+          onChange={e => onChange({ ...value, [key]: e.target.value })}
+        />
+      </div>
+    )
+    return (
+      <div style={S.fieldGrid}>
+        {field('name', 'Nome da empresa', { full: true })}
+        {field('trade_name', 'Nome fantasia')}
+        {field('document', 'Documento (CNPJ/CPF)')}
+        {field('email', 'E-mail', { type: 'email' })}
+        {field('phone', 'Telefone')}
+        {field('plan', 'Plano', { full: true })}
+      </div>
+    )
   }
 
   return (
@@ -210,25 +247,10 @@ export default function AdminPage() {
       <div style={S.grid}>
         {/* ── Empresas ── */}
         <div style={S.card}>
-          <div style={S.h2}>Empresas</div>
-
-          <form onSubmit={handleCreateCompany} style={{ marginBottom: 20 }}>
-            <input
-              style={S.input}
-              placeholder="Nome da empresa"
-              value={companyForm.name}
-              onChange={e => setCompanyForm({ ...companyForm, name: e.target.value })}
-            />
-            <input
-              style={S.input}
-              placeholder="Plano (ex.: free, pro)"
-              value={companyForm.plan}
-              onChange={e => setCompanyForm({ ...companyForm, plan: e.target.value })}
-            />
-            <button style={S.btn} disabled={savingCompany}>
-              {savingCompany ? 'Criando...' : '+ Criar empresa'}
-            </button>
-          </form>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ ...S.h2, marginBottom: 0 }}>Empresas</div>
+            <button style={S.act('#7C5CFC')} onClick={startCreate}>+ Nova</button>
+          </div>
 
           {loading ? (
             <p style={S.muted}>Carregando...</p>
@@ -236,65 +258,68 @@ export default function AdminPage() {
             <p style={S.muted}>Nenhuma empresa ainda.</p>
           ) : (
             companies.map(c => (
-              editingCompany?.id === c.id ? (
-                /* ── empresa: modo edição ── */
-                <div key={c.id} style={{ ...S.row(true), display: 'block', cursor: 'default' }}>
-                  <input style={{ ...S.input, marginBottom: 8 }} placeholder="Nome da empresa" value={editingCompany.name}
-                    onChange={e => setEditingCompany({ ...editingCompany, name: e.target.value })} />
-                  <input style={S.input} placeholder="Nome fantasia" value={editingCompany.trade_name}
-                    onChange={e => setEditingCompany({ ...editingCompany, trade_name: e.target.value })} />
-                  <input style={S.input} placeholder="Documento (CNPJ/CPF)" value={editingCompany.document}
-                    onChange={e => setEditingCompany({ ...editingCompany, document: e.target.value })} />
-                  <input style={S.input} placeholder="E-mail" value={editingCompany.email}
-                    onChange={e => setEditingCompany({ ...editingCompany, email: e.target.value })} />
-                  <input style={S.input} placeholder="Telefone" value={editingCompany.phone}
-                    onChange={e => setEditingCompany({ ...editingCompany, phone: e.target.value })} />
-                  <input style={S.input} placeholder="Plano" value={editingCompany.plan}
-                    onChange={e => setEditingCompany({ ...editingCompany, plan: e.target.value })} />
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button style={S.btn} disabled={savingCompanyEdit} onClick={handleSaveCompany}>
-                      {savingCompanyEdit ? 'Salvando...' : 'Salvar'}
-                    </button>
-                    <button style={{ ...S.btn, background: 'none', border: '1px solid rgba(255,255,255,0.2)' }}
-                      disabled={savingCompanyEdit} onClick={() => setEditingCompany(null)}>
-                      Cancelar
-                    </button>
-                  </div>
+              <div key={c.id} style={S.row(selected?.id === c.id)} onClick={() => selectCompany(c)}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
+                  <div style={S.muted}>{c.plan} · {c.users_count} usuário(s)</div>
                 </div>
-              ) : (
-                /* ── empresa: modo exibição ── */
-                <div key={c.id} style={S.row(selected?.id === c.id)} onClick={() => selectCompany(c)}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
-                    <div style={S.muted}>{c.plan} · {c.users_count} usuário(s)</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {c.is_active === false
-                      ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativa</span>
-                      : <span style={S.tag}>ativa</span>}
-                    <button style={S.act('#A78BFA')} disabled={busyCompanyId === c.id}
-                      onClick={(e) => { e.stopPropagation(); startEditCompany(c) }}>Editar</button>
-                    <button style={S.act('#38BDF8')} disabled={busyCompanyId === c.id}
-                      onClick={(e) => { e.stopPropagation(); handleToggleCompanyActive(c) }}>
-                      {c.is_active === false ? 'Ativar' : 'Desativar'}
-                    </button>
-                  </div>
-                </div>
-              )
+                {c.is_active === false
+                  ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativa</span>
+                  : <span style={S.tag}>ativa</span>}
+              </div>
             ))
           )}
         </div>
 
-        {/* ── Usuários da empresa selecionada ── */}
+        {/* ── Painel da empresa (criar / detalhes + usuários) ── */}
         <div style={S.card}>
-          <div style={S.h2}>
-            {selected ? `Usuários — ${selected.name}` : 'Selecione uma empresa'}
-          </div>
-
-          {!selected ? (
-            <p style={S.muted}>Escolha uma empresa à esquerda para gerenciar seus usuários.</p>
+          {creating ? (
+            /* ── Nova empresa ── */
+            <>
+              <div style={S.h2}>Nova empresa</div>
+              {renderCompanyFields(companyForm, setCompanyForm)}
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                <button style={S.btn} disabled={savingCompany} onClick={handleCreateCompany}>
+                  {savingCompany ? 'Criando...' : 'Criar empresa'}
+                </button>
+                <button style={S.btnGhost} disabled={savingCompany} onClick={() => setCreating(false)}>
+                  Cancelar
+                </button>
+              </div>
+            </>
+          ) : !selected ? (
+            <>
+              <div style={S.h2}>Nenhuma empresa selecionada</div>
+              <p style={S.muted}>Selecione uma empresa à esquerda para editar seus dados e gerenciar usuários, ou clique em <strong>+ Nova</strong> para criar.</p>
+            </>
           ) : (
             <>
+              {/* ── Dados da empresa ── */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ ...S.h2, marginBottom: 0 }}>Dados da empresa</div>
+                <button
+                  style={S.act(selected.is_active === false ? '#34D399' : '#F87171')}
+                  disabled={busyCompanyId === selected.id}
+                  onClick={() => handleToggleCompanyActive(selected)}
+                >
+                  {selected.is_active === false ? 'Ativar empresa' : 'Desativar empresa'}
+                </button>
+              </div>
+
+              {companyEdit && (
+                <>
+                  {renderCompanyFields(companyEdit, setCompanyEdit)}
+                  <button style={{ ...S.btn, marginTop: 16 }} disabled={savingCompanyEdit} onClick={handleSaveCompany}>
+                    {savingCompanyEdit ? 'Salvando...' : 'Salvar dados'}
+                  </button>
+                </>
+              )}
+
+              <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '24px 0 20px' }} />
+
+              {/* ── Usuários ── */}
+              <div style={S.h2}>Usuários — {selected.name}</div>
+
               <form onSubmit={handleCreateUser} style={{ marginBottom: 20 }}>
                 <input style={S.input} placeholder="Nome" value={userForm.name}
                   onChange={e => setUserForm({ ...userForm, name: e.target.value })} />

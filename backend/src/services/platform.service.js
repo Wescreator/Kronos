@@ -43,7 +43,7 @@ const listCompanies = async () => {
   return companies.map(c => ({ ...toCompanyDTO(c), users_count: countMap[c.id] || 0 }))
 }
 
-const createCompany = async ({ name, slug, plan }) => {
+const createCompany = async ({ name, slug, plan, trade_name, document, email, phone }) => {
   if (!name || !name.trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
 
   // O slug e interno (coluna NOT NULL UNIQUE), gerado a partir do nome.
@@ -56,10 +56,26 @@ const createCompany = async ({ name, slug, plan }) => {
     finalSlug = `${base}-${n}`
   }
 
-  const company = await prisma.company.create({
-    data: { name: name.trim(), slug: finalSlug, plan: plan || 'free', isActive: true },
-  })
-  return { ...toCompanyDTO(company), users_count: 0 }
+  try {
+    const company = await prisma.company.create({
+      data: {
+        name:       name.trim(),
+        slug:       finalSlug,
+        plan:       plan || 'free',
+        trade_name: trade_name || null,
+        document:   document || null,
+        email:      email || null,
+        phone:      phone || null,
+        isActive:   true,
+      },
+    })
+    return { ...toCompanyDTO(company), users_count: 0 }
+  } catch (err) {
+    if (err.code === 'P2002') {
+      throw { status: 409, message: 'Ja existe uma empresa com este documento.' }
+    }
+    throw err
+  }
 }
 
 // ── Usuarios de uma empresa ─────────────────────────────────────
