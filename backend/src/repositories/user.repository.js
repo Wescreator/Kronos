@@ -18,28 +18,33 @@ const findById = async (id) => {
   return rows[0] || null
 }
 
-const findAll = async ({ limit, offset, search }) => {
-  const conditions = ['is_active = TRUE']
-  const params     = []
+// Lista membros da empresa (via company_users). Usuarios globais
+// (developer/support), que nao tem vinculo em company_users, ficam de
+// fora automaticamente.
+const findAll = async ({ companyId, limit, offset, search }) => {
+  const conditions = ['cu.company_id = $1', 'cu.is_active = TRUE']
+  const params     = [companyId]
 
   if (search) {
     params.push(`%${search}%`)
-    conditions.push(`(name ILIKE $${params.length} OR email ILIKE $${params.length})`)
+    conditions.push(`(u.name ILIKE $${params.length} OR u.email ILIKE $${params.length})`)
   }
 
   const where = conditions.join(' AND ')
 
   params.push(limit, offset)
   const { rows } = await pool.query(
-    `SELECT id, name, email, role, position, phone, avatar_url, admitted_at, created_at
-     FROM users WHERE ${where}
-     ORDER BY name ASC
+    `SELECT u.id, u.name, u.email, cu.role, u.position, u.phone, u.avatar_url, u.admitted_at, u.created_at
+     FROM company_users cu
+     JOIN users u ON u.id = cu.user_id
+     WHERE ${where}
+     ORDER BY u.name ASC
      LIMIT $${params.length - 1} OFFSET $${params.length}`,
     params
   )
 
   const { rows: cnt } = await pool.query(
-    `SELECT COUNT(*) FROM users WHERE ${where}`,
+    `SELECT COUNT(*) FROM company_users cu JOIN users u ON u.id = cu.user_id WHERE ${where}`,
     params.slice(0, -2)
   )
 

@@ -29,6 +29,10 @@ export default function AdminPage() {
   const [savingEdit, setSavingEdit]   = useState(false)
   const [busyUserId, setBusyUserId]   = useState(null)
 
+  const [editingCompany, setEditingCompany] = useState(null) // { id, name, trade_name, document, email, phone, plan }
+  const [savingCompanyEdit, setSavingCompanyEdit] = useState(false)
+  const [busyCompanyId, setBusyCompanyId]   = useState(null)
+
   const loadCompanies = async () => {
     try {
       setLoading(true)
@@ -89,6 +93,46 @@ export default function AdminPage() {
       toast.error(err.response?.data?.message || 'Erro ao criar usuário')
     } finally {
       setSavingUser(false)
+    }
+  }
+
+  const startEditCompany = (c) => setEditingCompany({
+    id: c.id,
+    name: c.name || '',
+    trade_name: c.trade_name || '',
+    document: c.document || '',
+    email: c.email || '',
+    phone: c.phone || '',
+    plan: c.plan || '',
+  })
+
+  const handleSaveCompany = async () => {
+    if (!editingCompany) return
+    if (!editingCompany.name.trim()) return toast.error('Informe o nome da empresa')
+    try {
+      setSavingCompanyEdit(true)
+      const { id, ...payload } = editingCompany
+      const updated = await platformService.updateCompany(id, payload)
+      toast.success('Empresa atualizada')
+      setEditingCompany(null)
+      await loadCompanies()
+      if (selected?.id === id) setSelected(updated)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erro ao atualizar empresa')
+    } finally {
+      setSavingCompanyEdit(false)
+    }
+  }
+
+  const handleToggleCompanyActive = async (c) => {
+    try {
+      setBusyCompanyId(c.id)
+      await platformService.setCompanyActive(c.id, c.is_active === false)
+      await loadCompanies()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erro ao alterar status')
+    } finally {
+      setBusyCompanyId(null)
     }
   }
 
@@ -192,15 +236,51 @@ export default function AdminPage() {
             <p style={S.muted}>Nenhuma empresa ainda.</p>
           ) : (
             companies.map(c => (
-              <div key={c.id} style={S.row(selected?.id === c.id)} onClick={() => selectCompany(c)}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
-                  <div style={S.muted}>{c.plan} · {c.users_count} usuário(s)</div>
+              editingCompany?.id === c.id ? (
+                /* ── empresa: modo edição ── */
+                <div key={c.id} style={{ ...S.row(true), display: 'block', cursor: 'default' }}>
+                  <input style={{ ...S.input, marginBottom: 8 }} placeholder="Nome da empresa" value={editingCompany.name}
+                    onChange={e => setEditingCompany({ ...editingCompany, name: e.target.value })} />
+                  <input style={S.input} placeholder="Nome fantasia" value={editingCompany.trade_name}
+                    onChange={e => setEditingCompany({ ...editingCompany, trade_name: e.target.value })} />
+                  <input style={S.input} placeholder="Documento (CNPJ/CPF)" value={editingCompany.document}
+                    onChange={e => setEditingCompany({ ...editingCompany, document: e.target.value })} />
+                  <input style={S.input} placeholder="E-mail" value={editingCompany.email}
+                    onChange={e => setEditingCompany({ ...editingCompany, email: e.target.value })} />
+                  <input style={S.input} placeholder="Telefone" value={editingCompany.phone}
+                    onChange={e => setEditingCompany({ ...editingCompany, phone: e.target.value })} />
+                  <input style={S.input} placeholder="Plano" value={editingCompany.plan}
+                    onChange={e => setEditingCompany({ ...editingCompany, plan: e.target.value })} />
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button style={S.btn} disabled={savingCompanyEdit} onClick={handleSaveCompany}>
+                      {savingCompanyEdit ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button style={{ ...S.btn, background: 'none', border: '1px solid rgba(255,255,255,0.2)' }}
+                      disabled={savingCompanyEdit} onClick={() => setEditingCompany(null)}>
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
-                {c.is_active === false
-                  ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativa</span>
-                  : <span style={S.tag}>ativa</span>}
-              </div>
+              ) : (
+                /* ── empresa: modo exibição ── */
+                <div key={c.id} style={S.row(selected?.id === c.id)} onClick={() => selectCompany(c)}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
+                    <div style={S.muted}>{c.plan} · {c.users_count} usuário(s)</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {c.is_active === false
+                      ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativa</span>
+                      : <span style={S.tag}>ativa</span>}
+                    <button style={S.act('#A78BFA')} disabled={busyCompanyId === c.id}
+                      onClick={(e) => { e.stopPropagation(); startEditCompany(c) }}>Editar</button>
+                    <button style={S.act('#38BDF8')} disabled={busyCompanyId === c.id}
+                      onClick={(e) => { e.stopPropagation(); handleToggleCompanyActive(c) }}>
+                      {c.is_active === false ? 'Ativar' : 'Desativar'}
+                    </button>
+                  </div>
+                </div>
+              )
             ))
           )}
         </div>

@@ -17,6 +17,7 @@ router.use(authenticate, authorize('developer'))
 router.get('/companies',            ctrl.listCompanies)
 router.post('/companies',           ctrl.createCompany)
 router.patch('/companies/:id/active', ctrl.setCompanyActive)
+router.patch('/companies/:id',      ctrl.updateCompany)
 
 // Usuarios de uma empresa
 router.get('/companies/:id/users',             ctrl.listCompanyUsers)

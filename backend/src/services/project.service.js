@@ -1,5 +1,6 @@
 const projectRepo = require('../repositories/project.repository')
 const stageRepo   = require('../repositories/stage.repository')
+const companyRepo = require('../repositories/company.repository')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 function buildProjectPayload(data, userId, companyId) {
@@ -78,6 +79,11 @@ const getStatusHistory = async (id, companyId) => {
 const addMember = async (projectId, userId, companyId) => {
   const project = await projectRepo.findById(projectId, companyId)
   if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+
+  // O usuario adicionado precisa pertencer a mesma empresa
+  const link = await companyRepo.findCompanyUser(companyId, userId)
+  if (!link) throw { status: 400, message: 'Usuário não pertence a esta empresa' }
+
   await projectRepo.addMember(projectId, userId)
 }
 

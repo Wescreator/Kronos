@@ -21,8 +21,13 @@ const slugify = (s) =>
 const toCompanyDTO = (c) => ({
   id:         c.id,
   name:       c.name,
-  slug:       c.slug,
+  trade_name: c.trade_name,
+  document:   c.document,
+  email:      c.email,
+  phone:      c.phone,
   plan:       c.plan,
+  status:     c.status,
+  slug:       c.slug,
   is_active:  c.isActive,
   created_at: c.createdAt,
 })
@@ -131,6 +136,36 @@ const setCompanyActive = async (companyId, isActive) => {
   return { id: companyId, is_active: !!isActive }
 }
 
+const updateCompany = async (companyId, fields) => {
+  const company = await prisma.company.findUnique({ where: { id: companyId } })
+  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+
+  const data = {}
+  if (fields.name       !== undefined) {
+    if (!String(fields.name).trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
+    data.name = String(fields.name).trim()
+  }
+  if (fields.trade_name !== undefined) data.trade_name = fields.trade_name || null
+  if (fields.document   !== undefined) data.document   = fields.document || null
+  if (fields.email      !== undefined) data.email      = fields.email || null
+  if (fields.phone      !== undefined) data.phone      = fields.phone || null
+  if (fields.plan       !== undefined) data.plan       = fields.plan || null
+  if (fields.status     !== undefined) data.status     = fields.status || null
+  if (fields.is_active  !== undefined) data.isActive   = !!fields.is_active
+  data.updated_at = new Date()
+
+  try {
+    const updated = await prisma.company.update({ where: { id: companyId }, data })
+    const count = await prisma.companyUser.count({ where: { companyId } })
+    return { ...toCompanyDTO(updated), users_count: count }
+  } catch (err) {
+    if (err.code === 'P2002') {
+      throw { status: 409, message: 'Ja existe uma empresa com este documento.' }
+    }
+    throw err
+  }
+}
+
 const updateCompanyUser = async (companyId, userId, { name, position, role, isActive, password }) => {
   const link = await prisma.companyUser.findFirst({ where: { companyId, userId } })
   if (!link) throw { status: 404, message: 'Usuario nao encontrado nesta empresa.' }
@@ -181,6 +216,7 @@ const deleteCompanyUser = async (companyId, userId) => {
 module.exports = {
   listCompanies,
   createCompany,
+  updateCompany,
   listCompanyUsers,
   createCompanyUser,
   setCompanyActive,

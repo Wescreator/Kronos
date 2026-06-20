@@ -13,6 +13,9 @@ const platformService = {
   createCompany: (payload) =>
     api.post('/platform/companies', payload).then(r => r.data.company),
 
+  updateCompany: (companyId, payload) =>
+    api.patch(`/platform/companies/${companyId}`, payload).then(r => r.data.company),
+
   setCompanyActive: (companyId, isActive) =>
     api.patch(`/platform/companies/${companyId}/active`, { is_active: isActive }).then(r => r.data),
 

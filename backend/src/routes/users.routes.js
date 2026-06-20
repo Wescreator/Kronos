@@ -1,11 +1,28 @@
 const router   = require('express').Router()
 const userRepo = require('../repositories/user.repository')
+const companyRepo = require('../repositories/company.repository')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
+const tenantMiddleware = require('../middlewares/tenant.middleware')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 const R        = require('../utils/response')
 const { uploadImage } = require('../config/multer')
 
-router.use(authenticate)
+router.use(authenticate, tenantMiddleware)
+
+/**
+ * Pode acessar o usuario alvo?
+ *  - o proprio usuario (self); ou
+ *  - admin, desde que o alvo seja membro da MESMA empresa.
+ * Impede que um admin acesse/edite usuarios de outra empresa por ID.
+ */
+async function canAccessTarget(req) {
+  const targetId = req.params.id
+  if (req.user.user_id === targetId) return true
+  if (!req.tenant) return false
+  if (req.user.role !== 'admin') return false
+  const link = await companyRepo.findCompanyUser(req.tenant.id, targetId)
+  return !!link
+}
 
 /**
  * Listagem de usuários
@@ -16,9 +33,14 @@ router.get(
   authorize('admin', 'manager'),
   async (req, res) => {
     try {
+      if (!req.tenant) {
+        return R.forbidden(res, 'Selecione uma empresa para listar a equipe')
+      }
+
       const { page, limit, offset } = paginate(req.query)
 
       const { rows, total } = await userRepo.findAll({
+        companyId: req.tenant.id,
         limit,
         offset,
         search: req.query.search
@@ -40,10 +62,7 @@ router.get(
  */
 router.get('/:id', async (req, res) => {
   try {
-    const isOwner = req.user.user_id === req.params.id
-    const isAdmin = req.user.role === 'admin'
-
-    if (!isOwner && !isAdmin) {
+    if (!(await canAccessTarget(req))) {
       return R.forbidden(res, 'Acesso negado')
     }
 
@@ -65,10 +84,7 @@ router.get('/:id', async (req, res) => {
  */
 router.patch('/:id', async (req, res) => {
   try {
-    const isOwner = req.user.user_id === req.params.id
-    const isAdmin = req.user.role === 'admin'
-
-    if (!isOwner && !isAdmin) {
+    if (!(await canAccessTarget(req))) {
       return R.forbidden(res, 'Acesso negado')
     }
 
@@ -105,10 +121,7 @@ router.patch('/:id', async (req, res) => {
  */
 router.post('/:id/avatar', uploadImage.single('avatar'), async (req, res) => {
   try {
-    const isOwner = req.user.user_id === req.params.id
-    const isAdmin = req.user.role === 'admin'
-
-    if (!isOwner && !isAdmin) {
+    if (!(await canAccessTarget(req))) {
       return R.forbidden(res, 'Acesso negado')
     }
 

@@ -12,21 +12,21 @@ const {
 router.get(
   '/month',
   authenticate,
-  authorize('admin', 'manager', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee', 'member'),
   ctrl.getByMonth
 )
 
 router.get(
   '/week',
   authenticate,
-  authorize('admin', 'manager', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee', 'member'),
   ctrl.getByWeek
 )
 
 router.get(
   '/agenda',
   authenticate,
-  authorize('admin', 'manager', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee', 'member'),
   ctrl.getAgenda
 )
 
@@ -34,35 +34,35 @@ router.get(
 router.get(
   '/',
   authenticate,
-  authorize('admin', 'manager', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee', 'member'),
   ctrl.getAll
 )
 
 router.get(
   '/:id',
   authenticate,
-  authorize('admin', 'manager', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee', 'member'),
   ctrl.getById
 )
 
 router.post(
   '/',
   authenticate,
-  authorize('admin', 'manager'),
+  authorize('owner', 'admin', 'manager'),
   ctrl.create
 )
 
 router.patch(
   '/:id',
   authenticate,
-  authorize('admin', 'manager'),
+  authorize('owner', 'admin', 'manager'),
   ctrl.update
 )
 
 router.delete(
   '/:id',
   authenticate,
-  authorize('admin'),
+  authorize('owner', 'admin'),
   ctrl.remove
 )
 

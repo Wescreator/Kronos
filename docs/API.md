@@ -163,7 +163,8 @@ Todas: Auth + `authorize('developer')` (escopo global). Operam apenas sobre empr
 | Metodo | Rota | Descricao |
 | ------ | ---- | --------- |
 | GET | `/companies` | Lista empresas (com contagem de usuarios) |
-| POST | `/companies` | Cria empresa (`{ name, slug?, plan? }`) |
+| POST | `/companies` | Cria empresa (`{ name, plan? }`; slug gerado automaticamente) |
+| PATCH | `/companies/:id` | Edita empresa (`{ name?, trade_name?, document?, email?, phone?, plan?, status?, is_active? }`) |
 | PATCH | `/companies/:id/active` | Ativa/desativa empresa (`{ is_active }`) |
 | GET | `/companies/:id/users` | Lista usuarios da empresa |
 | POST | `/companies/:id/users` | Cria usuario na empresa (`{ name, email, password, role, position? }`) |

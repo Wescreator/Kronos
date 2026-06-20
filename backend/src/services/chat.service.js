@@ -1,4 +1,5 @@
 const chatRepo = require('../repositories/chat.repository')
+const companyRepo = require('../repositories/company.repository')
 
 const getRooms = async (userId) => {
   return chatRepo.findRoomsByUser(userId)
@@ -6,8 +7,14 @@ const getRooms = async (userId) => {
 
 const createRoom = async ({ name, type = 'private', members = [] }, createdBy, companyId) => {
   const room = await chatRepo.createRoom({ name, type, createdBy, companyId })
+
   const allMembers = [...new Set([createdBy, ...members])]
   for (const uid of allMembers) {
+    // O criador entra sempre; demais membros precisam ser da mesma empresa
+    if (uid !== createdBy) {
+      const link = await companyRepo.findCompanyUser(companyId, uid)
+      if (!link) continue
+    }
     await chatRepo.addMember(room.id, uid)
   }
   return room

@@ -101,4 +101,30 @@ const deletePhase = async (phaseId) => {
   await pool.query(`DELETE FROM project_phases WHERE id = $1`, [phaseId])
 }
 
-module.exports = {DEFAULT_STAGES, createDefaultStages, findStagesByProject, hasStages, findPhasesByStageIds, findPhaseById, createPhase, updatePhase, deletePhase,}
+// ── Resolucao de dono (empresa) para checagem de tenant ──────────
+// Escopa via projects.company_id (fonte confiavel), nao pela coluna
+// company_id das tabelas filhas (que pode estar nula em dados antigos).
+const findStageOwner = async (stageId) => {
+  const { rows } = await pool.query(
+    `SELECT ps.id, ps.project_id, p.company_id
+       FROM project_stages ps
+       JOIN projects p ON p.id = ps.project_id
+      WHERE ps.id = $1`,
+    [stageId]
+  )
+  return rows[0] || null
+}
+
+const findPhaseOwner = async (phaseId) => {
+  const { rows } = await pool.query(
+    `SELECT pph.id, pph.project_stage_id, p.company_id
+       FROM project_phases pph
+       JOIN project_stages ps ON ps.id = pph.project_stage_id
+       JOIN projects p        ON p.id = ps.project_id
+      WHERE pph.id = $1`,
+    [phaseId]
+  )
+  return rows[0] || null
+}
+
+module.exports = {DEFAULT_STAGES, createDefaultStages, findStagesByProject, hasStages, findPhasesByStageIds, findPhaseById, createPhase, updatePhase, deletePhase, findStageOwner, findPhaseOwner,}
