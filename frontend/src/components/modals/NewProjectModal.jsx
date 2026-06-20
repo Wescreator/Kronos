@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { toast }               from 'react-hot-toast'
 import { AlertTriangle }       from 'lucide-react'
-import Modal                   from '../ui/Modal'
+import PortalModal from '../ui/PortalModal'
 import { createProject, uploadCover, getProjects } from '../../services/projects.service'
 import { addDays, format, startOfMonth, endOfMonth } from 'date-fns'
 
@@ -80,7 +80,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Novo Projeto" size="lg">
+    <PortalModal open={open} onClose={onClose} title="Novo Projeto" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
 
         {blockedUntil && (
@@ -165,6 +165,6 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
           </button>
         </div>
       </form>
-    </Modal>
+    </PortalModal>
   )
 }

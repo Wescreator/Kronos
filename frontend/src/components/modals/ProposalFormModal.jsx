@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Trash2, GripVertical } from 'lucide-react'
-import Modal  from '../ui/Modal'
+import PortalModal from '../ui/PortalModal'
 import { createProposal, updateProposal } from '../../services/proposals.service'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
@@ -337,15 +337,32 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
   }
 
   return (
-    <Modal
+    <PortalModal
       open={open}
       onClose={onClose}
       title={isEdit ? `Editar Proposta — ${proposal?.proposal_number}` : 'Nova Proposta'}
       size="xl"
     >
+      {/* ── Container do modal ── */}
+      <div
+        style={{
+        display:        'flex',
+        flexDirection:  'column',
+        maxHeight:      '75vh',
+        
+      }}
+      >
       {/* ── Conteúdo scrollável ── */}
-      <div className="space-y-6 pb-2">
+      <div
+      className="space-y-6"
+      style={{
+        overflowY:      'auto',
+        flex:           1,
+        paddingRight:   '8px',
+        paddingLeft:    '16px',
+      }}  
 
+      >
         {/* Campo 1: Título */}
         <div>
           <label className="label">Título <span style={{ color: '#FB7185' }}>*</span></label>
@@ -474,6 +491,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
               onChange={e => set('valid_until', e.target.value)}
             />
           </div>
+        </div>  
         </div>
       </div>
 
@@ -481,10 +499,10 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
       <div
         className="flex justify-end gap-3 pt-4 mt-2"
         style={{
-          borderTop:       '1px solid rgba(255,255,255,0.06)',
+          borderTop:       '1px solid rgba(255,255,255,0.05)',
           position:        'sticky',
           bottom:          0,
-          background:      '#171717',
+          background:      'glassmorphism',
           marginLeft:      '-24px',
           marginRight:     '-24px',
           paddingLeft:     '24px',
@@ -500,6 +518,6 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
           {saving ? 'Salvando...' : isEdit ? 'Salvar Alterações' : 'Criar Proposta'}
         </button>
       </div>
-    </Modal>
+    </PortalModal>
   )
 }

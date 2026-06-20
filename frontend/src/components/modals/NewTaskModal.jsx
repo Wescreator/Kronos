@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
-import Modal from '../ui/Modal'
+import PortalModal from '../ui/PortalModal'
 import { createTask } from '../../services/tasks.service'
 import { getProjects } from '../../services/projects.service'
 import { getUsers } from '../../services/team.service'
@@ -53,7 +53,7 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
   ]
 
   return (
-    <Modal open={open} onClose={onClose} title="Nova Tarefa" size="lg">
+    <PortalModal open={open} onClose={onClose} title="Nova Tarefa" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label className="label">Título *</label>
@@ -124,6 +124,6 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
           </button>
         </div>
       </form>
-    </Modal>
+    </PortalModal>
   )
 }

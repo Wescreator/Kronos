@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   DollarSign, FolderKanban, AlertCircle,
   TrendingUp, CheckSquare, Clock, ArrowRight, Zap
 } from 'lucide-react'
-import StatCard  from '../../components/ui/StatCard'
-import Spinner   from '../../components/ui/Spinner'
-import Badge     from '../../components/ui/Badge'
+import StatCard      from '../../components/ui/StatCard'
+import Spinner       from '../../components/ui/Spinner'
+import Badge         from '../../components/ui/Badge'
+import QuickActions  from '../../components/dashboard/QuickActions'
 import {
   formatCurrency, formatDate, formatCompact,
   statusLabel, statusColors,
@@ -61,8 +62,8 @@ export default function DashboardPage() {
   const [tasks,     setTasks]     = useState([])
   const [loading,   setLoading]   = useState(true)
 
-  useEffect(() => {
-    Promise.all([
+  const loadDashboard = useCallback(() => {
+    return Promise.all([
       getFinancialDashboard(),
       getProjects({ limit: 50 }),
       getTasks({ status: 'open', limit: 6 })
@@ -75,6 +76,8 @@ export default function DashboardPage() {
       setTasks(tsk.data.data || [])
     }).finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => { loadDashboard() }, [loadDashboard])
 
   if (loading) return (
     <div className="flex items-center justify-center h-64"><Spinner size="lg" /></div>
@@ -112,6 +115,9 @@ export default function DashboardPage() {
           })}
         </p>
       </div>
+
+      {/* ── Navegações Rápidas ───────────────────────────────────────── */}
+      <QuickActions onActionSuccess={loadDashboard} />
 
       {/* ── KPIs ──────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

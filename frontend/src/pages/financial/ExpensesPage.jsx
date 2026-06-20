@@ -1,125 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
-import { createPortal } from 'react-dom'
-import { Plus, CheckCircle, Trash2, TrendingDown, Tag, Edit, ChevronLeft, ChevronRight, Repeat } from 'lucide-react'
-import PageHeader    from '../../components/ui/PageHeader'
-import Badge         from '../../components/ui/Badge'
-import Spinner       from '../../components/ui/Spinner'
-import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import { Plus, CheckCircle, Trash2, TrendingDown, Edit, ChevronLeft, ChevronRight, Repeat } from 'lucide-react'
+import PageHeader     from '../../components/ui/PageHeader'
+import Badge          from '../../components/ui/Badge'
+import Spinner        from '../../components/ui/Spinner'
+import PortalModal     from '../../components/ui/PortalModal'
+import ConfirmDialog   from '../../components/ui/ConfirmDialog'
+import NewExpenseModal from '../../components/modals/NewExpenseModal'
 import { formatCurrency, formatDate, statusLabel, statusColors, monthNamesLong } from '../../utils/format'
 import {
-  getExpenses, createExpense, updateExpense,
-  confirmPayment, deleteExpense, getCategories, createCategory
+  getExpenses, confirmPayment, deleteExpense, getCategories
 } from '../../services/financial.service'
 import { toast } from 'react-hot-toast'
 
 const ITEMS_PER_PAGE = 15
-
-// ── Seletor de categoria com criação inline ───────────────────────
-function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
-  const [showCreate, setShowCreate] = useState(false)
-  const [newName,    setNewName]    = useState('')
-  const [newColor,   setNewColor]   = useState('#7C5CFC')
-  const [saving,     setSaving]     = useState(false)
-
-  const PRESET_COLORS = [
-    '#7C5CFC','#34D399','#FB7185','#38BDF8',
-    '#FBBF24','#F472B6','#A78BFA','#6EE7B7'
-  ]
-
-  const handleCreate = async () => {
-    if (!newName.trim()) return toast.error('Informe o nome da categoria')
-    setSaving(true)
-    try {
-      const { data } = await createCategory({ name: newName.trim(), color: newColor })
-      toast.success(`Categoria "${newName}" criada!`)
-      onCategoryCreated(data.category)
-      onChange(data.category.id)
-      setNewName(''); setNewColor('#7C5CFC'); setShowCreate(false)
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Erro ao criar categoria')
-    } finally { setSaving(false) }
-  }
-
-  return (
-    <div>
-      <label className="label">Categoria</label>
-      <div className="flex gap-2">
-        <select
-          className="input flex-1"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-        >
-          <option value="">Sem categoria</option>
-          {categories.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        <button
-          type="button"
-          onClick={() => setShowCreate(!showCreate)}
-          title="Criar nova categoria"
-          className="px-3 rounded-xl transition-all duration-150 shrink-0"
-          style={{
-            background: showCreate ? 'rgba(124,92,252,0.20)' : 'rgba(255,255,255,0.05)',
-            border:     `1px solid ${showCreate ? 'rgba(124,92,252,0.35)' : 'rgba(255,255,255,0.08)'}`,
-            color:      showCreate ? '#A78BFA' : 'var(--text-muted)'
-          }}
-        >
-          <Tag size={14} />
-        </button>
-      </div>
-
-      {showCreate && (
-        <div
-          className="mt-2 p-4 rounded-2xl"
-          style={{
-            background: 'rgba(124,92,252,0.06)',
-            border:     '1px solid rgba(124,92,252,0.15)',
-            animation:  'fadeInUp 0.15s ease'
-          }}
-        >
-          <p className="text-xs font-bold mb-3" style={{ color: '#A78BFA' }}>
-            Nova categoria
-          </p>
-          <input
-            className="input flex-1 text-sm mb-3"
-            placeholder="Nome da categoria"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleCreate()}
-          />
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Cor:</span>
-            <div className="flex gap-1.5">
-              {PRESET_COLORS.map(c => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setNewColor(c)}
-                  className="h-5 w-5 rounded-full transition-all duration-150"
-                  style={{
-                    background:    c,
-                    outline:       newColor === c ? `2px solid ${c}` : 'none',
-                    outlineOffset: 2,
-                    transform:     newColor === c ? 'scale(1.2)' : 'scale(1)'
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={() => setShowCreate(false)} className="btn-secondary text-xs py-1.5 px-3">
-              Cancelar
-            </button>
-            <button type="button" onClick={handleCreate} disabled={saving} className="btn-primary text-xs py-1.5 px-3">
-              {saving ? 'Salvando...' : 'Criar categoria'}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ── Paginação ─────────────────────────────────────────────────────
 function Pagination({ page, totalPages, onPrev, onNext }) {
@@ -159,68 +52,7 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
   )
 }
 
-// ── Modal via Portal ──────────────────────────────────────────────
-function PortalModal({ open, onClose, title, children, size = 'md' }) {
-  const sizes = { sm: 'max-w-md', md: 'max-w-lg', lg: 'max-w-2xl' }
-
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
-    if (open) {
-      document.addEventListener('keydown', handler)
-      document.body.style.overflow = 'hidden'
-    }
-    return () => {
-      document.removeEventListener('keydown', handler)
-      document.body.style.overflow = ''
-    }
-  }, [open, onClose])
-
-  if (!open) return null
-
-  return createPortal(
-    <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(5,8,22,0.80)', backdropFilter: 'blur(8px)' }} />
-      <div
-        className={`relative w-full ${sizes[size]} flex flex-col`}
-        style={{
-          maxHeight: '90vh', background: 'linear-gradient(180deg, #0D152B, #081024)',
-          border: '1px solid rgba(255,255,255,0.08)', borderRadius: '24px',
-          boxShadow: '0 25px 60px rgba(0,0,0,0.55)', animation: 'fadeInUp 0.2s ease forwards',
-          marginTop: '-5vh',
-        }}
-      >
-        <div className="absolute inset-0 pointer-events-none rounded-3xl" style={{ background: 'radial-gradient(circle at top right, rgba(124,92,252,0.12), transparent 60%)' }} />
-        <div className="flex items-center justify-between px-6 py-5 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'relative', zIndex: 1 }}>
-          <h2 className="text-[17px] font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl transition-all duration-150"
-            style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
-          >
-            ✕
-          </button>
-        </div>
-        <div className="overflow-y-auto flex-1 px-6 py-5" style={{ position: 'relative', zIndex: 1 }}>
-          {children}
-        </div>
-      </div>
-    </div>,
-    document.body
-  )
-}
-
 // ── Página principal ──────────────────────────────────────────────
-const EMPTY_FORM = {
-  title:        '',
-  amount:       '',
-  due_date:     '',
-  category_id:  '',
-  description:  '',
-  is_recurring: false,   // novo campo
-}
-
 export default function ExpensesPage() {
   const now = new Date()
 
@@ -240,7 +72,6 @@ export default function ExpensesPage() {
   const [selectedYear,   setSelectedYear]   = useState(now.getFullYear())
   const [currentPage,    setCurrentPage]    = useState(1)
 
-  const [form,    setForm]    = useState(EMPTY_FORM)
   const [payDate, setPayDate] = useState('')
 
   const load = useCallback(async () => {
@@ -278,49 +109,6 @@ export default function ExpensesPage() {
   const handleMonthChange    = (m)     => { setSelectedMonth(m);      setCurrentPage(1) }
   const handleYearChange     = (y)     => { setSelectedYear(y);       setCurrentPage(1) }
 
-  const handleCreate = async (e) => {
-    e.preventDefault()
-    try {
-      await createExpense({
-        ...form,
-        amount:       parseFloat(form.amount),
-        is_recurring: form.is_recurring,
-      })
-      toast.success(form.is_recurring ? 'Despesa recorrente criada para os próximos 24 meses!' : 'Despesa criada!')
-      setShowNew(false)
-      setForm(EMPTY_FORM)
-      setCurrentPage(1)
-      load()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Erro ao criar despesa')
-    }
-  }
-
-  const handleEdit = async (e) => {
-    e.preventDefault()
-    try {
-      await updateExpense(editItem.id, { ...form, amount: parseFloat(form.amount) })
-      toast.success('Despesa atualizada!')
-      setEditItem(null)
-      setForm(EMPTY_FORM)
-      load()
-    } catch (err) {
-      toast.error(err.response?.data?.message || 'Erro ao editar despesa')
-    }
-  }
-
-  const openEdit = (expense) => {
-    setForm({
-      title:        expense.title,
-      amount:       expense.amount,
-      due_date:     expense.due_date?.slice(0, 10) || '',
-      category_id:  expense.category_id || '',
-      description:  expense.description || '',
-      is_recurring: expense.is_recurring || false,
-    })
-    setEditItem(expense)
-  }
-
   const handlePay = async () => {
     if (!payDate) return toast.error('Informe a data de pagamento')
     try {
@@ -351,127 +139,6 @@ export default function ExpensesPage() {
   const paid    = expenses.filter(e => e.status === 'paid').reduce((s, e) => s + parseFloat(e.amount), 0)
   const pending = total - paid
 
-  // ── Formulário compartilhado (criação e edição) ───────────────
-  const FormBody = (
-    <form onSubmit={editItem ? handleEdit : handleCreate} className="space-y-5">
-      <div>
-        <label className="label">Título *</label>
-        <input
-          className="input"
-          required
-          value={form.title}
-          onChange={e => setForm({ ...form, title: e.target.value })}
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Valor *</label>
-          <input
-            type="number" step="0.01" min="0"
-            className="input" required
-            value={form.amount}
-            onChange={e => setForm({ ...form, amount: e.target.value })}
-          />
-        </div>
-        <div>
-          <label className="label">Vencimento *</label>
-          <input
-            type="date" className="input" required
-            value={form.due_date}
-            onChange={e => setForm({ ...form, due_date: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <CategorySelect
-        categories={categories}
-        value={form.category_id}
-        onChange={(id) => setForm({ ...form, category_id: id })}
-        onCategoryCreated={(cat) => {setCategories(prev =>[...prev, cat].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')
-    )
-  )
-
-  loadCategories()
-}}
-      />
-
-      <div>
-        <label className="label">Descrição</label>
-        <textarea
-          className="input resize-none" rows={2}
-          value={form.description}
-          onChange={e => setForm({ ...form, description: e.target.value })}
-        />
-      </div>
-
-      {/* ── Despesa recorrente — só aparece ao criar ── */}
-      {!editItem && (
-        <div
-          className="rounded-2xl p-4"
-          style={{
-            background: form.is_recurring ? 'rgba(124,92,252,0.08)' : 'rgba(255,255,255,0.02)',
-            border:     `1px solid ${form.is_recurring ? 'rgba(124,92,252,0.25)' : 'rgba(255,255,255,0.06)'}`,
-            transition: 'background 0.2s, border-color 0.2s',
-          }}
-        >
-          <label
-            className="flex items-start gap-3 cursor-pointer select-none"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            <input
-              type="checkbox"
-              checked={form.is_recurring}
-              onChange={e => setForm({ ...form, is_recurring: e.target.checked })}
-              style={{ marginTop: 2, accentColor: '#7C5CFC', width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }}
-            />
-            <div>
-              <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: form.is_recurring ? '#A78BFA' : 'var(--text-secondary)' }}>
-                <Repeat size={14} />
-                Despesa recorrente
-              </span>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                Gera automaticamente uma ocorrência pendente por mês pelos próximos 24 meses. Cada mês tem status independente.
-              </p>
-            </div>
-          </label>
-        </div>
-      )}
-
-      {/* ── Indicador no modo edição (somente leitura) ── */}
-      {editItem && editItem.is_recurring && (
-        <div
-          className="flex items-center gap-2 rounded-xl px-4 py-3"
-          style={{
-            background: 'rgba(124,92,252,0.08)',
-            border:     '1px solid rgba(124,92,252,0.20)',
-          }}
-        >
-          <Repeat size={14} style={{ color: '#A78BFA', flexShrink: 0 }} />
-          <p className="text-xs" style={{ color: '#A78BFA' }}>
-            Esta é uma despesa recorrente. As outras ocorrências mensais não são afetadas por esta edição.
-          </p>
-        </div>
-      )}
-
-      <div
-        className="flex justify-end gap-3 pt-2"
-        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
-      >
-        <button
-          type="button"
-          onClick={() => { setShowNew(false); setEditItem(null); setForm(EMPTY_FORM) }}
-          className="btn-secondary"
-        >
-          Cancelar
-        </button>
-        <button type="submit" className="btn-primary">
-          {editItem ? 'Salvar alterações' : 'Criar Despesa'}
-        </button>
-      </div>
-    </form>
-  )
-
   return (
     <div className="fade-in">
       <PageHeader
@@ -479,7 +146,7 @@ export default function ExpensesPage() {
         tag="Financeiro"
         subtitle="Gerencie despesas e confirme pagamentos"
         actions={
-          <button onClick={() => { setShowNew(true); setForm(EMPTY_FORM) }} className="btn-primary">
+          <button onClick={() => setShowNew(true)} className="btn-primary">
             <Plus size={15} /> Nova Despesa
           </button>
         }
@@ -660,7 +327,7 @@ export default function ExpensesPage() {
                   <td className="table-cell">
                     <div className="flex items-center gap-1">
                       <button
-                        onClick={() => openEdit(e)}
+                        onClick={() => setEditItem(e)}
                         className="p-2 rounded-xl transition-all duration-150"
                         style={{ color: '#A78BFA' }}
                         onMouseEnter={ev => ev.currentTarget.style.background = 'rgba(124,92,252,0.10)'}
@@ -715,14 +382,17 @@ export default function ExpensesPage() {
       )}
 
       {/* ── Modal Nova / Editar Despesa ── */}
-      <PortalModal
+      <NewExpenseModal
         open={showNew || !!editItem}
-        onClose={() => { setShowNew(false); setEditItem(null); setForm(EMPTY_FORM) }}
-        title={editItem ? 'Editar Despesa' : 'Nova Despesa'}
-        size="md"
-      >
-        {FormBody}
-      </PortalModal>
+        expense={editItem}
+        onClose={() => { setShowNew(false); setEditItem(null) }}
+        onSuccess={() => {
+          if (!editItem) setCurrentPage(1)
+          setShowNew(false)
+          setEditItem(null)
+          load()
+        }}
+      />
 
       {/* ── Modal Confirmar Pagamento ── */}
       <PortalModal
