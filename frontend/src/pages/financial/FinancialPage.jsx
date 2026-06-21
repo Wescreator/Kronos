@@ -324,9 +324,9 @@ export default function FinancialPage() {
         .kpi-glow-wrap,
         .nav-glow-wrap {
           position: relative;
-          border-radius: 14px;
+          border-radius: 20px;
           overflow: hidden;
-          padding: 1.5px;
+          padding: 1px;
           transition: box-shadow 0.35s ease;
         }
 
@@ -335,7 +335,7 @@ export default function FinancialPage() {
         .nav-glow-wrap::before {
           content: '';
           position: absolute;
-          width: 250%;
+          width: 100%;
           aspect-ratio: 1 / 1;
           top: 50%;
           left: 50%;
@@ -377,10 +377,10 @@ export default function FinancialPage() {
         }
 
         .kpi-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #34D399 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-violet:hover {
-          box-shadow: 0 0 18px rgba(124,92,252,.35);
+          box-shadow: 0 0 18px rgba(52,211,153,.35);
         }
 
         .kpi-glow-wrap.glow-sky::before {
