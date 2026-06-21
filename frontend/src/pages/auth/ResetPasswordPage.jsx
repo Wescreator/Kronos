@@ -4,20 +4,13 @@ import { toast, Toaster } from 'react-hot-toast'
 import { resetPassword } from '../../services/auth.service'
 import { Eye, EyeOff } from 'lucide-react'
 
-const STARS = Array.from({ length: 38 }, (_, i) => ({
-  x: ((i * 97 + 13) % 100),
-  y: ((i * 61 + 37) % 100),
-  r: ((i * 7  + 3)  % 3) + 0.8,
-  o: ((i * 31 + 11) % 35) / 100 + 0.06,
-}))
-
 const KronosIcon = ({ size = 40 }) => (
   <svg width={size} height={size} viewBox="0 0 64 64" fill="none"
     style={{ animation: 'kronosFloat 4s ease-in-out infinite' }}>
     <defs>
       <linearGradient id="kh3" x1="0" y1="0" x2="64" y2="64">
-        <stop offset="0%" stopColor="#D8CCFF" />
-        <stop offset="100%" stopColor="#7C5CFC" />
+        <stop offset="0%" stopColor="#E5E7EB" />
+        <stop offset="100%" stopColor="#6B7280" />
       </linearGradient>
     </defs>
     <path d="M20 10H44" stroke="url(#kh3)" strokeWidth="4" strokeLinecap="round" />
@@ -26,7 +19,7 @@ const KronosIcon = ({ size = 40 }) => (
       stroke="url(#kh3)" strokeWidth="4" fill="none" strokeLinecap="round" />
     <path d="M22 52 C22 42, 28 40, 32 34 C36 40, 42 42, 42 52"
       stroke="url(#kh3)" strokeWidth="4" fill="none" strokeLinecap="round" />
-    <circle cx="32" cy="32" r="2.5" fill="#C4B5FD" />
+    <circle cx="32" cy="32" r="2.5" fill="#9CA3AF" />
   </svg>
 )
 
@@ -78,120 +71,91 @@ export default function ResetPasswordPage() {
           0%,100% { transform: translateY(0px); }
           50%     { transform: translateY(-3px); }
         }
-        @keyframes kronosRing {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(360deg); }
-        }
         @keyframes kronosFadeUp {
           from { opacity: 0; transform: translateY(22px); }
           to   { opacity: 1; transform: translateY(0); }
         }
         .kn-input {
-          width: 100%; height: 46px; padding: 0 44px 0 16px;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(124,92,252,0.20); border-radius: 12px;
-          color: #fff; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
-          transition: border-color .2s, background .2s, box-shadow .2s;
+          width: 100%; height: 56px; padding: 0 50px 0 16px;
+          background: #FFFFFF;
+          border: 1px solid #D1D5DB; border-radius: 10px;
+          color: #111827; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+          transition: border-color .2s, box-shadow .2s;
           outline: none; box-sizing: border-box;
         }
-        .kn-input::placeholder { color: rgba(255,255,255,0.25); }
+        .kn-input::placeholder { color: #9CA3AF; }
         .kn-input:focus {
-          border-color: rgba(124,92,252,0.60);
-          background: rgba(124,92,252,0.07);
-          box-shadow: 0 0 0 3px rgba(124,92,252,0.14);
+          border-color: #6B7280;
+          box-shadow: 0 0 0 3px rgba(107,114,128,0.15);
         }
         .kn-input.error {
-          border-color: rgba(239,68,68,0.60);
-          box-shadow: 0 0 0 3px rgba(239,68,68,0.12);
+          border-color: #DC2626;
+          box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
         }
         .kn-btn {
-          width: 100%; height: 50px; border-radius: 14px;
-          background: linear-gradient(135deg, #7C5CFC, #6344e0);
-          border: 1px solid rgba(124,92,252,0.50);
-          box-shadow: 0 4px 22px rgba(124,92,252,0.35);
+          width: 100%; height: 56px; border-radius: 10px;
+          background: #374151;
+          border: none;
           color: #fff; font-size: 15px; font-weight: 600;
           font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: 8px;
-          transition: transform .22s ease, box-shadow .22s ease, opacity .2s;
-          letter-spacing: .01em;
+          transition: background .2s, opacity .2s;
         }
-        .kn-btn:hover:not(:disabled)  { transform: scale(1.02); box-shadow: 0 8px 36px rgba(124,92,252,0.55); }
-        .kn-btn:active:not(:disabled) { transform: scale(0.99); }
-        .kn-btn:disabled              { opacity: .55; cursor: not-allowed; }
+        .kn-btn:hover:not(:disabled)  { background: #1f2937; }
+        .kn-btn:disabled              { background: #9CA3AF; cursor: not-allowed; }
       `}</style>
 
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
-        background: 'radial-gradient(ellipse at 50% 45%, #0b0d20 0%, #060816 55%, #020410 100%)',
+        background: 'linear-gradient(135deg, #c7cbd1 0%, #9aa0a6 50%, #c7cbd1 100%)',
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}>
         <Toaster position="top-right" toastOptions={{
-          style: { background: '#0D152B', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12 },
+          style: { background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: 12 },
         }} />
 
-        {STARS.map((s, i) => (
-          <div key={i} style={{
-            position: 'absolute', width: s.r, height: s.r, borderRadius: '50%',
-            background: `rgba(196,181,253,${s.o})`, top: `${s.y}%`, left: `${s.x}%`, pointerEvents: 'none',
-          }} />
-        ))}
-
-        {[
-          { sz: 870, dur: '220s', dir: 'normal',  op: 0.06 },
-          { sz: 920, dur: '300s', dir: 'reverse', op: 0.04 },
-        ].map((ring, i) => (
-          <div key={i} style={{
-            position: 'absolute', width: ring.sz, height: ring.sz, borderRadius: '50%',
-            border: `1px solid rgba(124,92,252,${ring.op})`,
-            animation: `kronosRing ${ring.dur} linear infinite ${ring.dir}`,
-          }} />
-        ))}
-
         <div style={{
-          position: 'relative', zIndex: 10, width: '100%', maxWidth: 420, padding: '0 20px',
+          position: 'relative', zIndex: 10, width: '100%', maxWidth: 480, padding: '0 20px',
           animation: 'kronosFadeUp 0.65s cubic-bezier(.22,1,.36,1) forwards',
         }}>
           {/* Logo */}
-          <div style={{ textAlign: 'center', marginBottom: 30 }}>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 18, filter: 'drop-shadow(0 0 18px rgba(124,92,252,.35))' }}>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 18 }}>
               <KronosIcon size={52} />
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.28em', color: '#fff', marginBottom: 5 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.28em', color: '#374151', marginBottom: 6 }}>
               K R O N O S
             </div>
-            <div style={{ fontSize: 10.5, letterSpacing: '0.22em', color: 'rgba(167,139,250,0.48)', textTransform: 'uppercase', fontWeight: 500 }}>
+            <div style={{ fontSize: 10.5, letterSpacing: '0.22em', color: '#6B7280', textTransform: 'uppercase', fontWeight: 500 }}>
               SISTEMA CORPORATIVO DE GESTÃO
             </div>
           </div>
 
           {/* Card */}
           <div style={{
-            background: 'linear-gradient(175deg, rgba(13,21,43,0.88) 0%, rgba(7,10,24,0.93) 100%)',
-            backdropFilter: 'blur(28px)', WebkitBackdropFilter: 'blur(28px)',
-            border: '1px solid rgba(124,92,252,0.16)', borderRadius: 24,
-            boxShadow: '0 28px 64px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.03) inset',
-            padding: '36px 32px', position: 'relative', overflow: 'hidden',
+            background: '#FFFFFF',
+            borderRadius: 20,
+            boxShadow: '0 30px 70px -20px rgba(20,24,28,0.45), 0 1px 0 rgba(255,255,255,0.6) inset',
+            padding: '48px 44px', position: 'relative', overflow: 'hidden',
           }}>
-            <div style={{ position: 'absolute', top: 0, left: '10%', right: '10%', height: 1, background: 'linear-gradient(90deg, transparent, rgba(124,92,252,0.45), transparent)' }} />
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse at 60% -10%, rgba(124,92,252,0.09), transparent 55%)' }} />
 
             <div style={{ position: 'relative', zIndex: 1 }}>
               {!done ? (
                 /* ── Estado: formulário ── */
                 <>
-                  <h2 style={{ color: '#fff', fontSize: 22, fontWeight: 700, marginBottom: 7, letterSpacing: '-0.025em' }}>
+                  <h2 style={{ color: '#374151', fontSize: 24, fontWeight: 700, marginBottom: 10, letterSpacing: '-0.025em' }}>
                     Nova senha
                   </h2>
-                  <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 13.5, lineHeight: '1.55', marginBottom: 28 }}>
+                  <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.6', marginBottom: 32 }}>
                     Crie uma nova senha para sua conta. Use pelo menos 8 caracteres.
                   </p>
 
                   <form onSubmit={handleSubmit}>
                     {/* Nova senha */}
-                    <div style={{ marginBottom: 16 }}>
-                      <label style={{ display: 'block', fontSize: 10.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(167,139,250,0.55)', marginBottom: 7 }}>
-                        NOVA SENHA
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 10 }}>
+                        Nova senha
                       </label>
                       <div style={{ position: 'relative' }}>
                         <input
@@ -203,24 +167,24 @@ export default function ResetPasswordPage() {
                           required autoFocus
                         />
                         <button type="button" onClick={() => setShow(s => ({ ...s, password: !s.password }))} style={{
-                          position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                          position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
                           background: 'none', border: 'none', cursor: 'pointer',
-                          color: 'rgba(167,139,250,0.40)', padding: 4, display: 'flex', alignItems: 'center',
+                          color: '#9CA3AF', padding: 4, display: 'flex', alignItems: 'center',
                         }}>
-                          {show.password ? <EyeOff size={15} /> : <Eye size={15} />}
+                          {show.password ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
                       {form.password && form.password.length < 8 && (
-                        <p style={{ color: 'rgba(239,68,68,0.75)', fontSize: 11.5, marginTop: 5 }}>
+                        <p style={{ color: '#DC2626', fontSize: 12, marginTop: 6 }}>
                           Mínimo de 8 caracteres
                         </p>
                       )}
                     </div>
 
                     {/* Confirmar senha */}
-                    <div style={{ marginBottom: 26 }}>
-                      <label style={{ display: 'block', fontSize: 10.5, fontWeight: 600, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(167,139,250,0.55)', marginBottom: 7 }}>
-                        CONFIRMAR SENHA
+                    <div style={{ marginBottom: 30 }}>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 10 }}>
+                        Confirmar senha
                       </label>
                       <div style={{ position: 'relative' }}>
                         <input
@@ -232,15 +196,15 @@ export default function ResetPasswordPage() {
                           required
                         />
                         <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))} style={{
-                          position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                          position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
                           background: 'none', border: 'none', cursor: 'pointer',
-                          color: 'rgba(167,139,250,0.40)', padding: 4, display: 'flex', alignItems: 'center',
+                          color: '#9CA3AF', padding: 4, display: 'flex', alignItems: 'center',
                         }}>
-                          {show.confirm ? <EyeOff size={15} /> : <Eye size={15} />}
+                          {show.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
                       </div>
                       {form.confirm && form.confirm !== form.password && (
-                        <p style={{ color: 'rgba(239,68,68,0.75)', fontSize: 11.5, marginTop: 5 }}>
+                        <p style={{ color: '#DC2626', fontSize: 12, marginTop: 6 }}>
                           As senhas não coincidem
                         </p>
                       )}
@@ -263,21 +227,21 @@ export default function ResetPasswordPage() {
                 /* ── Estado: sucesso ── */
                 <div style={{ textAlign: 'center', padding: '8px 0' }}>
                   <div style={{
-                    width: 64, height: 64, borderRadius: '50%', margin: '0 auto 20px',
-                    background: 'rgba(124,92,252,0.12)',
-                    border: '1px solid rgba(124,92,252,0.30)',
+                    width: 64, height: 64, borderRadius: '50%', margin: '0 auto 22px',
+                    background: '#F3F4F6',
+                    border: '1px solid #D1D5DB',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                      stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                   </div>
-                  <h2 style={{ color: '#fff', fontSize: 20, fontWeight: 700, marginBottom: 10, letterSpacing: '-0.025em' }}>
+                  <h2 style={{ color: '#374151', fontSize: 22, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.025em' }}>
                     Senha redefinida!
                   </h2>
-                  <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 13.5, lineHeight: '1.65', marginBottom: 28 }}>
+                  <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.65', marginBottom: 28 }}>
                     Sua senha foi atualizada com sucesso. Faça login com suas novas credenciais.
                   </p>
                   <button type="button" className="kn-btn" onClick={() => navigate('/login', { replace: true })}>
@@ -288,8 +252,8 @@ export default function ResetPasswordPage() {
             </div>
           </div>
 
-          <div style={{ textAlign: 'center', marginTop: 26 }}>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.13)' }}>
+          <div style={{ textAlign: 'center', marginTop: 28 }}>
+            <p style={{ fontSize: 11, color: 'rgba(55,65,81,0.5)' }}>
               © 2025 Kronos. Todos os direitos reservados.
             </p>
           </div>
