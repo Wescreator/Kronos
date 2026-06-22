@@ -65,10 +65,10 @@ export default function TeamPage() {
           className="relative flex-1 max-w-sm"
           style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--bg-card)' }} />
           <input
             className="w-full bg-transparent pl-9 pr-4 py-2.5 text-sm outline-none"
-            style={{ color: 'var(--text-primary)' }}
+            style={{ color: 'var(--bg-hover)' }}
             placeholder="Buscar membro..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -76,7 +76,7 @@ export default function TeamPage() {
         </div>
         <span
           className="text-xs font-semibold px-3 py-2 rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.06)' }}
         >
           {users.length} membros
         </span>
