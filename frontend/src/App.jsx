@@ -25,8 +25,8 @@ import TeamMemberPage     from './pages/team/TeamMemberPage'
 import CalendarPage       from './pages/calendar/CalendarPage'
 import ProposalsPage      from './pages/proposals/ProposalsPage'
 import ProposalDetailPage from './pages/proposals/ProposalDetailPage'
-// Importação adicionada:
-import ClientPage        from './pages/client/ClientPage' 
+
+
 
 /**
  * Restaura o `user` (nome, role, scope, company_id) a partir do token salvo
