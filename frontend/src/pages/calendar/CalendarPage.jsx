@@ -8,14 +8,7 @@ import WeekView from '../../components/calendar/WeekView'
 import AgendaView from '../../components/calendar/AgendaView'
 import EventModal from '../../components/calendar/EventModal'
 import '../../App.css'
-import {
-  getEventsByMonth,
-  getEventsByWeek,
-  getAgendaEvents,
-  createEvent,
-  updateEvent,
-  deleteEvent,
-} from '../../services/calendar.service'
+import {getEventsByMonth, getEventsByWeek, getAgendaEvents, createEvent, updateEvent, deleteEvent,} from '../../services/calendar.service'
 
 import { getUsers } from '../../services/team.service'
 import { useAuth } from '../../hooks/useAuth'
@@ -23,17 +16,13 @@ import { can } from '../../utils/permissions'
 
 function getWeekRange(date) {
   const d = new Date(date)
-
   const day = d.getDay()
-
   const start = new Date(d)
   start.setDate(d.getDate() - day)
   start.setHours(0, 0, 0, 0)
-
   const end = new Date(start)
   end.setDate(start.getDate() + 6)
   end.setHours(23, 59, 59, 999)
-
   return {
     startOfWeek: start.toISOString(),
     endOfWeek: end.toISOString(),
@@ -42,17 +31,13 @@ function getWeekRange(date) {
 
 export default function CalendarPage() {
   const { user } = useAuth()
-
   const [view, setView] = useState('month')
   const [currentDate, setCurrentDate] = useState(new Date())
-
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(false)
-
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [defaultDate, setDefaultDate] = useState('')
-
   const [teamUsers, setTeamUsers] = useState([])
 
   // Permissões do Kronos
@@ -68,7 +53,6 @@ export default function CalendarPage() {
     async function loadUsers() {
       try {
         const { data } = await getUsers()
-
         setTeamUsers(
           data?.users ||
           data?.data ||
@@ -80,7 +64,6 @@ export default function CalendarPage() {
         setTeamUsers([])
       }
     }
-
     loadUsers()
   }, [])
 
@@ -90,10 +73,8 @@ export default function CalendarPage() {
 
   const loadEvents = useCallback(async () => {
     setLoading(true)
-
     try {
       let data = []
-
       if (view === 'month') {
         data = await getEventsByMonth(
           currentDate.getFullYear(),
@@ -110,13 +91,11 @@ export default function CalendarPage() {
           endOfWeek
         )
       }
-
       else {
         data = await getAgendaEvents(
           currentDate.toISOString()
         )
       }
-
       setEvents(data || [])
     }
 
@@ -125,7 +104,6 @@ export default function CalendarPage() {
         '[Calendar] Erro ao carregar eventos:',
         error
       )
-
       setEvents([])
     }
 
@@ -145,17 +123,14 @@ export default function CalendarPage() {
   function navigate(direction) {
     setCurrentDate((prev) => {
       const d = new Date(prev)
-
       if (view === 'month') {
         d.setMonth(d.getMonth() + direction)
       } else {
         d.setDate(d.getDate() + direction * 7)
       }
-
       return d
     })
   }
-
   function goToday() {
     setCurrentDate(new Date())
   }

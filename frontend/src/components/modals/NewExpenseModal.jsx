@@ -259,7 +259,7 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
                   <Repeat size={14} />
                   Despesa recorrente
                 </span>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
                   Gera automaticamente uma ocorrência pendente por mês pelos próximos 24 meses. Cada mês tem status independente.
                 </p>
               </div>

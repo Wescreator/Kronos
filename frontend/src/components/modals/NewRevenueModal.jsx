@@ -110,7 +110,7 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
                   className="flex flex-col items-start gap-1.5 p-4 rounded-2xl text-left transition-all duration-150"
                   style={revenueMode === mode.key
                     ? { background: 'rgba(107,114,128,0.15)', border: '1px solid rgba(107,114,128,0.35)', color: '#374151' }
-                    : { background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)', color: 'var(--text-muted)' }
+                    : { background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)', color: 'var(--text-secondary)' }
                   }>
                   <div className="flex items-center gap-2">
                     <Icon size={15} />

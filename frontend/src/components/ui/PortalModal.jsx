@@ -100,7 +100,7 @@ export default function PortalModal({
           <button
             onClick={onClose}
             className="p-1.5 rounded-xl transition-all duration-150"
-            style={{ color: 'var(--text-muted)' }}
+            style={{ color: 'var(--text-secondary)' }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(0,0,0,0.06)'
               e.currentTarget.style.color = '#374151'

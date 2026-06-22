@@ -352,7 +352,7 @@ export default function LoginPage() {
 
             
             <p className="slogan">
-              Tempo que conecta. Gestão que transforma.
+              Inteligência para gerir, liberdade para criar.
             </p>
 
           </div>

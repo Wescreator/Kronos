@@ -190,14 +190,14 @@ export default function ProjectsPage() {
             style={{
               position: 'absolute', left: 14, top: '50%',
               transform: 'translateY(-50%)',
-              color: 'var(--text-muted)', pointerEvents: 'none',
+              color: 'var(--bg-card)', pointerEvents: 'none',
             }}
           />
           <input
             style={{
               width: '100%', background: 'transparent',
               paddingLeft: 38, paddingRight: 16, paddingTop: 10, paddingBottom: 10,
-              fontSize: 13, color: 'var(--text-primary)', outline: 'none',
+              fontSize: 13, color: 'var(--bg-card)', outline: 'none',
               boxSizing: 'border-box',
             }}
             placeholder="Buscar projeto..."

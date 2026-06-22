@@ -151,7 +151,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
             <input type="file" accept="image/*"
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={e => setCover(e.target.files[0])} />
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
               {cover ? cover.name : 'Clique ou arraste uma imagem aqui'}
             </p>
           </div>

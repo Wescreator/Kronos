@@ -184,7 +184,7 @@ export default function DashboardPage() {
         <h1 className="text-[32px] font-bold tracking-tight" style={{ letterSpacing: '-0.025em' }}>
           Dashboard
         </h1>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
           {new Date().toLocaleDateString('pt-BR', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
           })}
