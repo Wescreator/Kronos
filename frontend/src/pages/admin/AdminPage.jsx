@@ -180,19 +180,26 @@ export default function AdminPage() {
   }
 
   // ── estilos ──────────────────────────────────────────────────
+  // Paleta "cinza metálico" — mesma régua das telas de autenticação:
+  // fundo em gradiente 3-stop, card branco elevado, hierarquia de texto
+  // por escurecimento (#374151 > #6B7280 > #9CA3AF), bordas #D1D5DB.
+  // Cores semânticas (verde = ativo, vermelho = inativo/sair) preservadas
+  // e apenas recalibradas para contraste sobre fundo claro; "Editar" (antes
+  // roxo) foi neutralizado para a escala de cinza por não carregar
+  // significado de estado.
   const S = {
-    page:  { minHeight: '100vh', background: 'radial-gradient(ellipse at 50% 0%, #0b0d20, #060816)', color: '#fff', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '32px' },
+    page:  { minHeight: '100vh', background: 'linear-gradient(135deg, #c7cbd1 0%, #9aa0a6 50%, #c7cbd1 100%)', color: '#374151', fontFamily: "'Plus Jakarta Sans', sans-serif", padding: '32px' },
     head:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1200, margin: '0 auto 28px' },
     grid:  { display: 'grid', gridTemplateColumns: 'minmax(260px, 0.9fr) 1.8fr', gap: 24, maxWidth: 1200, margin: '0 auto', alignItems: 'start' },
-    card:  { background: 'rgba(13,21,43,0.9)', border: '1px solid rgba(124,92,252,0.20)', borderRadius: 16, padding: 24 },
-    h2:    { fontSize: 16, fontWeight: 700, marginBottom: 16, letterSpacing: '0.02em' },
-    label: { fontSize: 11, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, display: 'block' },
-    input: { width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, padding: '10px 12px', color: '#fff', fontSize: 14, marginBottom: 10, fontFamily: 'inherit', boxSizing: 'border-box' },
-    btn:   { background: '#7C5CFC', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' },
-    btnGhost: { background: 'none', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' },
-    row:   (active) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 10, marginBottom: 8, cursor: 'pointer', border: '1px solid', borderColor: active ? 'rgba(124,92,252,0.5)' : 'rgba(255,255,255,0.08)', background: active ? 'rgba(124,92,252,0.12)' : 'rgba(255,255,255,0.03)' }),
-    tag:   { fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(52,211,153,0.12)', color: '#34D399' },
-    muted: { color: 'rgba(255,255,255,0.4)', fontSize: 13 },
+    card:  { background: '#FFFFFF', border: '1px solid #D1D5DB', borderRadius: 16, padding: 24, boxShadow: '0 30px 70px -20px rgba(20,24,28,.25), 0 1px 0 rgba(255,255,255,.6) inset' },
+    h2:    { fontSize: 16, fontWeight: 700, marginBottom: 16, letterSpacing: '0.02em', color: '#374151' },
+    label: { fontSize: 11, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6, display: 'block' },
+    input: { width: '100%', background: '#FFFFFF', border: '1px solid #D1D5DB', borderRadius: 10, padding: '10px 12px', color: '#374151', fontSize: 14, marginBottom: 10, fontFamily: 'inherit', boxSizing: 'border-box' },
+    btn:   { background: '#374151', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' },
+    btnGhost: { background: 'none', border: '1px solid #D1D5DB', color: '#374151', borderRadius: 10, padding: '10px 18px', cursor: 'pointer', fontSize: 14, fontWeight: 600, fontFamily: 'inherit' },
+    row:   (active) => ({ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', borderRadius: 10, marginBottom: 8, cursor: 'pointer', border: '1px solid', borderColor: active ? '#9CA3AF' : '#E5E7EB', background: active ? '#F3F4F6' : '#FAFAFA' }),
+    tag:   { fontSize: 11, padding: '2px 8px', borderRadius: 999, background: 'rgba(22,163,74,.12)', color: '#16A34A' },
+    muted: { color: '#9CA3AF', fontSize: 13 },
     act:   (color) => ({ background: 'none', border: `1px solid ${color}33`, color, borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontFamily: 'inherit' }),
     fieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
     full: { gridColumn: '1 / -1' },
@@ -227,18 +234,18 @@ export default function AdminPage() {
 
   return (
     <div style={S.page}>
-      <Toaster position="top-right" toastOptions={{ style: { background: '#0d152b', color: '#fff', border: '1px solid rgba(124,92,252,0.3)' } }} />
+      <Toaster position="top-right" toastOptions={{ style: { background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB' } }} />
       <div style={S.head}>
         <div>
-          <div style={{ fontSize: 12, letterSpacing: '0.18em', color: 'rgba(251,191,36,0.7)', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#6B7280', textTransform: 'uppercase' }}>
             Painel Global — Super Admin
           </div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 4 }}>Gestão de Empresas</h1>
+          <h1 style={{ fontSize: 24, fontWeight: 700, marginTop: 4, color: '#374151' }}>Gestão de Empresas</h1>
           <p style={S.muted}>Olá, {user?.name}. Crie empresas e seus usuários.</p>
         </div>
         <button
           onClick={() => { logout(); navigate('/login') }}
-          style={{ ...S.btn, background: 'none', border: '1px solid rgba(239,68,68,0.3)', color: '#F87171' }}
+          style={{ ...S.btn, background: 'none', border: '1px solid rgba(220,38,38,.3)', color: '#DC2626' }}
         >
           Sair
         </button>
@@ -249,7 +256,7 @@ export default function AdminPage() {
         <div style={S.card}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
             <div style={{ ...S.h2, marginBottom: 0 }}>Empresas</div>
-            <button style={S.act('#7C5CFC')} onClick={startCreate}>+ Nova</button>
+            <button style={S.act('#374151')} onClick={startCreate}>+ Nova</button>
           </div>
 
           {loading ? (
@@ -260,11 +267,11 @@ export default function AdminPage() {
             companies.map(c => (
               <div key={c.id} style={S.row(selected?.id === c.id)} onClick={() => selectCompany(c)}>
                 <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600 }}>{c.name}</div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{c.name}</div>
                   <div style={S.muted}>{c.plan} · {c.users_count} usuário(s)</div>
                 </div>
                 {c.is_active === false
-                  ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativa</span>
+                  ? <span style={{ ...S.tag, background: 'rgba(220,38,38,.12)', color: '#DC2626' }}>inativa</span>
                   : <span style={S.tag}>ativa</span>}
               </div>
             ))
@@ -298,7 +305,7 @@ export default function AdminPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                 <div style={{ ...S.h2, marginBottom: 0 }}>Dados da empresa</div>
                 <button
-                  style={S.act(selected.is_active === false ? '#34D399' : '#F87171')}
+                  style={S.act(selected.is_active === false ? '#16A34A' : '#DC2626')}
                   disabled={busyCompanyId === selected.id}
                   onClick={() => handleToggleCompanyActive(selected)}
                 >
@@ -315,7 +322,7 @@ export default function AdminPage() {
                 </>
               )}
 
-              <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', margin: '24px 0 20px' }} />
+              <div style={{ height: 1, background: '#E5E7EB', margin: '24px 0 20px' }} />
 
               {/* ── Usuários ── */}
               <div style={S.h2}>Usuários — {selected.name}</div>
@@ -366,7 +373,7 @@ export default function AdminPage() {
                         <button style={S.btn} disabled={savingEdit} onClick={handleSaveEdit}>
                           {savingEdit ? 'Salvando...' : 'Salvar'}
                         </button>
-                        <button style={{ ...S.btn, background: 'none', border: '1px solid rgba(255,255,255,0.2)' }}
+                        <button style={{ ...S.btn, background: 'none', border: '1px solid #D1D5DB', color: '#374151' }}
                           disabled={savingEdit} onClick={() => setEditingUser(null)}>
                           Cancelar
                         </button>
@@ -376,15 +383,15 @@ export default function AdminPage() {
                     /* ── modo exibição ── */
                     <div key={u.id} style={{ ...S.row(false), cursor: 'default' }}>
                       <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600 }}>{u.name}</div>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>{u.name}</div>
                         <div style={S.muted}>{u.email} · {u.role}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         {u.is_active === false
-                          ? <span style={{ ...S.tag, background: 'rgba(239,68,68,0.12)', color: '#F87171' }}>inativo</span>
+                          ? <span style={{ ...S.tag, background: 'rgba(220,38,38,.12)', color: '#DC2626' }}>inativo</span>
                           : <span style={S.tag}>ativo</span>}
-                        <button style={S.act('#A78BFA')} disabled={busyUserId === u.id} onClick={() => startEdit(u)}>Editar</button>
-                        <button style={S.act('#38BDF8')} disabled={busyUserId === u.id} onClick={() => handleToggleActive(u)}>
+                        <button style={S.act('#6B7280')} disabled={busyUserId === u.id} onClick={() => startEdit(u)}>Editar</button>
+                        <button style={S.act('#6B7280')} disabled={busyUserId === u.id} onClick={() => handleToggleActive(u)}>
                           {u.is_active === false ? 'Ativar' : 'Desativar'}
                         </button>
                       </div>

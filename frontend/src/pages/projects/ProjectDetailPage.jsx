@@ -57,7 +57,7 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
   return (
     <div
       className="rounded-xl p-3 transition-all duration-150"
-      style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}
+      style={{ background: '#FAFAFA', border: '1px solid #E5E7EB' }}
     >
       <div className="flex items-start gap-3">
         {/* Checkbox */}
@@ -66,8 +66,8 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
           disabled={!canEdit}
           className="mt-0.5 shrink-0 h-5 w-5 rounded-md flex items-center justify-center transition-all duration-150"
           style={{
-            background: phase.is_completed ? '#7C5CFC' : 'rgba(255,255,255,0.06)',
-            border: `1px solid ${phase.is_completed ? '#7C5CFC' : 'rgba(255,255,255,0.15)'}`,
+            background: phase.is_completed ? '#374151' : '#FFFFFF',
+            border: `1px solid ${phase.is_completed ? '#374151' : '#D1D5DB'}`,
             cursor: canEdit ? 'pointer' : 'default'
           }}
         >
@@ -116,7 +116,7 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
                 </p>
               )}
               {phase.is_completed && phase.completed_by_name && (
-                <p className="text-xs mt-1" style={{ color: 'rgba(124,92,252,0.7)' }}>
+                <p className="text-xs mt-1" style={{ color: 'rgba(55,65,81,0.65)' }}>
                   ✓ Concluído por {phase.completed_by_name}
                 </p>
               )}
@@ -130,7 +130,7 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
               onClick={() => setEditing(true)}
               className="p-1.5 rounded-lg transition-all duration-150"
               style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; e.currentTarget.style.color = '#fff' }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#E5E7EB'; e.currentTarget.style.color = '#374151' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
             >
               <Edit size={13} />
@@ -139,7 +139,7 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
               onClick={() => onDelete(phase.id)}
               className="p-1.5 rounded-lg transition-all duration-150"
               style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,113,133,0.12)'; e.currentTarget.style.color = '#FB7185' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
             >
               <Trash2 size={13} />
@@ -188,19 +188,19 @@ function StageItem({ stage, projectId, onUpdate, canEdit }) {
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ border: '1px solid #E5E7EB' }}
     >
       {/* Header da etapa */}
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-between px-5 py-4 transition-all duration-150"
-        style={{ background: 'rgba(255,255,255,0.03)' }}
-        onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,92,252,0.06)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
+        style={{ background: '#FAFAFA' }}
+        onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+        onMouseLeave={e => e.currentTarget.style.background = '#FAFAFA'}
       >
         <div className="flex items-center gap-3">
           {expanded
-            ? <ChevronDown size={16} style={{ color: '#A78BFA' }} />
+            ? <ChevronDown size={16} style={{ color: '#6B7280' }} />
             : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
           }
           <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -211,8 +211,8 @@ function StageItem({ stage, projectId, onUpdate, canEdit }) {
           {totalCount > 0 && (
             <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
               style={{
-                background: completedCount === totalCount ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.06)',
-                color:      completedCount === totalCount ? '#34D399' : 'var(--text-muted)'
+                background: completedCount === totalCount ? 'rgba(22,163,74,0.10)' : '#F3F4F6',
+                color:      completedCount === totalCount ? '#16A34A' : 'var(--text-muted)'
               }}>
               {completedCount}/{totalCount}
             </span>
@@ -223,7 +223,7 @@ function StageItem({ stage, projectId, onUpdate, canEdit }) {
       {/* Fases */}
       {expanded && (
         <div className="px-5 py-4 space-y-2.5"
-          style={{ background: 'rgba(255,255,255,0.01)' }}>
+          style={{ background: '#FFFFFF' }}>
 
           {stage.phases?.length === 0 && (
             <p className="text-xs text-center py-3" style={{ color: 'var(--text-muted)' }}>
@@ -247,7 +247,7 @@ function StageItem({ stage, projectId, onUpdate, canEdit }) {
           {showAddForm && canEdit ? (
             <form onSubmit={handleAddPhase}
               className="p-3 rounded-xl space-y-2"
-              style={{ background: 'rgba(124,92,252,0.06)', border: '1px solid rgba(124,92,252,0.15)' }}>
+              style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}>
               <input
                 className="input text-sm py-1.5"
                 placeholder="Nome da fase *"
@@ -275,9 +275,9 @@ function StageItem({ stage, projectId, onUpdate, canEdit }) {
             <button
               onClick={() => setShowAddForm(true)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
-              style={{ color: 'var(--text-muted)', border: '1px dashed rgba(255,255,255,0.08)' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#A78BFA'; e.currentTarget.style.borderColor = 'rgba(124,92,252,0.25)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)' }}
+              style={{ color: 'var(--text-muted)', border: '1px dashed #D1D5DB' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#374151'; e.currentTarget.style.borderColor = 'rgba(55,65,81,0.30)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = '#D1D5DB' }}
             >
               <Plus size={13} /> Adicionar fase
             </button>
@@ -428,12 +428,12 @@ export default function ProjectDetailPage() {
       <div className="relative h-52 mb-6 group overflow-hidden" style={{ borderRadius: 24 }}>
         {project.cover_url
           ? <img src={project.cover_url} alt={project.title} className="w-full h-full object-cover" />
-          : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, rgba(124,92,252,0.30), rgba(56,189,248,0.12))' }} />
+          : <div className="w-full h-full" style={{ background: 'linear-gradient(135deg, rgba(55,65,81,0.16), rgba(2,132,199,0.06))' }} />
         }
         <label className="absolute inset-0 flex items-center justify-center cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-          style={{ background: 'rgba(5,8,22,0.55)', backdropFilter: 'blur(4px)' }}>
+          style={{ background: 'rgba(20,24,28,0.45)', backdropFilter: 'blur(4px)' }}>
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white"
-            style={{ background: 'rgba(124,92,252,0.30)', border: '1px solid rgba(124,92,252,0.40)' }}>
+            style={{ background: 'rgba(55,65,81,0.85)', border: '1px solid rgba(31,41,55,0.6)' }}>
             <Upload size={15} /> Alterar capa
           </div>
           <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
@@ -520,12 +520,12 @@ export default function ProjectDetailPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 p-1 rounded-2xl"
-        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'inline-flex' }}>
+        style={{ background: '#F3F4F6', border: '1px solid #E5E7EB', display: 'inline-flex' }}>
         {TABS.map(({ label, icon: Icon }, i) => (
           <button key={i} onClick={() => setTab(i)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150"
             style={tab === i
-              ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.25)' }
+              ? { background: '#FFFFFF', color: '#374151', border: '1px solid #D1D5DB' }
               : { color: 'var(--text-muted)', background: 'transparent', border: '1px solid transparent' }
             }>
             <Icon size={14} /> {label}
@@ -572,8 +572,8 @@ export default function ProjectDetailPage() {
           </div>
           {showAddMember && (
             <div className="mb-5 p-4 rounded-2xl"
-              style={{ background: 'rgba(124,92,252,0.06)', border: '1px solid rgba(124,92,252,0.15)' }}>
-              <p className="text-xs font-semibold mb-3" style={{ color: '#A78BFA' }}>Selecione para adicionar:</p>
+              style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}>
+              <p className="text-xs font-semibold mb-3" style={{ color: '#374151' }}>Selecione para adicionar:</p>
               {nonMembers.length === 0
                 ? <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Todos os membros já estão no projeto.</p>
                 : <div className="flex flex-wrap gap-2">
@@ -581,9 +581,9 @@ export default function ProjectDetailPage() {
                       <button key={u.id}
                         onClick={() => { handleAddMember(u.id); setShowAddMember(false) }}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.08)' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.15)'; e.currentTarget.style.color = '#A78BFA' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
+                        style={{ background: '#FFFFFF', color: 'var(--text-secondary)', border: '1px solid #E5E7EB' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.color = '#374151' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
                         <Avatar name={u.name} size="sm" /> {u.name}
                       </button>
                     ))}
@@ -597,19 +597,19 @@ export default function ProjectDetailPage() {
             )}
             {(project.members || []).map(m => (
               <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                style={{ background: '#FAFAFA', border: '1px solid #E5E7EB' }}>
                 <Avatar name={m.name} src={m.avatar_url} />
                 <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{m.name}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{m.position || m.role}</p>
                 </div>
                 <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                  style={{ background: 'rgba(124,92,252,0.10)', color: '#A78BFA' }}>{m.role}</span>
+                  style={{ background: 'rgba(55,65,81,0.08)', color: '#374151' }}>{m.role}</span>
                 {canEdit && (
                   <button onClick={() => setRemovingId(m.id)}
                     className="p-1.5 rounded-lg transition-all duration-150 ml-1"
                     style={{ color: 'var(--text-muted)' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(251,113,133,0.12)'; e.currentTarget.style.color = '#FB7185' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}>
                     <UserMinus size={14} />
                   </button>
@@ -635,8 +635,8 @@ export default function ProjectDetailPage() {
           </div>
           {files.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 rounded-2xl"
-              style={{ border: '1px dashed rgba(255,255,255,0.08)' }}>
-              <Paperclip size={28} style={{ color: 'rgba(255,255,255,0.15)', marginBottom: 10 }} />
+              style={{ border: '1px dashed #D1D5DB' }}>
+              <Paperclip size={28} style={{ color: '#D1D5DB', marginBottom: 10 }} />
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nenhum arquivo anexado</p>
             </div>
           ) : (
@@ -646,11 +646,11 @@ export default function ProjectDetailPage() {
     key={f.id}
     className="flex items-center gap-3 p-3 rounded-xl"
     style={{
-      background: 'rgba(255,255,255,0.025)',
-      border: '1px solid rgba(255,255,255,0.04)'
+      background: '#FAFAFA',
+      border: '1px solid #E5E7EB'
     }}
   >
-    <File size={16} style={{ color: '#A78BFA' }} />
+    <File size={16} style={{ color: '#374151' }} />
 
     <div className="flex-1 min-w-0">
       <p
@@ -676,8 +676,8 @@ export default function ProjectDetailPage() {
         rel="noopener noreferrer"
         className="text-xs px-2.5 py-1 rounded-lg font-semibold"
         style={{
-          background: 'rgba(124,92,252,0.10)',
-          color: '#A78BFA'
+          background: 'rgba(55,65,81,0.08)',
+          color: '#374151'
         }}
       >
         Abrir
@@ -697,7 +697,7 @@ export default function ProjectDetailPage() {
             Histórico de status
           </h3>
           <div className="relative pl-6">
-            <div className="absolute left-0 top-0 bottom-0 w-px" style={{ background: 'rgba(124,92,252,0.20)' }} />
+            <div className="absolute left-0 top-0 bottom-0 w-px" style={{ background: 'rgba(55,65,81,0.18)' }} />
             <div className="space-y-5">
               {history.length === 0 && (
                 <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nenhum histórico disponível.</p>
@@ -705,10 +705,10 @@ export default function ProjectDetailPage() {
               {history.map((h, i) => (
                 <div key={i} className="relative">
                   <div className="absolute -left-7 top-1 h-3 w-3 rounded-full"
-                    style={{ background: '#7C5CFC', boxShadow: '0 0 10px rgba(124,92,252,0.5)' }} />
+                    style={{ background: '#374151', boxShadow: '0 0 10px rgba(55,65,81,0.40)' }} />
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                     {h.from_status ? `${statusLabel[h.from_status]} → ` : 'Criado como '}
-                    <span style={{ color: '#A78BFA' }}>{statusLabel[h.to_status]}</span>
+                    <span style={{ color: '#374151' }}>{statusLabel[h.to_status]}</span>
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                     por {h.changed_by_name} · {formatDate(h.changed_at)}

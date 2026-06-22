@@ -22,11 +22,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#0D152B', border: '1px solid rgba(255,255,255,0.08)',
+      background: '#FFFFFF', border: '1px solid #E5E7EB',
       borderRadius: 12, padding: '10px 14px',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.45)', fontSize: 12,
+      boxShadow: '0 20px 40px rgba(20,24,28,0.18)', fontSize: 12,
     }}>
-      <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>{label}</p>
+      <p style={{ color: '#9CA3AF', marginBottom: 6, fontWeight: 600 }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600, marginBottom: 2 }}>
           {p.name}: {formatCurrency(p.value)}
@@ -48,9 +48,9 @@ const EmptyChart = ({ message }) => (
   <div style={{
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     height: 180, borderRadius: 12,
-    background: 'rgba(255,255,255,0.02)',
-    border: '1px dashed rgba(255,255,255,0.07)',
-    color: 'var(--text-muted)', fontSize: 13,
+    background: '#FAFAFA',
+    border: '1px dashed #D1D5DB',
+    color: '#9CA3AF', fontSize: 13,
   }}>
     {message}
   </div>
@@ -121,8 +121,8 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
     >
       <defs>
         <radialGradient id="floorGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%"   stopColor="rgba(120,80,255,0.5)" />
-          <stop offset="65%"  stopColor="rgba(80,40,200,0.18)" />
+          <stop offset="0%"   stopColor="rgba(107,114,128,0.35)" />
+          <stop offset="65%"  stopColor="rgba(107,114,128,0.12)" />
           <stop offset="100%" stopColor="rgba(0,0,0,0)" />
         </radialGradient>
         {segments.map((_, i) => (
@@ -174,7 +174,7 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
             <path
               d={arcPath(seg.start, seg.end, INNER_R, OUTER_R)}
               fill={seg.category_color}
-              stroke="rgba(255,255,255,0.08)"
+              stroke="rgba(255,255,255,0.6)"
               strokeWidth={1}
               filter={isH ? `url(#glow${i})` : undefined}
               style={{ transition: 'filter 0.18s' }}
@@ -209,10 +209,10 @@ const DonutChart = ({ categories, totalCat, formatCurrencyFn }) => {
             <rect
               x={tp.x - bw / 2} y={tp.y - bh / 2}
               width={bw} height={bh} rx={6}
-              fill="#0D152B"
+              fill="#FFFFFF"
               stroke={seg.category_color}
               strokeWidth={1}
-              opacity={0.95}
+              opacity={0.98}
             />
             <text
               x={tp.x} y={tp.y}
@@ -326,7 +326,7 @@ export default function FinancialPage() {
           position: relative;
           border-radius: 20px;
           overflow: hidden;
-          padding: 1px;
+          padding: 2.5px;
           transition: box-shadow 0.35s ease;
         }
 
@@ -347,69 +347,76 @@ export default function FinancialPage() {
           pointer-events: none;
         }
 
-        /* Card filho cobre o centro do disco — apenas a borda fica visível */
+        /* Card filho cobre o centro do disco — apenas a borda fica visível.
+           FIX: o card precisa de fundo OPACO e do próprio border-radius
+           para realmente tapar o disco; antes ele herdava um fundo
+           translúcido da classe global "card" (pensado pro tema escuro),
+           então o glow vazava por cima do conteúdo nos cantos arredondados.
+           Aqui forçamos opacidade explícita só neste componente. */
         .kpi-glow-wrap > *,
         .nav-glow-wrap > * {
           position: relative;
           z-index: 1;
+          background: #FFFFFF;
+          border-radius: 17.5px;
         }
 
         /* Ativa ao hover */
         .kpi-glow-wrap:hover::before,
         .nav-glow-wrap:hover::before {
           opacity: 1;
-          animation: kronosBorderSpin 2.5s linear infinite;
+          animation: kronosBorderSpin 4s linear infinite;
         }
 
         /* ── Cores — KPIs ── */
         .kpi-glow-wrap.glow-emerald::before {
-          background: conic-gradient(from 0deg, transparent 0%, #34D399 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #16A34A 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-emerald:hover {
-          box-shadow: 0 0 18px rgba(52,211,153,.35);
+          box-shadow: 0 0 18px rgba(22,163,74,.25);
         }
 
         .kpi-glow-wrap.glow-rose::before {
-          background: conic-gradient(from 0deg, transparent 0%, #FB7185 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #DC2626 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-rose:hover {
-          box-shadow: 0 0 18px rgba(251,113,133,.35);
+          box-shadow: 0 0 18px rgba(220,38,38,.25);
         }
 
         .kpi-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #34D399 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #16A34A 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-violet:hover {
-          box-shadow: 0 0 18px rgba(52,211,153,.35);
+          box-shadow: 0 0 18px rgba(22,163,74,.25);
         }
 
         .kpi-glow-wrap.glow-sky::before {
-          background: conic-gradient(from 0deg, transparent 0%, #38BDF8 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #0284C7 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-sky:hover {
-          box-shadow: 0 0 18px rgba(56,189,248,.35);
+          box-shadow: 0 0 18px rgba(2,132,199,.25);
         }
 
         /* ── Cores — Navegação ── */
         .nav-glow-wrap.glow-rose::before {
-          background: conic-gradient(from 0deg, transparent 0%, #FB7185 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #DC2626 14%, transparent 28%);
         }
         .nav-glow-wrap.glow-rose:hover {
-          box-shadow: 0 0 18px rgba(251,113,133,.35);
+          box-shadow: 0 0 18px rgba(220,38,38,.25);
         }
 
         .nav-glow-wrap.glow-emerald::before {
-          background: conic-gradient(from 0deg, transparent 0%, #34D399 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #16A34A 14%, transparent 28%);
         }
         .nav-glow-wrap.glow-emerald:hover {
-          box-shadow: 0 0 18px rgba(52,211,153,.35);
+          box-shadow: 0 0 18px rgba(22,163,74,.25);
         }
 
         .nav-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #7C5CFC 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, #374151 14%, transparent 28%);
         }
         .nav-glow-wrap.glow-violet:hover {
-          box-shadow: 0 0 18px rgba(124,92,252,.35);
+          box-shadow: 0 0 18px rgba(55,65,81,.25);
         }
       `}</style>
 
@@ -452,8 +459,8 @@ export default function FinancialPage() {
             label: 'Contas a Pagar',
             value: formatCompact(stats.expenses_pending),
             sub:   `${formatCompact(stats.expenses_overdue)} em atraso`,
-            accent: '#FB7185',
-            glow:   'rgba(251,113,133,0.08)',
+            accent: '#DC2626',
+            glow:   'rgba(220,38,38,0.06)',
             glowClass: 'glow-rose',
           },
           {
@@ -461,8 +468,8 @@ export default function FinancialPage() {
             label: 'Contas a Receber',
             value: formatCompact(stats.revenue_pending),
             sub:   `${formatCompact(stats.revenue_overdue)} em atraso`,
-            accent: '#34D399',
-            glow:   'rgba(52,211,153,0.08)',
+            accent: '#16A34A',
+            glow:   'rgba(22,163,74,0.06)',
             glowClass: 'glow-emerald',
           },
           {
@@ -470,8 +477,8 @@ export default function FinancialPage() {
             label: 'DRE',
             value: `Margem ${margin}%`,
             sub:   'Demonstrativo de resultados',
-            accent: '#7C5CFC',
-            glow:   'rgba(124,92,252,0.08)',
+            accent: '#374151',
+            glow:   'rgba(55,65,81,0.06)',
             glowClass: 'glow-violet',
           },
         ].map(item => (
@@ -479,17 +486,17 @@ export default function FinancialPage() {
             <Link
               to={item.to}
               className="card card-hover p-5 flex items-center justify-between"
-              style={{ boxShadow: `0 10px 30px rgba(0,0,0,0.35), 0 0 30px ${item.glow}` }}
+              style={{ boxShadow: `0 10px 30px rgba(20,24,28,0.10), 0 0 30px ${item.glow}` }}
             >
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1"
-                  style={{ color: 'var(--text-muted)' }}>
+                  style={{ color: '#9CA3AF' }}>
                   {item.label}
                 </p>
                 <p className="text-xl font-bold mb-0.5" style={{ color: item.accent }}>{item.value}</p>
-                <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>
+                <p className="text-xs" style={{ color: '#9CA3AF' }}>{item.sub}</p>
               </div>
-              <ArrowRight size={18} style={{ color: 'var(--text-muted)' }} />
+              <ArrowRight size={18} style={{ color: '#9CA3AF' }} />
             </Link>
           </div>
         ))}
@@ -500,8 +507,8 @@ export default function FinancialPage() {
         <div className="card p-6">
           <div className="mb-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-              style={{ color: 'var(--text-muted)' }}>Anual</p>
-            <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+              style={{ color: '#9CA3AF' }}>Anual</p>
+            <h3 className="text-base font-bold" style={{ color: '#374151' }}>
               Fluxo de Caixa
             </h3>
           </div>
@@ -509,21 +516,21 @@ export default function FinancialPage() {
             <AreaChart data={cashflow}>
               <defs>
                 <linearGradient id="gRev2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#34D399" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#34D399" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="#16A34A" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gExp2" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor="#FB7185" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#FB7185" stopOpacity={0} />
+                  <stop offset="5%"  stopColor="#DC2626" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip content={<CustomTooltip />} />
-              <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }} />
-              <Area type="monotone" dataKey="Receitas" stroke="#34D399" strokeWidth={2} fill="url(#gRev2)" dot={false} />
-              <Area type="monotone" dataKey="Despesas" stroke="#FB7185" strokeWidth={2} fill="url(#gExp2)" dot={false} />
+              <Legend wrapperStyle={{ fontSize: 12, color: '#6B7280' }} />
+              <Area type="monotone" dataKey="Receitas" stroke="#16A34A" strokeWidth={2} fill="url(#gRev2)" dot={false} />
+              <Area type="monotone" dataKey="Despesas" stroke="#DC2626" strokeWidth={2} fill="url(#gExp2)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -531,8 +538,8 @@ export default function FinancialPage() {
         <div className="card p-6">
           <div className="mb-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-              style={{ color: 'var(--text-muted)' }}>Mensal</p>
-            <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+              style={{ color: '#9CA3AF' }}>Mensal</p>
+            <h3 className="text-base font-bold" style={{ color: '#374151' }}>
               Lucro por Mês
             </h3>
           </div>
@@ -540,13 +547,13 @@ export default function FinancialPage() {
             <BarChart data={cashflow} barSize={24}>
               <defs>
                 <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%"   stopColor="#7C5CFC" />
-                  <stop offset="100%" stopColor="#4338ca" />
+                  <stop offset="0%"   stopColor="#6B7280" />
+                  <stop offset="100%" stopColor="#374151" />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="Lucro" radius={[8,8,0,0]} fill="url(#barGrad)" />
             </BarChart>
@@ -562,10 +569,10 @@ export default function FinancialPage() {
         {/* Cabeçalho da seção */}
         <div className="mb-5">
           <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-            style={{ color: 'var(--text-muted)' }}>
+            style={{ color: '#9CA3AF' }}>
             Projeção Financeira
           </p>
-          <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-base font-bold" style={{ color: '#374151' }}>
             Análise Avançada
           </h2>
         </div>
@@ -580,8 +587,8 @@ export default function FinancialPage() {
             className="card p-6"
             style={{
               background: `
-                radial-gradient(circle at top right, rgba(124,92,252,0.14), rgba(0,0,0,0) 45%),
-                var(--card-bg)
+                radial-gradient(circle at top right, rgba(107,114,128,0.08), rgba(0,0,0,0) 45%),
+                #FFFFFF
               `,
             }}
           >
@@ -589,10 +596,10 @@ export default function FinancialPage() {
             <div className="flex items-start justify-between mb-5 gap-3 flex-wrap">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-                  style={{ color: 'var(--text-muted)' }}>
+                  style={{ color: '#9CA3AF' }}>
                   Pagas
                 </p>
-                <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                <h3 className="text-base font-bold" style={{ color: '#374151' }}>
                   Despesas por Categoria
                 </h3>
               </div>
@@ -666,7 +673,7 @@ export default function FinancialPage() {
                         <p style={{
                           fontSize: 8.5,
                           fontWeight: 700,
-                          color: 'var(--text-muted)',
+                          color: '#9CA3AF',
                           textTransform: 'uppercase',
                           letterSpacing: '0.10em',
                           marginBottom: 4,
@@ -677,7 +684,7 @@ export default function FinancialPage() {
                         <p style={{
                           fontSize: 11,
                           fontWeight: 800,
-                          color: 'var(--text-primary)',
+                          color: '#374151',
                           lineHeight: 1.2,
                           wordBreak: 'break-all',
                         }}>
@@ -709,7 +716,7 @@ export default function FinancialPage() {
                             gap: 8,
                             padding: '7px 0',
                             borderBottom: i < categories.length - 1
-                              ? '1px solid rgba(255,255,255,0.04)'
+                              ? '1px solid #F3F4F6'
                               : 'none',
                           }}
                         >
@@ -720,13 +727,13 @@ export default function FinancialPage() {
                               height: 8,
                               borderRadius: '50%',
                               background: cat.category_color,
-                              boxShadow: `0 0 8px ${cat.category_color}`,
+                              boxShadow: `0 0 8px ${cat.category_color}66`,
                               flexShrink: 0,
                             }} />
                             <span style={{
                               fontSize: 11.5,
                               fontWeight: 600,
-                              color: 'var(--text-primary)',
+                              color: '#374151',
                               whiteSpace: 'nowrap',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
@@ -737,7 +744,7 @@ export default function FinancialPage() {
 
                           {/* Valor + % */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                            <span style={{ fontSize: 11, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: 11, color: '#9CA3AF', whiteSpace: 'nowrap' }}>
                               {formatCurrency(cat.total)}
                             </span>
                             <span style={{
@@ -759,10 +766,10 @@ export default function FinancialPage() {
                 {/* Rodapé informativo */}
                 <p style={{
                   fontSize: 11,
-                  color: 'var(--text-muted)',
+                  color: '#9CA3AF',
                   textAlign: 'center',
                   marginTop: 18,
-                  opacity: 0.55,
+                  opacity: 0.85,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -780,10 +787,10 @@ export default function FinancialPage() {
           <div className="card p-6">
             <div className="mb-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-                style={{ color: 'var(--text-muted)' }}>
+                style={{ color: '#9CA3AF' }}>
                 Pendências futuras
               </p>
-              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-base font-bold" style={{ color: '#374151' }}>
                 Saldo Projetado
               </h3>
             </div>
@@ -797,26 +804,26 @@ export default function FinancialPage() {
                   display: 'flex', alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '16px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: '1px solid #F3F4F6',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
-                      background: 'rgba(52,211,153,0.10)',
+                      background: 'rgba(22,163,74,0.10)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <TrendingUp size={16} style={{ color: '#34D399' }} />
+                      <TrendingUp size={16} style={{ color: '#16A34A' }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 1 }}>
+                      <p style={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 1 }}>
                         Receitas previstas
                       </p>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: '#34D399', lineHeight: 1 }}>
+                      <p style={{ fontSize: 18, fontWeight: 700, color: '#16A34A', lineHeight: 1 }}>
                         {formatCompact(totalForecastRevenues)}
                       </p>
                     </div>
                   </div>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: 11, color: '#9CA3AF' }}>
                     {forecast.revenues.length} {forecast.revenues.length === 1 ? 'mês' : 'meses'}
                   </span>
                 </div>
@@ -826,26 +833,26 @@ export default function FinancialPage() {
                   display: 'flex', alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '16px 0',
-                  borderBottom: '1px solid rgba(255,255,255,0.05)',
+                  borderBottom: '1px solid #F3F4F6',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
-                      background: 'rgba(251,113,133,0.10)',
+                      background: 'rgba(220,38,38,0.10)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <TrendingDown size={16} style={{ color: '#FB7185' }} />
+                      <TrendingDown size={16} style={{ color: '#DC2626' }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 1 }}>
+                      <p style={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 1 }}>
                         Despesas previstas
                       </p>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: '#FB7185', lineHeight: 1 }}>
+                      <p style={{ fontSize: 18, fontWeight: 700, color: '#DC2626', lineHeight: 1 }}>
                         {formatCompact(totalForecastExpenses)}
                       </p>
                     </div>
                   </div>
-                  <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                  <span style={{ fontSize: 11, color: '#9CA3AF' }}>
                     {forecast.expenses.length} {forecast.expenses.length === 1 ? 'mês' : 'meses'}
                   </span>
                 </div>
@@ -859,18 +866,18 @@ export default function FinancialPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
-                      background: projectedBalance >= 0 ? 'rgba(124,92,252,0.12)' : 'rgba(251,113,133,0.10)',
+                      background: projectedBalance >= 0 ? 'rgba(55,65,81,0.10)' : 'rgba(220,38,38,0.10)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Scale size={16} style={{ color: projectedBalance >= 0 ? '#A78BFA' : '#FB7185' }} />
+                      <Scale size={16} style={{ color: projectedBalance >= 0 ? '#374151' : '#DC2626' }} />
                     </div>
                     <div>
-                      <p style={{ fontSize: 10.5, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 1 }}>
+                      <p style={{ fontSize: 10.5, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.10em', marginBottom: 1 }}>
                         Saldo projetado
                       </p>
                       <p style={{
                         fontSize: 22, fontWeight: 700, lineHeight: 1,
-                        color: projectedBalance >= 0 ? '#A78BFA' : '#FB7185',
+                        color: projectedBalance >= 0 ? '#374151' : '#DC2626',
                       }}>
                         {formatCompact(projectedBalance)}
                       </p>
@@ -880,9 +887,9 @@ export default function FinancialPage() {
                     fontSize: 11, fontWeight: 600, padding: '3px 10px',
                     borderRadius: 20,
                     background: projectedBalance >= 0
-                      ? 'rgba(52,211,153,0.10)' : 'rgba(251,113,133,0.10)',
-                    color: projectedBalance >= 0 ? '#34D399' : '#FB7185',
-                    border: `1px solid ${projectedBalance >= 0 ? 'rgba(52,211,153,0.20)' : 'rgba(251,113,133,0.20)'}`,
+                      ? 'rgba(22,163,74,0.10)' : 'rgba(220,38,38,0.10)',
+                    color: projectedBalance >= 0 ? '#16A34A' : '#DC2626',
+                    border: `1px solid ${projectedBalance >= 0 ? 'rgba(22,163,74,0.25)' : 'rgba(220,38,38,0.25)'}`,
                   }}>
                     {projectedBalance >= 0 ? 'Positivo' : 'Negativo'}
                   </span>
@@ -899,10 +906,10 @@ export default function FinancialPage() {
           <div className="card p-6">
             <div className="mb-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-                style={{ color: 'var(--text-muted)' }}>
+                style={{ color: '#9CA3AF' }}>
                 Pendentes
               </p>
-              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-base font-bold" style={{ color: '#374151' }}>
                 Previsão de Despesas
               </h3>
             </div>
@@ -916,18 +923,18 @@ export default function FinancialPage() {
                 <BarChart data={forecastExpData} barSize={22}>
                   <defs>
                     <linearGradient id="gradExp" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#FB7185" stopOpacity={0.90} />
-                      <stop offset="100%" stopColor="#e11d48" stopOpacity={0.60} />
+                      <stop offset="0%"   stopColor="#DC2626" stopOpacity={0.90} />
+                      <stop offset="100%" stopColor="#991B1B" stopOpacity={0.60} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.35)' }}
+                    tick={{ fontSize: 11, fill: '#9CA3AF' }}
                     axisLine={false} tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }}
+                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
                     axisLine={false} tickLine={false}
                     tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
                   />
@@ -942,10 +949,10 @@ export default function FinancialPage() {
           <div className="card p-6">
             <div className="mb-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-                style={{ color: 'var(--text-muted)' }}>
+                style={{ color: '#9CA3AF' }}>
                 Pendentes
               </p>
-              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+              <h3 className="text-base font-bold" style={{ color: '#374151' }}>
                 Previsão de Receitas
               </h3>
             </div>
@@ -959,18 +966,18 @@ export default function FinancialPage() {
                 <BarChart data={forecastRevData} barSize={22}>
                   <defs>
                     <linearGradient id="gradRev" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%"   stopColor="#34D399" stopOpacity={0.90} />
-                      <stop offset="100%" stopColor="#059669" stopOpacity={0.60} />
+                      <stop offset="0%"   stopColor="#16A34A" stopOpacity={0.90} />
+                      <stop offset="100%" stopColor="#15803D" stopOpacity={0.60} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                   <XAxis
                     dataKey="name"
-                    tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.35)' }}
+                    tick={{ fontSize: 11, fill: '#9CA3AF' }}
                     axisLine={false} tickLine={false}
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }}
+                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
                     axisLine={false} tickLine={false}
                     tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
                   />

@@ -25,12 +25,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: 'rgba(13,21,43,0.92)', border: '1px solid rgba(255,255,255,0.10)',
+      background: '#FFFFFF', border: '1px solid #E5E7EB',
       borderRadius: 12, padding: '10px 14px',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.45)', fontSize: 12,
-      backdropFilter: 'blur(12px)',
+      boxShadow: '0 20px 40px rgba(20,24,28,0.18)', fontSize: 12,
     }}>
-      <p style={{ color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 600 }}>{label}</p>
+      <p style={{ color: '#9CA3AF', marginBottom: 6, fontWeight: 600 }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600, marginBottom: 2 }}>
           {p.name}: {formatCurrency(p.value)}
@@ -40,20 +39,23 @@ const CustomTooltip = ({ active, payload, label }) => {
   )
 }
 
-/* ── Estilos de glassmorphism inline reutilizáveis ── */
+/* ── Estilos de glassmorphism inline reutilizáveis ──
+   Substituídos pelo equivalente "elevação sólida" do tema claro:
+   fundo quase branco com leve diferenciação + borda cinza visível,
+   no lugar de transparências pensadas para fundo escuro. */
 const glassRow = {
-  background: 'rgba(255,255,255,0.030)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderTop: '1px solid rgba(255,255,255,0.11)',
+  background: '#FAFAFA',
+  border: '1px solid #E5E7EB',
+  borderTop: '1px solid #E5E7EB',
 }
 
 const glassRowHoverEnter = (e) => {
-  e.currentTarget.style.background  = 'rgba(124,92,252,0.07)'
-  e.currentTarget.style.borderColor = 'rgba(124,92,252,0.18)'
+  e.currentTarget.style.background  = '#F3F4F6'
+  e.currentTarget.style.borderColor = '#D1D5DB'
 }
 const glassRowHoverLeave = (e) => {
   e.currentTarget.style.background  = glassRow.background
-  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+  e.currentTarget.style.borderColor = '#E5E7EB'
 }
 
 export default function DashboardPage() {
@@ -98,11 +100,84 @@ export default function DashboardPage() {
   return (
     <div className="space-y-7 fade-in">
 
+      {/* ── Estilos da borda luminosa nos KPIs (mesma técnica da FinancialPage) ── */}
+      <style>{`
+        @keyframes kronosBorderSpin {
+          from { transform: translate(-50%, -50%) rotate(0deg);   }
+          to   { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .kpi-glow-wrap {
+          position: relative;
+          border-radius: 20px;
+          overflow: hidden;
+          padding: 2.5px;
+          transition: box-shadow 0.35s ease;
+        }
+
+        .kpi-glow-wrap::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(0deg);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          will-change: transform, opacity;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        /* Card filho cobre o centro do disco — fundo opaco obrigatório
+           para a borda não vazar por cima do conteúdo nos cantos. */
+        .kpi-glow-wrap > * {
+          position: relative;
+          z-index: 1;
+          background: #FFFFFF;
+          border-radius: 17.5px;
+        }
+
+        .kpi-glow-wrap:hover::before {
+          opacity: 1;
+          animation: kronosBorderSpin 4s linear infinite;
+        }
+
+        .kpi-glow-wrap.glow-emerald::before {
+          background: conic-gradient(from 0deg, transparent 0%, #16A34A 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-emerald:hover {
+          box-shadow: 0 0 18px rgba(22,163,74,.25);
+        }
+
+        .kpi-glow-wrap.glow-violet::before {
+          background: conic-gradient(from 0deg, transparent 0%, #374151 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-violet:hover {
+          box-shadow: 0 0 18px rgba(55,65,81,.25);
+        }
+
+        .kpi-glow-wrap.glow-amber::before {
+          background: conic-gradient(from 0deg, transparent 0%, #D97706 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-amber:hover {
+          box-shadow: 0 0 18px rgba(217,119,6,.25);
+        }
+
+        .kpi-glow-wrap.glow-sky::before {
+          background: conic-gradient(from 0deg, transparent 0%, #0284C7 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-sky:hover {
+          box-shadow: 0 0 18px rgba(2,132,199,.25);
+        }
+      `}</style>
+
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Zap size={16} style={{ color: '#c5a30d' }} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#c5a30d' }}>
+          <Zap size={16} style={{ color: '#374151' }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#374151' }}>
             Visão Executiva
           </span>
         </div>
@@ -119,12 +194,20 @@ export default function DashboardPage() {
       {/* ── Navegações Rápidas ───────────────────────────────────────── */}
       <QuickActions onActionSuccess={loadDashboard} />
 
-      {/* ── KPIs ──────────────────────────────────────────────────────── */}
+      {/* ── KPIs — com borda luminosa ─────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Receita do Mês"     value={formatCompact(netRevenue)}            icon={DollarSign}  color="green"  subtitle="Recebimentos confirmados" />
-        <StatCard title="Projetos Ativos"    value={projects.length}                      icon={FolderKanban}color="purple" subtitle="Em andamento agora" />
-        <StatCard title="Despesas a Vencer"  value={formatCompact(stats.expenses_pending)} icon={AlertCircle} color="yellow" subtitle={`${formatCompact(stats.expenses_overdue)} em atraso`} />
-        <StatCard title="Receitas a Receber" value={formatCompact(stats.revenue_pending)}  icon={TrendingUp}  color="blue"   subtitle={`${formatCompact(stats.revenue_overdue)} em atraso`} />
+        <div className="kpi-glow-wrap glow-emerald">
+          <StatCard title="Receita do Mês"     value={formatCompact(netRevenue)}            icon={DollarSign}  color="green"  subtitle="Recebimentos confirmados" />
+        </div>
+        <div className="kpi-glow-wrap glow-violet">
+          <StatCard title="Projetos Ativos"    value={projects.length}                      icon={FolderKanban}color="purple" subtitle="Em andamento agora" />
+        </div>
+        <div className="kpi-glow-wrap glow-amber">
+          <StatCard title="Despesas a Vencer"  value={formatCompact(stats.expenses_pending)} icon={AlertCircle} color="yellow" subtitle={`${formatCompact(stats.expenses_overdue)} em atraso`} />
+        </div>
+        <div className="kpi-glow-wrap glow-sky">
+          <StatCard title="Receitas a Receber" value={formatCompact(stats.revenue_pending)}  icon={TrendingUp}  color="blue"   subtitle={`${formatCompact(stats.revenue_overdue)} em atraso`} />
+        </div>
       </div>
 
       {/* ── Projetos + Resumo ──────────────────────────────────────────── */}
@@ -142,7 +225,7 @@ export default function DashboardPage() {
             </div>
             <Link to="/app/projects"
               className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#ffffff' }}>
+              style={{ color: '#374151' }}>
               Ver todos <ArrowRight size={13} />
             </Link>
           </div>
@@ -195,14 +278,14 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-1">
             {[
-              { label: 'Receita',       value: netRevenue,             color: '#34D399' },
-              { label: 'Despesas',      value: netExpense,             color: '#FB7185' },
-              { label: 'Lucro líquido', value: netProfit,              color: netProfit >= 0 ? '#34D399' : '#FB7185', bold: true },
-              { label: 'A pagar',       value: stats.expenses_pending, color: 'var(--text-secondary)' },
-              { label: 'A receber',     value: stats.revenue_pending,  color: 'var(--text-secondary)' },
+              { label: 'Receita',       value: netRevenue,             color: '#16A34A' },
+              { label: 'Despesas',      value: netExpense,             color: '#DC2626' },
+              { label: 'Lucro líquido', value: netProfit,              color: netProfit >= 0 ? '#16A34A' : '#DC2626', bold: true },
+              { label: 'A pagar',       value: stats.expenses_pending, color: '#D97706' },
+              { label: 'A receber',     value: stats.revenue_pending,  color: '#0284C7' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between py-3"
-                style={{ borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                style={{ borderBottom: i < 4 ? '1px solid #E5E7EB' : 'none' }}>
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
                 <span className="text-sm" style={{ color: item.color, fontWeight: item.bold ? 700 : 600 }}>
                   {formatCurrency(item.value)}
@@ -213,14 +296,14 @@ export default function DashboardPage() {
           <Link to="/app/financial"
             className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
             style={{
-              background: 'rgba(124,92,252,0.10)',
-              border: '1px solid rgba(201, 187, 255, 0.22)',
+              background: '#374151',
+              border: '1px solid #1f2937',
               color: '#ffffff',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.18)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.10)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = '#1f2937' }}
+            onMouseLeave={e => { e.currentTarget.style.background = '#374151' }}
           >
-            Ver financeiro completo <ArrowRight size={13} />
+            Financeiro completo <ArrowRight size={13} />
           </Link>
         </div>
       </div>
@@ -238,22 +321,22 @@ export default function DashboardPage() {
           <AreaChart data={cashflow} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
             <defs>
               <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#34D399" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#34D399" stopOpacity={0} />
+                <stop offset="5%"  stopColor="#16A34A" stopOpacity={0.30} />
+                <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#FB7185" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#FB7185" stopOpacity={0} />
+                <stop offset="5%"  stopColor="#DC2626" stopOpacity={0.30} />
+                <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.35)' }} axisLine={false} tickLine={false}
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false}
               tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12, color: 'rgba(255,255,255,0.5)' }} />
-            <Area type="monotone" dataKey="Receitas" stroke="#34D399" strokeWidth={2} fill="url(#gRev)" dot={false} />
-            <Area type="monotone" dataKey="Despesas" stroke="#FB7185" strokeWidth={2} fill="url(#gExp)" dot={false} />
+            <Legend wrapperStyle={{ fontSize: 12, color: '#6B7280' }} />
+            <Area type="monotone" dataKey="Receitas" stroke="#16A34A" strokeWidth={2} fill="url(#gRev)" dot={false} />
+            <Area type="monotone" dataKey="Despesas" stroke="#DC2626" strokeWidth={2} fill="url(#gExp)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -272,7 +355,7 @@ export default function DashboardPage() {
               </h3>
             </div>
             <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#ffffff' }}>
+              style={{ color: '#374151' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
@@ -285,7 +368,7 @@ export default function DashboardPage() {
             {tasks.map(t => (
               <Link key={t.id} to={`/app/tasks/${t.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.04)'}
+                onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 <div className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`} />
                 <div className="flex-1 min-w-0">
@@ -315,18 +398,18 @@ export default function DashboardPage() {
               </h3>
             </div>
             <Link to="/app/financial/expenses" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#ffffff' }}>
+              style={{ color: '#374151' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
           <div className="space-y-1">
             {[
-              { label: 'A pagar total', sub: 'Pendente',    value: stats.expenses_pending, color: '#FBBF24' },
-              { label: 'Em atraso',     sub: 'Vencidas',    value: stats.expenses_overdue, color: '#FB7185' },
-              { label: 'Pago este mês', sub: 'Confirmados', value: stats.expenses_month,   color: '#34D399' },
+              { label: 'A pagar total', sub: 'Pendente',    value: stats.expenses_pending, color: '#D97706' },
+              { label: 'Em atraso',     sub: 'Vencidas',    value: stats.expenses_overdue, color: '#DC2626' },
+              { label: 'Pago este mês', sub: 'Confirmados', value: stats.expenses_month,   color: '#16A34A' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between py-3"
-                style={{ borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+                style={{ borderBottom: i < 2 ? '1px solid #E5E7EB' : 'none' }}>
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.label}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>
