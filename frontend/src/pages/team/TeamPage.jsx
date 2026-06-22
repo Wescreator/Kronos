@@ -13,9 +13,9 @@ import api from '../../services/api'
 
 const ROLE_LABELS = { admin: 'Administrador', manager: 'Arquiteto', member: 'Estagiário' }
 const ROLE_STYLES = {
-  admin:   { background: 'rgba(167,139,250,0.12)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' },
-  manager: { background: 'rgba(56,189,248,0.10)',  color: '#38BDF8', border: '1px solid rgba(56,189,248,0.20)' },
-  member:  { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.10)' },
+  admin:   { background: 'rgb(170, 170, 170)', color: '#ffffff', border: '1px solid rgba(126, 126, 126, 0)' },
+  manager: { background: 'rgba(8, 66, 90, 0.81)',  color: '#38BDF8', border: '1px solid rgba(56,189,248,0.20)' },
+  member:  { background: 'rgb(170, 170, 170)', color: '#ffffff', border: '1px solid rgba(126, 126, 126, 0)' },
 }
 
 export default function TeamPage() {

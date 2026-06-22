@@ -10,7 +10,7 @@ import { toast } from 'react-hot-toast'
 
 const ROLE_LABELS = { admin: 'Administrador', manager: 'Gerente', member: 'Membro' }
 const ROLE_STYLES = {
-  admin:   { background: 'rgba(167,139,250,0.12)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' },
+  admin:   { background: 'rgba(180, 180, 180, 0.55)', color: '#ffffff', border: '1px solid rgba(70, 70, 70, 0.25)' },
   manager: { background: 'rgba(56,189,248,0.10)',  color: '#38BDF8', border: '1px solid rgba(56,189,248,0.20)' },
   member:  { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.10)' },
 }
@@ -89,7 +89,7 @@ export default function TeamMemberPage() {
         onClick={() => navigate('/app/team')}
         className="flex items-center gap-2 text-sm mb-5 transition-colors"
         style={{ color: 'var(--text-muted)' }}
-        onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+        onMouseEnter={e => e.currentTarget.style.color = '#222222'}
         onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
       >
         <ArrowLeft size={15} /> Voltar para Equipe
@@ -107,8 +107,8 @@ export default function TeamMemberPage() {
                 <div
                   className="w-full h-full flex items-center justify-center text-2xl font-bold"
                   style={{
-                    background: 'linear-gradient(135deg, rgba(124,92,252,0.3), rgba(124,92,252,0.12))',
-                    color: '#A78BFA'
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(124, 124, 124, 0.12))',
+                    color: '#ffffff'
                   }}
                 >
                   {user.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
@@ -117,7 +117,7 @@ export default function TeamMemberPage() {
             </div>
             <label
               className="absolute inset-0 flex items-center justify-center rounded-full cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(2px)' }}
+              style={{ background: 'rgba(94, 94, 94, 0.55)', backdropFilter: 'blur(2px)' }}
             >
               <Upload size={16} className="text-white" />
               <input type="file" accept="image/*" className="hidden" onChange={handleAvatar} />
@@ -257,9 +257,9 @@ export default function TeamMemberPage() {
             disabled={savingStatus}
             className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
             style={isActive ? {
-              background: 'rgba(251,113,133,0.10)',
-              border: '1px solid rgba(251,113,133,0.25)',
-              color: '#FB7185',
+              background: 'rgba(255, 0, 38, 0.53)',
+              border: '1px solid rgb(250, 0, 37)',
+              color: '#ffffff',
             } : {
               background: 'rgba(52,211,153,0.10)',
               border: '1px solid rgba(52,211,153,0.25)',

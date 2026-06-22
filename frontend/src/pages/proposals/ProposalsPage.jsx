@@ -77,7 +77,7 @@ function ProposalCard({ proposal, idx }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
-            color: '#A78BFA', textTransform: 'uppercase',
+            color: '#ffffff', textTransform: 'uppercase',
           }}>
             {proposal.proposal_number}
           </span>
@@ -202,7 +202,7 @@ export default function ProposalsPage() {
       {!loading && proposals.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
           {[
-            { label: 'Total',      value: stats.total,    icon: <Layers size={17} />,       iconBg: 'rgba(124,92,252,0.12)', iconColor: '#A78BFA', valueColor: 'var(--text-primary)' },
+            { label: 'Total',      value: stats.total,    icon: <Layers size={17} />,       iconBg: 'rgba(170, 170, 170, 0.27)', iconColor: '#ffffff', valueColor: 'var(--text-primary)' },
             { label: 'Rascunhos',  value: stats.draft,    icon: <Clock size={17} />,         iconBg: 'rgba(255,255,255,0.06)', iconColor: 'rgba(255,255,255,0.40)', valueColor: 'var(--text-secondary)' },
             { label: 'Enviadas',   value: stats.sent,     icon: <Send size={17} />,          iconBg: 'rgba(56,189,248,0.10)', iconColor: '#38BDF8', valueColor: '#38BDF8' },
             { label: 'Aprovadas',  value: stats.approved, icon: <CheckCircle2 size={17} />,  iconBg: 'rgba(52,211,153,0.10)', iconColor: '#34D399', valueColor: '#34D399' },
@@ -230,7 +230,7 @@ export default function ProposalsPage() {
           className="prop-search relative"
           style={{ flex: '1 1 0%', maxWidth: 340, background: 'rgba(255,255,255,0.04)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)' }}
         >
-          <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+          <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-primary)', pointerEvents: 'none' }} />
           <input
             style={{ width: '100%', background: 'transparent', paddingLeft: 38, paddingRight: 16, paddingTop: 10, paddingBottom: 10, fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }}
             placeholder="Buscar por número, título ou cliente..."
@@ -246,8 +246,8 @@ export default function ProposalsPage() {
               onClick={() => setStatusFilter(f.value)}
               className="prop-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={statusFilter === f.value
-                ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+                ? { background: 'rgba(90, 90, 90, 0.29)', color: '#ffffff', border: '1px solid rgba(90, 90, 90, 0.3)' }
+                : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.06)' }
               }
             >
               {f.label}

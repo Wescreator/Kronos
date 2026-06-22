@@ -21,9 +21,9 @@ export default function Avatar({ src, name = '', size = 'md' }) {
     <div
       className={`${s.box} ${s.text} rounded-full flex items-center justify-center font-bold shrink-0`}
       style={{
-        background: 'linear-gradient(135deg, rgba(124,92,252,0.3), rgba(124,92,252,0.12))',
-        border: '1px solid rgba(124,92,252,0.25)',
-        color: '#A78BFA'
+        background: 'linear-gradient(135deg, rgba(172, 172, 172, 0.3), rgba(87, 87, 87, 0.12))',
+        border: '1px solid rgba(68, 68, 68, 0)',
+        color: '#c4c4c4'
       }}
     >
       {initials}

@@ -14,7 +14,7 @@ export default function AppLayout() {
       {/* ── Background decorativo (fixed, atrás de tudo) ─────────────────── */}
       <div
         className="pointer-events-none fixed inset-0 -z-10"
-        style={{ background: '#0A0A0A' }}
+        style={{ background: '#b1b1b1' }}
       >
 
         {/* Vinheta nas bordas — profundidade sutil */}
@@ -42,32 +42,6 @@ export default function AppLayout() {
             filter: 'blur(80px)',
           }}
         />
-
-        <div className="kronos-fog" />
-        <div className="kronos-depth-lines" />
-        <div className="kronos-depth-grid" />
-
-        {/* Logo Kronos — marca d'água central */}
-        <div className="absolute inset-0 flex items-center justify-center px-6">
-          <img
-            src={kronosLogo}
-            alt=""
-            aria-hidden="true"
-            className="
-              w-[380px]
-              sm:w-[480px]
-              lg:w-[580px]
-              xl:w-[680px]
-              object-contain
-              select-none
-            "
-            style={{
-              opacity: 0.03,
-              filter: 'brightness(3) saturate(0)',
-            }}
-            draggable={false}
-          />
-        </div>
       </div>
 
       <Topbar />

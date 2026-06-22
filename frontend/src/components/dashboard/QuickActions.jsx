@@ -12,14 +12,15 @@ import ProposalFormModal   from '../modals/ProposalFormModal'
 
 /* ── Mesmos estilos de glassmorphism usados na Dashboard ── */
 const tileStyle = {
-  background: 'rgba(255,255,255,0.030)',
-  border: '1px solid rgba(255,255,255,0.07)',
-  borderTop: '1px solid rgba(255,255,255,0.11)',
+  background: '#55555500', // Fundo cinza neutro
+  border: '1px solid rgba(255,255,255,0.07)', // Borda sutil
+  border: '1px solid rgba(63, 63, 63, 0.07)',
+  borderTop: '1px solid rgba(63, 63, 63, 0.07)',
 }
 
 const tileHoverEnter = (e) => {
-  e.currentTarget.style.background  = 'rgba(124,92,252,0.07)'
-  e.currentTarget.style.borderColor = 'rgba(124,92,252,0.18)'
+  e.currentTarget.style.background  = 'rgba(46, 46, 46, 0.22)'
+  e.currentTarget.style.borderColor = 'rgba(46, 46, 46, 0.22)'
 }
 const tileHoverLeave = (e) => {
   e.currentTarget.style.background  = tileStyle.background

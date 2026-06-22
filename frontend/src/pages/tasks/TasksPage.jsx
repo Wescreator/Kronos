@@ -83,8 +83,8 @@ export default function TasksPage() {
           <button key={f.value} onClick={() => setFilters({ ...filters, status: f.value })}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={filters.status === f.value
-              ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-              : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+              ? { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(124,92,252,0.30)' }
+              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.06)' }
             }>
             {f.label}
           </button>
@@ -94,8 +94,8 @@ export default function TasksPage() {
           <button key={f.value} onClick={() => setFilters({ ...filters, priority: f.value })}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={filters.priority === f.value
-              ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-              : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+              ? { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(124,92,252,0.30)' }
+              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.06)' }
             }>
             {f.label}
           </button>

@@ -16,10 +16,10 @@ import { can }       from '../../utils/permissions'
 
 const STATUS_META = {
   draft:    { label: 'Rascunho',  color: 'rgba(255,255,255,0.08)', text: 'rgba(255,255,255,0.55)', icon: Clock },
-  sent:     { label: 'Enviada',   color: 'rgba(56,189,248,0.12)',  text: '#38BDF8',                icon: Send },
-  approved: { label: 'Aprovada',  color: 'rgba(52,211,153,0.12)',  text: '#34D399',                icon: CheckCircle2 },
-  rejected: { label: 'Rejeitada', color: 'rgba(251,113,133,0.12)', text: '#FB7185',                icon: XCircle },
-  expired:  { label: 'Expirada',  color: 'rgba(251,191,36,0.12)',  text: '#FBBF24',                icon: AlertCircle },
+  sent:     { label: 'Enviada',   color: 'rgba(56, 191, 248, 0.02)',  text: '#38BDF8',                icon: Send },
+  approved: { label: 'Aprovada',  color: 'rgba(52, 211, 153, 0.06)',  text: '#34D399',                icon: CheckCircle2 },
+  rejected: { label: 'Rejeitada', color: 'rgba(251, 113, 134, 0.07)', text: '#FB7185',                icon: XCircle },
+  expired:  { label: 'Expirada',  color: 'rgba(251, 190, 36, 0.05)',  text: '#FBBF24',                icon: AlertCircle },
 }
 
 const STATUS_OPTIONS = [
@@ -350,7 +350,7 @@ export default function ProposalDetailPage() {
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#A78BFA', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#ffffff', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 {proposal.proposal_number}
               </span>
               <StatusBadge status={proposal.status} />

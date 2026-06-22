@@ -23,22 +23,24 @@ const STATUS_FILTERS = [
   { value: 'cancelled',   label: 'Cancelado'    },
 ]
 
-/* Gradiente do placeholder de capa por status */
+/* Gradiente do placeholder de capa por status — recalibrado para o
+   sistema cinza metálico. Roxo (acento decorativo antigo) neutralizado
+   para cinza; verde/âmbar/vermelho mantidos como cores semânticas. */
 const COVER_GRADIENT = {
-  in_progress: 'linear-gradient(140deg, rgba(124,92,252,0.32) 0%, rgba(67,56,202,0.10) 100%)',
-  completed:   'linear-gradient(140deg, rgba(52,211,153,0.28) 0%, rgba(5,150,105,0.08)  100%)',
-  paused:      'linear-gradient(140deg, rgba(251,191,36,0.28) 0%, rgba(245,158,11,0.08) 100%)',
-  cancelled:   'linear-gradient(140deg, rgba(251,113,133,0.24) 0%, rgba(220,38,38,0.08) 100%)',
-  default:     'linear-gradient(140deg, rgba(124,92,252,0.22) 0%, rgba(124,92,252,0.05) 100%)',
+  in_progress: 'linear-gradient(140deg, rgba(55,65,81,0.16) 0%, rgba(55,65,81,0.04) 100%)',
+  completed:   'linear-gradient(140deg, rgba(22,163,74,0.16) 0%, rgba(5,150,105,0.04)  100%)',
+  paused:      'linear-gradient(140deg, rgba(217,119,6,0.16) 0%, rgba(180,83,9,0.04) 100%)',
+  cancelled:   'linear-gradient(140deg, rgba(220,38,38,0.14) 0%, rgba(185,28,28,0.04) 100%)',
+  default:     'linear-gradient(140deg, rgba(55,65,81,0.12) 0%, rgba(55,65,81,0.03) 100%)',
 }
 
 /* Cor do ícone no placeholder por status */
 const COVER_ICON_COLOR = {
-  in_progress: '#A78BFA',
-  completed:   '#34D399',
-  paused:      '#FBBF24',
-  cancelled:   '#FB7185',
-  default:     'rgba(124,92,252,0.55)',
+  in_progress: '#6B7280',
+  completed:   '#16A34A',
+  paused:      '#D97706',
+  cancelled:   '#DC2626',
+  default:     'rgba(55,65,81,0.55)',
 }
 
 export default function ProjectsPage() {
@@ -71,9 +73,9 @@ export default function ProjectsPage() {
         }
         .project-card:hover {
           transform:    translateY(-5px);
-          box-shadow:   0 24px 52px rgba(0,0,0,0.50),
-                        0 0 0 1px rgba(124,92,252,0.22) !important;
-          border-color: rgba(124,92,252,0.22) !important;
+          box-shadow:   0 24px 52px rgba(20,24,28,0.16),
+                        0 0 0 1px rgba(209, 213, 219, 0.80) !important;
+          border-color: rgba(209, 213, 219, 0.90) !important;
         }
         .kp-filter-btn {
           transition: background 0.15s ease, color 0.15s ease,
@@ -83,8 +85,8 @@ export default function ProjectsPage() {
           transform: translateY(-1px);
         }
         .kp-search:focus-within {
-          border-color: rgba(124,92,252,0.45) !important;
-          box-shadow: 0 0 0 3px rgba(124,92,252,0.10);
+          border-color: rgba(55, 65, 81, 0.45) !important;
+          box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.08);
           transition: border-color 0.2s, box-shadow 0.2s;
         }
       `}</style>
@@ -111,32 +113,32 @@ export default function ProjectsPage() {
               value:     stats.total,
               icon:      <Layers size={17} />,
               valueColor:'var(--text-primary)',
-              iconBg:    'rgba(124,92,252,0.12)',
-              iconColor: '#A78BFA',
+              iconBg:    'rgba(55, 65, 81, 0.08)',
+              iconColor: '#374151',
             },
             {
               label:     'Em Andamento',
               value:     stats.in_progress,
               icon:      <Activity size={17} />,
-              valueColor:'#A78BFA',
-              iconBg:    'rgba(124,92,252,0.12)',
-              iconColor: '#A78BFA',
+              valueColor:'#374151',
+              iconBg:    'rgba(55,65,81,0.08)',
+              iconColor: '#374151',
             },
             {
               label:     'Concluídos',
               value:     stats.completed,
               icon:      <CheckCircle2 size={17} />,
-              valueColor:'#34D399',
-              iconBg:    'rgba(52,211,153,0.10)',
-              iconColor: '#34D399',
+              valueColor:'#16A34A',
+              iconBg:    'rgba(22,163,74,0.10)',
+              iconColor: '#16A34A',
             },
             {
               label:     'Pausados',
               value:     stats.paused,
               icon:      <PauseCircle size={17} />,
-              valueColor:'#FBBF24',
-              iconBg:    'rgba(251,191,36,0.10)',
-              iconColor: '#FBBF24',
+              valueColor:'#D97706',
+              iconBg:    'rgba(217,119,6,0.10)',
+              iconColor: '#D97706',
             },
           ].map(item => (
             <div
@@ -178,9 +180,9 @@ export default function ProjectsPage() {
           style={{
             flex: '1 1 0%',
             maxWidth: 340,
-            background: 'rgba(255,255,255,0.04)',
+            background: '#FFFFFF',
             borderRadius: 14,
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid #D1D5DB',
           }}
         >
           <Search
@@ -213,14 +215,14 @@ export default function ProjectsPage() {
               className="kp-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={filters.status === f.value
                 ? {
-                    background:  'rgba(124,92,252,0.20)',
-                    color:       '#A78BFA',
-                    border:      '1px solid rgba(124,92,252,0.30)',
+                    background:  '#374151',
+                    color:       '#ffffff',
+                    border:      '1px solid #1f2937',
                   }
                 : {
-                    background:  'rgba(255,255,255,0.04)',
-                    color:       'var(--text-muted)',
-                    border:      '1px solid rgba(255,255,255,0.06)',
+                    background:  '#FFFFFF',
+                    color:       'var(--text-secondary)',
+                    border:      '1px solid #E5E7EB',
                   }
               }
             >
@@ -241,8 +243,8 @@ export default function ProjectsPage() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             borderRadius: 24, minHeight: 320,
-            background: 'rgba(255,255,255,0.015)',
-            border: '1px dashed rgba(255,255,255,0.07)',
+            background: '#FAFAFA',
+            border: '1px dashed #D1D5DB',
           }}
         >
           <EmptyState
@@ -271,11 +273,11 @@ export default function ProjectsPage() {
               to={`/app/projects/${p.id}`}
               className="project-card block"
               style={{
-                background:   'linear-gradient(175deg, rgba(13,21,43,0.85) 0%, rgba(7,10,24,0.92) 100%)',
-                border:       '1px solid rgba(255,255,255,0.07)',
+                background:   '#FFFFFF',
+                border:       '1px solid #E5E7EB',
                 borderRadius: 20,
                 overflow:     'hidden',
-                boxShadow:    '0 4px 20px rgba(0,0,0,0.28)',
+                boxShadow:    '0 4px 20px rgba(20,24,28,0.08)',
                 animationDelay: `${idx * 0.04}s`,
               }}
             >
@@ -290,7 +292,7 @@ export default function ProjectsPage() {
                   {/* Overlay para legibilidade do conteúdo abaixo */}
                   <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to bottom, transparent 50%, rgba(7,10,24,0.65) 100%)',
+                    background: 'linear-gradient(to bottom, transparent 50%, rgba(20,24,28,0.45) 100%)',
                   }} />
                 </div>
               ) : (
@@ -308,7 +310,7 @@ export default function ProjectsPage() {
                   <div style={{
                     position: 'absolute', inset: 0,
                     backgroundImage:
-                      'radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px)',
+                      'radial-gradient(circle, rgba(55,65,81,0.08) 1px, transparent 1px)',
                     backgroundSize: '18px 18px',
                     pointerEvents: 'none',
                   }} />
@@ -316,17 +318,16 @@ export default function ProjectsPage() {
                   <div style={{
                     position: 'absolute', inset: 0,
                     background:
-                      'radial-gradient(ellipse at 50% 60%, rgba(124,92,252,0.08), transparent 65%)',
+                      'radial-gradient(ellipse at 50% 60%, rgba(55,65,81,0.06), transparent 65%)',
                     pointerEvents: 'none',
                   }} />
                   {/* Ícone */}
                   <div style={{
                     position: 'relative', zIndex: 1,
                     width: 46, height: 46, borderRadius: 14,
-                    background: 'rgba(255,255,255,0.06)',
-                    border: '1px solid rgba(255,255,255,0.10)',
+                    background: '#FFFFFF',
+                    border: '1px solid #E5E7EB',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    backdropFilter: 'blur(4px)',
                   }}>
                     <FolderOpen
                       size={22}
@@ -338,7 +339,7 @@ export default function ProjectsPage() {
                     position: 'relative', zIndex: 1,
                     fontSize: 10, fontWeight: 700,
                     letterSpacing: '0.16em', textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.28)',
+                    color: '#9CA3AF',
                     maxWidth: '75%', overflow: 'hidden',
                     textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
@@ -403,7 +404,7 @@ export default function ProjectsPage() {
                 {/* Separador */}
                 <div style={{
                   height: 1,
-                  background: 'rgba(255,255,255,0.05)',
+                  background: '#E5E7EB',
                   marginBottom: 12,
                 }} />
 
@@ -413,7 +414,7 @@ export default function ProjectsPage() {
                   justifyContent: 'space-between', marginBottom: 12,
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <DollarSign size={11} style={{ color: '#34D399', flexShrink: 0 }} />
+                    <DollarSign size={11} style={{ color: '#16A34A', flexShrink: 0 }} />
                     <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
                       {formatCurrency(p.budget)}
                     </span>
@@ -431,7 +432,7 @@ export default function ProjectsPage() {
                   <>
                     <div style={{
                       height: 1,
-                      background: 'rgba(255,255,255,0.05)',
+                      background: '#E5E7EB',
                       marginBottom: 12,
                     }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -448,9 +449,9 @@ export default function ProjectsPage() {
                         <span style={{
                           fontSize: 11, fontWeight: 600,
                           padding: '2px 8px', borderRadius: 20,
-                          background: 'rgba(124,92,252,0.10)',
-                          border: '1px solid rgba(124,92,252,0.18)',
-                          color: '#A78BFA',
+                          background: 'rgba(55,65,81,0.08)',
+                          border: '1px solid rgba(55,65,81,0.16)',
+                          color: '#374151',
                           flexShrink: 0,
                         }}>
                           +{p.member_count - 1}

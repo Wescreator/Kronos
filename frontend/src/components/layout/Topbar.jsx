@@ -1,25 +1,9 @@
-import {
-  Bell,
-  Menu,
-  X,
-  Search,
-  LayoutDashboard,
-  FolderKanban,
-  DollarSign,
-  CheckSquare,
-  MessageSquare,
-  Users,
-  Calendar,
-  FileText
-} from 'lucide-react'
+import {Bell, Menu, X, Search, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
 import Avatar from '../ui/Avatar'
-import {
-  getNotifications,
-  markAllRead,
-} from '../../services/notifications.service'
+import {getNotifications, markAllRead,} from '../../services/notifications.service'
 import { formatDateTime } from '../../utils/format'
 
 // ─── Links extraídos diretamente do Sidebar original ──────────────

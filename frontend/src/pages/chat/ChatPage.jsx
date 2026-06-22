@@ -75,10 +75,10 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
         style={{
           width: 'calc(100% - 8px)',
           background: active
-            ? 'rgba(124,92,252,0.14)'
+            ? 'rgba(139, 139, 139, 0.14)'
             : 'transparent',
           border: active
-            ? '1px solid rgba(124,92,252,0.20)'
+            ? '1px solid rgba(139, 139, 139, 0.2)'
             : '1px solid transparent',
         }}
         onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.04)' }}
@@ -90,11 +90,11 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
             <div
               className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
               style={{
-                background: 'rgba(124,92,252,0.12)',
-                border: '1px solid rgba(124,92,252,0.20)',
+                background: 'rgba(126, 126, 126, 0.23)',
+                border: '1px solid rgba(167, 167, 167, 0.2)',
               }}
             >
-              <Hash size={14} style={{ color: '#A78BFA' }} />
+              <Hash size={14} style={{ color: '#363636' }} />
             </div>
           ) : (
             <Avatar name={name} src={avatarSrc} size="sm" />
@@ -146,9 +146,9 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
           <div
             className="absolute right-0 top-full mt-1 py-1 rounded-xl overflow-hidden"
             style={{
-              background: '#0D152B',
-              border: '1px solid rgba(255,255,255,0.08)',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.50)',
+              background: '#7c7c7c',
+              border: '1px solid rgba(126, 126, 126, 0.08)',
+              boxShadow: '0 8px 24px rgba(56, 56, 56, 0.5)',
               minWidth: 140,
               zIndex: 50,
             }}
@@ -160,8 +160,8 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
                 onDelete(room)
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium transition-all duration-150"
-              style={{ color: '#FB7185' }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,113,133,0.08)'}
+              style={{ color: '#fdfdfd' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(73, 73, 73, 0.18)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
               <Trash2 size={13} />
@@ -697,9 +697,9 @@ export default function ChatPage() {
         className="fade-in flex overflow-hidden"
         style={{
           height:       'calc(100vh - 5rem)',
-          background:   '#080e1e',
+          background:   '#7a7a7a',
           border:       '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 20,
+          borderRadius: 25,
           boxShadow:    '0 8px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.05)',
           position:     'relative',
           overflow:     'hidden',
@@ -738,7 +738,7 @@ export default function ChatPage() {
           } md:w-[280px] overflow-hidden`}
           style={{
             borderRight: '1px solid rgba(255,255,255,0.06)',
-            background:  'rgba(5,8,18,0.90)',
+            background:  '#7a7a7a34',
             position:    'relative',
             zIndex:      1,
           }}
@@ -746,7 +746,7 @@ export default function ChatPage() {
           {/* Header */}
           <div
             className="px-3 shrink-0"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', paddingTop: 20, paddingBottom: 14 }}
+            style={{ borderBottom: '1px solid rgba(116, 116, 116, 0.7)', paddingTop: 70, paddingBottom: 14 }}
           >
             <div className="flex items-center justify-between px-1" style={{ marginBottom: 12 }}>
               <h2 className="text-[13px] font-bold tracking-wide" style={{ color: 'var(--text-primary)' }}>
@@ -756,7 +756,7 @@ export default function ChatPage() {
                 onClick={() => setShowNew(true)}
                 className="p-1.5 rounded-lg transition-all duration-150"
                 style={{ color: 'var(--text-muted)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(124,92,252,0.12)'; e.currentTarget.style.color = '#A78BFA' }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(49, 49, 49, 0.12)'; e.currentTarget.style.color = '#ffffff' }}
                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
                 title="Nova conversa"
               >
@@ -883,7 +883,7 @@ export default function ChatPage() {
                 className="flex items-center gap-3 px-5 shrink-0"
                 style={{
                   borderBottom:   '1px solid rgba(255,255,255,0.07)',
-                  background:     'rgba(5,8,18,0.80)',
+                  background:     'rgb(124, 124, 124)',
                   backdropFilter: 'blur(16px)',
                   height:         64,
                   paddingTop:     0,
@@ -973,12 +973,12 @@ export default function ChatPage() {
                     <div className="flex flex-col items-center justify-center py-20 text-center">
                       <div style={{
                         width: 56, height: 56, borderRadius: 18,
-                        background: 'rgba(124,92,252,0.10)',
-                        border: '1px solid rgba(124,92,252,0.18)',
+                        background: 'rgb(70, 70, 70)',
+                        border: '1px solid rgb(255, 255, 255)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         marginBottom: 16,
                       }}>
-                        <MessageSquare size={24} style={{ color: 'rgba(167,139,250,0.6)' }} />
+                        <MessageSquare size={24} style={{ color: 'rgba(255, 255, 255, 0.6)' }} />
                       </div>
                       <p className="text-sm font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.55)' }}>
                         Início da conversa
@@ -1031,7 +1031,7 @@ export default function ChatPage() {
                 className="shrink-0 relative"
                 style={{
                   borderTop:  '1px solid rgba(255,255,255,0.06)',
-                  background: 'rgba(5,8,18,0.80)',
+                  background: 'rgba(99, 99, 99, 0.8)',
                   backdropFilter: 'blur(16px)',
                   padding: '12px 20px 16px',
                 }}
@@ -1053,8 +1053,8 @@ export default function ChatPage() {
                         previewConfig={{ showPreview: false }}
                         skinTonesDisabled
                         style={{
-                          '--epr-bg-color':             '#0A1020',
-                          '--epr-category-label-bg-color': '#060A16',
+                          '--epr-bg-color':             '#949494',
+                          '--epr-category-label-bg-color': '#949494',
                           '--epr-search-background-color': 'rgba(255,255,255,0.05)',
                           '--epr-hover-bg-color':       'rgba(124,92,252,0.10)',
                           '--epr-text-color':           'rgba(255,255,255,0.65)',
@@ -1074,8 +1074,8 @@ export default function ChatPage() {
                       onClick={() => setShowEmoji(v => !v)}
                       className="p-2 rounded-xl transition-all duration-150 shrink-0 mb-0.5"
                       style={{
-                        color:      showEmoji ? '#A78BFA' : 'var(--text-muted)',
-                        background: showEmoji ? 'rgba(124,92,252,0.10)' : 'transparent',
+                        color:      showEmoji ? '#ffffff' : 'var(--text-muted)',
+                        background: showEmoji ? 'rgba(56, 56, 56, 0.86)' : 'transparent',
                       }}
                       onMouseEnter={e => { if (!showEmoji) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#A78BFA' } }}
                       onMouseLeave={e => { if (!showEmoji) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' } }}
