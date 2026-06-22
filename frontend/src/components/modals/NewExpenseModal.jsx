@@ -50,9 +50,9 @@ function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
           title="Criar nova categoria"
           className="px-3 rounded-xl transition-all duration-150 shrink-0"
           style={{
-            background: showCreate ? 'rgba(124,92,252,0.20)' : 'rgba(255,255,255,0.05)',
-            border:     `1px solid ${showCreate ? 'rgba(124,92,252,0.35)' : 'rgba(255,255,255,0.08)'}`,
-            color:      showCreate ? '#A78BFA' : 'var(--text-muted)'
+            background: showCreate ? 'rgba(107,114,128,0.15)' : 'rgba(0,0,0,0.03)',
+            border:     `1px solid ${showCreate ? 'rgba(107,114,128,0.35)' : 'rgba(0,0,0,0.08)'}`,
+            color:      showCreate ? '#374151' : 'var(--text-muted)'
           }}
         >
           <Tag size={14} />
@@ -63,12 +63,12 @@ function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
         <div
           className="mt-2 p-4 rounded-2xl"
           style={{
-            background: 'rgba(124,92,252,0.06)',
-            border:     '1px solid rgba(124,92,252,0.15)',
+            background: 'rgba(107,114,128,0.06)',
+            border:     '1px solid rgba(107,114,128,0.18)',
             animation:  'fadeInUp 0.15s ease'
           }}
         >
-          <p className="text-xs font-bold mb-3" style={{ color: '#A78BFA' }}>
+          <p className="text-xs font-bold mb-3" style={{ color: '#374151' }}>
             Nova categoria
           </p>
           <input
@@ -239,8 +239,8 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
           <div
             className="rounded-2xl p-4"
             style={{
-              background: form.is_recurring ? 'rgba(124,92,252,0.08)' : 'rgba(255,255,255,0.02)',
-              border:     `1px solid ${form.is_recurring ? 'rgba(124,92,252,0.25)' : 'rgba(255,255,255,0.06)'}`,
+              background: form.is_recurring ? 'rgba(107,114,128,0.08)' : 'rgba(0,0,0,0.02)',
+              border:     `1px solid ${form.is_recurring ? 'rgba(107,114,128,0.28)' : 'rgba(0,0,0,0.06)'}`,
               transition: 'background 0.2s, border-color 0.2s',
             }}
           >
@@ -252,10 +252,10 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
                 type="checkbox"
                 checked={form.is_recurring}
                 onChange={e => setForm({ ...form, is_recurring: e.target.checked })}
-                style={{ marginTop: 2, accentColor: '#7C5CFC', width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }}
+                style={{ marginTop: 2, accentColor: '#374151', width: 15, height: 15, cursor: 'pointer', flexShrink: 0 }}
               />
               <div>
-                <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: form.is_recurring ? '#A78BFA' : 'var(--text-secondary)' }}>
+                <span className="flex items-center gap-1.5 text-sm font-semibold" style={{ color: form.is_recurring ? '#374151' : 'var(--text-secondary)' }}>
                   <Repeat size={14} />
                   Despesa recorrente
                 </span>
@@ -272,12 +272,12 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
           <div
             className="flex items-center gap-2 rounded-xl px-4 py-3"
             style={{
-              background: 'rgba(124,92,252,0.08)',
-              border:     '1px solid rgba(124,92,252,0.20)',
+              background: 'rgba(107,114,128,0.08)',
+              border:     '1px solid rgba(107,114,128,0.22)',
             }}
           >
-            <Repeat size={14} style={{ color: '#A78BFA', flexShrink: 0 }} />
-            <p className="text-xs" style={{ color: '#A78BFA' }}>
+            <Repeat size={14} style={{ color: '#374151', flexShrink: 0 }} />
+            <p className="text-xs" style={{ color: '#374151' }}>
               Esta é uma despesa recorrente. As outras ocorrências mensais não são afetadas por esta edição.
             </p>
           </div>
@@ -285,7 +285,7 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
 
         <div
           className="flex justify-end gap-3 pt-2"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}
         >
           <button type="button" onClick={onClose} className="btn-secondary">
             Cancelar

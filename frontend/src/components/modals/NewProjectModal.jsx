@@ -147,7 +147,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         <div>
           <label className="label">Capa do projeto</label>
           <div className="relative rounded-2xl text-center py-5 px-4"
-            style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)' }}>
+            style={{ background: 'rgba(0,0,0,0.02)', border: '1px dashed rgba(0,0,0,0.10)' }}>
             <input type="file" accept="image/*"
               className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={e => setCover(e.target.files[0])} />
@@ -158,7 +158,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         </div>
 
         <div className="flex justify-end gap-3 pt-2"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Criando...' : 'Criar Projeto'}

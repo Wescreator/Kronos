@@ -54,8 +54,8 @@ export default function Topbar() {
       className="
         fixed top-0 left-0 right-0
         z-50 h-16
-        border-b border-white/5
-        bg-[#111111]/90
+        border-b border-slate-200
+        bg-white/90
         backdrop-blur-xl
       "
     >
@@ -76,20 +76,20 @@ export default function Topbar() {
             className="
               flex h-8 w-8 items-center justify-center
               rounded-xl
-              bg-white/[0.06]
-              text-sm font-bold text-white
-              border border-white/[0.08]
+              bg-slate-100
+              text-sm font-bold text-slate-700
+              border border-slate-200
             "
           >
             K
           </div>
-          <span className="text-sm font-semibold tracking-wide text-white">
+          <span className="text-sm font-semibold tracking-wide text-slate-800">
             KRONOS
           </span>
         </NavLink>
 
         {/* ── SEPARADOR ────────────────────────────────────────────── */}
-        <div className="hidden lg:block h-5 w-px shrink-0 bg-white/8" />
+        <div className="hidden lg:block h-5 w-px shrink-0 bg-slate-200" />
 
         {/* ── NAVEGAÇÃO DESKTOP (lg+) ───────────────────────────────*/}
         <nav className="hidden lg:flex items-center gap-0.5">
@@ -103,8 +103,8 @@ export default function Topbar() {
                 text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-white/[0.07] text-white ring-1 ring-white/10'
-                  : 'text-white/50 hover:bg-white/[0.04] hover:text-white'
+                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-200'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                 }
               `}
             >
@@ -126,8 +126,8 @@ export default function Topbar() {
                 rounded-xl
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-white/[0.07] text-white ring-1 ring-white/10'
-                  : 'text-white/50 hover:bg-white/[0.04] hover:text-white'
+                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-200'
+                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                 }
               `}
             >
@@ -142,19 +142,19 @@ export default function Topbar() {
             className="
               flex h-9 w-full max-w-xs items-center gap-3
               rounded-xl
-              border border-white/[0.06]
-              bg-white/[0.03]
+              border border-slate-200
+              bg-slate-50
               px-3
             "
           >
-            <Search size={15} className="shrink-0 text-white/35" />
+            <Search size={15} className="shrink-0 text-slate-400" />
             <input
               placeholder="Buscar projetos, tarefas, membros..."
               className="
                 flex-1 min-w-0
                 bg-transparent
-                text-sm text-white
-                placeholder:text-white/30
+                text-sm text-slate-800
+                placeholder:text-slate-400
                 outline-none
               "
             />
@@ -162,10 +162,10 @@ export default function Topbar() {
               className="
                 shrink-0
                 rounded-md
-                border border-white/[0.08]
-                bg-white/[0.03]
+                border border-slate-200
+                bg-slate-50
                 px-1.5 py-0.5
-                text-xs text-white/35
+                text-xs text-slate-400
               "
             >
               ⌘K
@@ -187,9 +187,9 @@ export default function Topbar() {
               className="
                 relative flex h-9 w-9 items-center justify-center
                 rounded-xl
-                text-white/55
+                text-slate-500
                 transition-all duration-200
-                hover:bg-white/[0.05] hover:text-white
+                hover:bg-slate-100 hover:text-slate-800
               "
             >
               <Bell size={18} />
@@ -209,19 +209,19 @@ export default function Topbar() {
                   absolute right-0 top-12
                   w-[380px]
                   overflow-hidden rounded-3xl
-                  border border-white/[0.06]
-                  bg-[#1B1B1B]/97
+                  border border-slate-200
+                  bg-white
                   backdrop-blur-xl
-                  shadow-[0_20px_50px_rgba(0,0,0,0.50)]
+                  shadow-[0_20px_50px_rgba(15,23,42,0.12)]
                 "
               >
-                <div className="flex items-center justify-between border-b border-white/[0.06] p-4">
-                  <h3 className="font-semibold text-white">
+                <div className="flex items-center justify-between border-b border-slate-100 p-4">
+                  <h3 className="font-semibold text-slate-800">
                     Notificações
                   </h3>
                   <button
                     onClick={handleMarkAll}
-                    className="text-xs text-white/50 hover:text-white/80"
+                    className="text-xs text-slate-500 hover:text-slate-800"
                   >
                     Marcar todas
                   </button>
@@ -229,7 +229,7 @@ export default function Topbar() {
 
                 <div className="max-h-[420px] overflow-y-auto">
                   {notifs.length === 0 ? (
-                    <div className="p-8 text-center text-sm text-white/35">
+                    <div className="p-8 text-center text-sm text-slate-400">
                       Nenhuma notificação
                     </div>
                   ) : (
@@ -237,21 +237,21 @@ export default function Topbar() {
                       <div
                         key={n.id}
                         className={`
-                          border-b border-white/[0.05] p-4
+                          border-b border-slate-100 p-4
                           transition-colors
-                          hover:bg-white/[0.03]
-                          ${!n.is_read ? 'bg-white/[0.03]' : ''}
+                          hover:bg-slate-50
+                          ${!n.is_read ? 'bg-slate-50' : ''}
                         `}
                       >
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-slate-800">
                           {n.title}
                         </p>
                         {n.body && (
-                          <p className="mt-1 text-xs text-white/50">
+                          <p className="mt-1 text-xs text-slate-500">
                             {n.body}
                           </p>
                         )}
-                        <p className="mt-2 text-xs text-white/30">
+                        <p className="mt-2 text-xs text-slate-400">
                           {formatDateTime(n.created_at)}
                         </p>
                       </div>
@@ -274,7 +274,7 @@ export default function Topbar() {
                 flex items-center gap-2
                 rounded-2xl px-2 py-1.5
                 transition-all duration-200
-                hover:bg-white/[0.05]
+                hover:bg-slate-100
               "
             >
               <Avatar
@@ -283,10 +283,10 @@ export default function Topbar() {
                 size="sm"
               />
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium leading-tight text-white">
+                <p className="text-sm font-medium leading-tight text-slate-800">
                   {user?.name}
                 </p>
-                <p className="text-xs leading-tight text-white/38">
+                <p className="text-xs leading-tight text-slate-400">
                   {user?.email}
                 </p>
               </div>
@@ -298,17 +298,17 @@ export default function Topbar() {
                   absolute right-0 top-12
                   w-60
                   overflow-hidden rounded-3xl
-                  border border-white/[0.06]
-                  bg-[#1B1B1B]/97
+                  border border-slate-200
+                  bg-white
                   backdrop-blur-xl
-                  shadow-[0_20px_50px_rgba(0,0,0,0.50)]
+                  shadow-[0_20px_50px_rgba(15,23,42,0.12)]
                 "
               >
-                <div className="border-b border-white/[0.06] p-4">
-                  <p className="font-semibold text-white">
+                <div className="border-b border-slate-100 p-4">
+                  <p className="font-semibold text-slate-800">
                     {user?.name}
                   </p>
-                  <p className="text-xs text-white/40">
+                  <p className="text-xs text-slate-400">
                     {user?.email}
                   </p>
                 </div>
@@ -316,9 +316,9 @@ export default function Topbar() {
                   onClick={logout}
                   className="
                     w-full px-4 py-3
-                    text-left text-sm text-rose-400
+                    text-left text-sm text-rose-600
                     transition-colors
-                    hover:bg-rose-500/10
+                    hover:bg-rose-50
                   "
                 >
                   Sair da conta
@@ -337,9 +337,9 @@ export default function Topbar() {
             className="
               flex md:hidden h-9 w-9 items-center justify-center
               rounded-xl
-              text-white/55
+              text-slate-500
               transition-all duration-200
-              hover:bg-white/[0.05] hover:text-white
+              hover:bg-slate-100 hover:text-slate-800
             "
           >
             {showMobileMenu ? <X size={18} /> : <Menu size={18} />}
@@ -353,30 +353,30 @@ export default function Topbar() {
           className="
             absolute left-0 right-0 top-16
             z-50
-            border-b border-white/[0.06]
-            bg-[#111111]/97
+            border-b border-slate-200
+            bg-white
             backdrop-blur-xl
             md:hidden
           "
         >
           {/* Busca mobile */}
-          <div className="border-b border-white/[0.06] px-4 py-3">
+          <div className="border-b border-slate-100 px-4 py-3">
             <div
               className="
                 flex h-10 items-center gap-3
                 rounded-xl
-                border border-white/[0.06]
-                bg-white/[0.03]
+                border border-slate-200
+                bg-slate-50
                 px-3
               "
             >
-              <Search size={15} className="shrink-0 text-white/35" />
+              <Search size={15} className="shrink-0 text-slate-400" />
               <input
                 placeholder="Buscar projetos, tarefas, membros..."
                 className="
                   flex-1 bg-transparent
-                  text-sm text-white
-                  placeholder:text-white/30
+                  text-sm text-slate-800
+                  placeholder:text-slate-400
                   outline-none
                 "
               />
@@ -396,8 +396,8 @@ export default function Topbar() {
                   text-sm font-medium
                   transition-all duration-200
                   ${isActive
-                    ? 'bg-white/[0.07] text-white ring-1 ring-white/10'
-                    : 'text-white/55 hover:bg-white/[0.04] hover:text-white'
+                    ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-200'
+                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                   }
                 `}
               >

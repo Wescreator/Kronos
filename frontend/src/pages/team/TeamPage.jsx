@@ -180,7 +180,7 @@ export default function TeamPage() {
                 onChange={e => setForm({...form, password: e.target.value})} />
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
             <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary">Adicionar Membro</button>
           </div>

@@ -109,8 +109,8 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
                   onClick={() => { setRevenueMode(mode.key); setForm(f => ({ ...f, project_id: '', title: '' })) }}
                   className="flex flex-col items-start gap-1.5 p-4 rounded-2xl text-left transition-all duration-150"
                   style={revenueMode === mode.key
-                    ? { background: 'rgba(124,92,252,0.15)', border: '1px solid rgba(124,92,252,0.35)', color: '#A78BFA' }
-                    : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--text-muted)' }
+                    ? { background: 'rgba(107,114,128,0.15)', border: '1px solid rgba(107,114,128,0.35)', color: '#374151' }
+                    : { background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)', color: 'var(--text-muted)' }
                   }>
                   <div className="flex items-center gap-2">
                     <Icon size={15} />
@@ -156,7 +156,7 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
             {form.installments_list.map((inst, index) => (
               <div key={index}
                 className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end p-3 rounded-xl"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}>
                 <div>
                   <label className="label text-[10px] mb-1">
                     Parcela {index + 1} — Valor *
@@ -185,15 +185,15 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
 
           <button type="button" onClick={addInstallment}
             className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150"
-            style={{ border: '1px dashed rgba(124,92,252,0.25)', color: '#A78BFA' }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(124,92,252,0.06)'}
+            style={{ border: '1px dashed rgba(107,114,128,0.30)', color: '#374151' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(107,114,128,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
             <Plus size={13} /> Adicionar parcela
           </button>
 
           {totalAmount > 0 && (
             <div className="mt-2 px-4 py-2.5 rounded-xl text-xs"
-              style={{ background: 'rgba(124,92,252,0.08)', border: '1px solid rgba(124,92,252,0.15)', color: '#A78BFA' }}>
+              style={{ background: 'rgba(107,114,128,0.08)', border: '1px solid rgba(107,114,128,0.18)', color: '#374151' }}>
               Total: <strong>{formatCurrency(totalAmount)}</strong>
               {form.installments_list.length > 1 && ` em ${form.installments_list.length} parcelas`}
             </div>
@@ -206,7 +206,7 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
             value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         </div>
 
-        <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
           <button type="submit" className="btn-primary">Criar Receita</button>
         </div>
