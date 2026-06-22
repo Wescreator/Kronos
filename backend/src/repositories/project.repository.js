@@ -1,13 +1,3 @@
-const ctrl        = require('../controllers/project.controller')
-const stageCtrl   = require('../controllers/stage.controller')
-const fileCtrl    = require('../controllers/project-file.controller')
-const { authenticate } = require('../middlewares/auth.middleware')
-const tenantMiddleware = require('../middlewares/tenant.middleware')
-const validate    = require('../middlewares/validate.middleware')
-const V           = require('../validators/project.validator')
-const { uploadImage, uploadFile } = require('../config/multer')
-const logger      = require('../middlewares/logger.middleware')
-
 const pool = require('../config/database')
 
 // ───────── PROJECTS ─────────
@@ -59,7 +49,7 @@ const findStatusHistory = async (projectId, companyId) => {
     FROM project_status_history
     WHERE project_id = $1
       AND company_id = $2
-    ORDER BY created_at DESC
+    ORDER BY changed_at DESC
     `,
     [projectId, companyId]
   )
@@ -134,4 +124,19 @@ const update = async (id, companyId, fields) => {
   return rows[0]
 }
 
-module.exports = {findAll, findById, create, update, findStatusHistory}
+const findMembers = async (projectId) => {
+  const { rows } = await pool.query(
+    `
+    SELECT pm.id, pm.role, pm.joined_at, u.name, u.email, u.avatar_url
+    FROM project_members pm
+    INNER JOIN users u ON u.id = pm.user_id
+    WHERE pm.project_id = $1
+    ORDER BY pm.joined_at ASC
+    `,
+    [projectId]
+  )
+
+  return rows
+}
+
+module.exports = {findAll, findById, create, update, findStatusHistory, findMembers}
