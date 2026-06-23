@@ -33,7 +33,7 @@ const create = async (data, userId, companyId) => {
   })
 
   if (data.assignees?.length) {
-    await taskRepo.setAssignees(task.id, data.assignees)
+    await taskRepo.setAssignees(task.id, data.assignees, company_id)
   }
 
   return await taskRepo.findById(task.id, companyId)

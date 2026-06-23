@@ -82,12 +82,18 @@ const update = async (id, companyId, fields) => {
   return rows[0]
 }
 
-const setAssignees = async (taskId, userIds) => {
-  await pool.query('DELETE FROM task_assignments WHERE task_id = $1', [taskId])
+const setAssignees = async (taskId, userIds, companyId) => {
+  await pool.query(
+    'DELETE FROM task_assignments WHERE task_id = $1',
+    [taskId]
+  )
+
   for (const uid of userIds) {
     await pool.query(
-      'INSERT INTO task_assignments (task_id, user_id) VALUES ($1,$2) ON CONFLICT DO NOTHING',
-      [taskId, uid]
+      `INSERT INTO task_assignments (task_id, user_id, company_id)
+       VALUES ($1, $2, $3)
+       ON CONFLICT DO NOTHING`,
+      [taskId, uid, companyId]
     )
   }
 }
