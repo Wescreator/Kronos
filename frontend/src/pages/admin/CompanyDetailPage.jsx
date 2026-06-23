@@ -1,0 +1,446 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
+import {
+  ArrowLeft, Pencil, Trash2, Plus, Building2, Users, Clock,
+  CreditCard, Settings, LayoutGrid, ShieldCheck,
+} from 'lucide-react'
+import toast from 'react-hot-toast'
+import platformService from '../../services/platform.service'
+
+import Spinner    from '../../components/ui/Spinner'
+import EmptyState from '../../components/ui/EmptyState'
+import UserModal  from '../../components/modals/UserModal'
+
+const ROLE_LABELS = {
+  owner:    'Owner',
+  admin:    'Administrador',
+  manager:  'Gestor / Arquiteto',
+  employee: 'Colaborador',
+}
+
+const ROLE_DESCRIPTIONS = {
+  owner:    'Acesso total à empresa, incluindo dados financeiros e configurações.',
+  admin:    'Gerencia usuários, projetos e configurações da empresa.',
+  manager:  'Gerencia projetos, tarefas e a equipe designada.',
+  employee: 'Acesso operacional às tarefas e projetos atribuídos.',
+}
+
+const TABS = [
+  { value: 'resumo',     label: 'Resumo',         icon: Building2   },
+  { value: 'kpis',       label: 'KPIs',           icon: LayoutGrid  },
+  { value: 'usuarios',   label: 'Usuários',       icon: Users       },
+  { value: 'historico',  label: 'Histórico',      icon: Clock       },
+  { value: 'financeiro', label: 'Financeiro',     icon: CreditCard  },
+  { value: 'config',     label: 'Configurações',  icon: Settings    },
+]
+
+const toCompanyEdit = (c) => ({
+  name: c.name || '', trade_name: c.trade_name || '', document: c.document || '',
+  email: c.email || '', phone: c.phone || '', plan: c.plan || '',
+})
+
+export default function CompanyDetailPage() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+
+  const [company,  setCompany]  = useState(null)
+  const [users,    setUsers]    = useState([])
+  const [stats,    setStats]    = useState(null)   // soft-fail — ver platform.service.js
+  const [history,  setHistory]  = useState([])     // soft-fail — ver platform.service.js
+  const [loading,  setLoading]  = useState(true)
+  const [activeTab, setActiveTab] = useState('resumo')
+
+  const [editingCompany,     setEditingCompany]     = useState(false)
+  const [companyEdit,        setCompanyEdit]        = useState(null)
+  const [savingCompanyEdit,  setSavingCompanyEdit]  = useState(false)
+  const [busyCompany,        setBusyCompany]        = useState(false)
+
+  const [showUserModal, setShowUserModal] = useState(false)
+  const [editingUser,   setEditingUser]   = useState(null)
+
+  const load = async () => {
+    setLoading(true)
+    try {
+      // ⚠️ Não existe endpoint de empresa única hoje — reaproveitamos a
+      // listagem completa e filtramos pelo id da rota. Quando existir um
+      // GET /admin/companies/:id dedicado, troque aqui.
+      const list = await platformService.listCompanies()
+      const found = list.find(c => String(c.id) === String(id))
+      if (!found) {
+        toast.error('Empresa não encontrada')
+        navigate('/admin')
+        return
+      }
+      setCompany(found)
+      setCompanyEdit(toCompanyEdit(found))
+    } catch {
+      toast.error('Falha ao carregar empresa')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadUsers = async () => {
+    try {
+      const list = await platformService.listCompanyUsers(id)
+      setUsers(list)
+    } catch {
+      toast.error('Falha ao carregar usuários')
+    }
+  }
+
+  const loadStats = async () => {
+    try {
+      setStats(await platformService.getCompanyStats(id))
+    } catch {
+      setStats(null) // endpoint ainda não existe — telas degradam para "—"
+    }
+  }
+
+  const loadHistory = async () => {
+    try {
+      setHistory(await platformService.getCompanyHistory(id))
+    } catch {
+      setHistory([]) // endpoint ainda não existe — aba mostra vazio
+    }
+  }
+
+  useEffect(() => { load(); loadUsers(); loadStats(); loadHistory() }, [id])
+
+  /* ── Resumo: editar empresa ──────────────────────────────────────────── */
+  const handleSaveCompany = async () => {
+    if (!companyEdit.name.trim()) return toast.error('Informe o nome da empresa')
+    try {
+      setSavingCompanyEdit(true)
+      const updated = await platformService.updateCompany(id, companyEdit)
+      toast.success('Empresa atualizada')
+      setCompany(updated)
+      setCompanyEdit(toCompanyEdit(updated))
+      setEditingCompany(false) // volta para visualização automaticamente
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao atualizar empresa')
+    } finally {
+      setSavingCompanyEdit(false)
+    }
+  }
+
+  const handleToggleActive = async () => {
+    try {
+      setBusyCompany(true)
+      const res = await platformService.setCompanyActive(id, company.is_active === false)
+      setCompany({ ...company, is_active: res.is_active })
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao alterar status')
+    } finally {
+      setBusyCompany(false)
+    }
+  }
+
+  /* ── Usuários ─────────────────────────────────────────────────────────── */
+  const openNewUser  = () => { setEditingUser(null); setShowUserModal(true) }
+  const openEditUser = (u) => { setEditingUser(u); setShowUserModal(true) }
+  const handleUserSaved = () => { setShowUserModal(false); setEditingUser(null); loadUsers() }
+
+  if (loading) {
+    return <div className="flex justify-center py-32"><Spinner size="lg" /></div>
+  }
+  if (!company) return null
+
+  const blocked = company.is_active === false
+
+  return (
+    <div className="fade-in" style={{ minHeight: '100vh', padding: '32px', maxWidth: 1100, margin: '0 auto' }}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/admin')} className="btn-secondary" style={{ padding: 10, borderRadius: 12 }}>
+            <ArrowLeft size={16} />
+          </button>
+          <div>
+            <p className="label" style={{ marginBottom: 3 }}>Painel Global</p>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{company.name}</h1>
+              <span className="badge" style={blocked
+                ? { background: 'rgba(220,38,38,0.10)', color: '#DC2626' }
+                : { background: 'rgba(22,163,74,0.10)', color: '#16A34A' }}>
+                {blocked ? 'Bloqueada' : 'Ativa'}
+              </span>
+            </div>
+          </div>
+        </div>
+        <button onClick={handleToggleActive} disabled={busyCompany} className={blocked ? 'btn-primary' : 'btn-danger'}>
+          {blocked ? 'Ativar empresa' : 'Desativar empresa'}
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-2 mb-7">
+        {TABS.map(t => {
+          const Icon = t.icon
+          const active = activeTab === t.value
+          return (
+            <button
+              key={t.value}
+              onClick={() => setActiveTab(t.value)}
+              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+              style={active
+                ? { background: '#374151', color: '#fff', border: '1px solid #1f2937' }
+                : { background: '#FFFFFF', color: '#6B7280', border: '1px solid #E5E7EB' }}
+            >
+              <Icon size={13} /> {t.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {activeTab === 'resumo' && (
+        <ResumoTab
+          company={company}
+          editing={editingCompany}
+          form={companyEdit}
+          onChange={setCompanyEdit}
+          onEdit={() => setEditingCompany(true)}
+          onCancel={() => { setEditingCompany(false); setCompanyEdit(toCompanyEdit(company)) }}
+          onSave={handleSaveCompany}
+          saving={savingCompanyEdit}
+        />
+      )}
+
+      {activeTab === 'kpis' && <KPIsTab company={company} users={users} stats={stats} />}
+
+      {activeTab === 'usuarios' && (
+        <UsersTab users={users} onAdd={openNewUser} onEdit={openEditUser} />
+      )}
+
+      {activeTab === 'historico' && <HistoryTab history={history} />}
+
+      {activeTab === 'financeiro' && <FinancialTab company={company} stats={stats} />}
+
+      {activeTab === 'config' && <SettingsTab />}
+
+      <UserModal
+        open={showUserModal}
+        companyId={id}
+        user={editingUser}
+        onClose={() => { setShowUserModal(false); setEditingUser(null) }}
+        onSuccess={handleUserSaved}
+      />
+    </div>
+  )
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+ * Abas — componentes locais (acoplados ao estado desta página)
+ * ════════════════════════════════════════════════════════════════════════ */
+
+function Field({ label, value }) {
+  return (
+    <div>
+      <p className="label" style={{ marginBottom: 4 }}>{label}</p>
+      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{value || '—'}</p>
+    </div>
+  )
+}
+
+function ResumoTab({ company, editing, form, onChange, onEdit, onCancel, onSave, saving }) {
+  if (!editing) {
+    return (
+      <div className="card p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <Field label="Nome da empresa" value={company.name} />
+          <Field label="Nome fantasia"   value={company.trade_name} />
+          <Field label="Documento"       value={company.document} />
+          <Field label="E-mail"          value={company.email} />
+          <Field label="Telefone"        value={company.phone} />
+          <Field label="Plano"           value={company.plan} />
+        </div>
+        <div className="divider my-5" />
+        <button onClick={onEdit} className="btn-secondary">
+          <Pencil size={13} /> Editar Empresa
+        </button>
+      </div>
+    )
+  }
+
+  const set = (key, val) => onChange({ ...form, [key]: val })
+
+  return (
+    <div className="card p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="sm:col-span-2">
+          <label className="label">Nome da empresa *</label>
+          <input className="input" value={form.name} onChange={e => set('name', e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Nome fantasia</label>
+          <input className="input" value={form.trade_name} onChange={e => set('trade_name', e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Documento</label>
+          <input className="input" value={form.document} onChange={e => set('document', e.target.value)} />
+        </div>
+        <div>
+          <label className="label">E-mail</label>
+          <input className="input" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Telefone</label>
+          <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="label">Plano</label>
+          <input className="input" value={form.plan} onChange={e => set('plan', e.target.value)} />
+        </div>
+      </div>
+      <div className="flex gap-2 mt-5 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <button onClick={onSave} disabled={saving} className="btn-primary">
+          {saving ? 'Salvando...' : 'Salvar alterações'}
+        </button>
+        <button onClick={onCancel} disabled={saving} className="btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  )
+}
+
+function KPIsTab({ company, users, stats }) {
+  const cards = [
+    { label: 'Usuários',            value: users.length,                 color: 'var(--text-primary)' },
+    { label: 'Projetos',            value: stats?.projects   ?? '—',     color: '#0284C7' },
+    { label: 'Clientes',            value: stats?.clients    ?? '—',     color: '#16A34A' },
+    { label: 'Arquivos',            value: stats?.files      ?? '—',     color: '#D97706' },
+    { label: 'Último Acesso',       value: stats?.lastAccess ?? '—',     color: '#6B7280' },
+    { label: 'Plano Contratado',    value: company.plan || '—',          color: '#374151' },
+  ]
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      {cards.map(c => (
+        <div key={c.label} className="card p-5 text-center">
+          <p className="text-2xl font-bold mb-1" style={{ color: c.color }}>{c.value}</p>
+          <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{c.label}</p>
+        </div>
+      ))}
+      {!stats && (
+        <p className="sm:col-span-3 text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Projetos, Clientes, Arquivos e Último Acesso aparecem aqui assim que o endpoint de estatísticas da empresa for implementado no backend.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function UsersTab({ users, onAdd, onEdit }) {
+  return (
+    <div>
+      <div className="flex justify-end mb-4">
+        <button onClick={onAdd} className="btn-primary"><Plus size={15} /> Adicionar Usuário</button>
+      </div>
+
+      {users.length === 0 ? (
+        <EmptyState icon={Users} title="Nenhum usuário nesta empresa" />
+      ) : (
+        <div className="card overflow-hidden">
+          <table className="w-full">
+            <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+              <tr>
+                <th className="table-header" style={{ color: 'var(--text-secondary)' }}>Usuário</th>
+                <th className="table-header hidden sm:table-cell" style={{ color: 'var(--text-secondary)' }}>Permissão</th>
+                <th className="table-header" style={{ color: 'var(--text-secondary)' }}>Status</th>
+                <th className="table-header hidden md:table-cell" style={{ color: 'var(--text-secondary)' }}>Último acesso</th>
+                <th className="table-header" style={{ color: 'var(--text-secondary)', textAlign: 'right' }}>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map((u, i) => (
+                <tr key={u.id} style={{ borderBottom: i < users.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+                  <td className="table-cell">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{u.name}</p>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.email}</p>
+                  </td>
+                  <td className="table-cell hidden sm:table-cell">
+                    <span className="badge" title={ROLE_DESCRIPTIONS[u.role]} style={{ background: 'var(--bg-sidebar)', color: 'var(--text-primary)', cursor: 'help' }}>
+                      <ShieldCheck size={11} style={{ marginRight: 4 }} /> {ROLE_LABELS[u.role] || u.role}
+                    </span>
+                  </td>
+                  <td className="table-cell">
+                    <span className="badge" style={u.is_active === false
+                      ? { background: 'rgba(220,38,38,0.10)', color: '#DC2626' }
+                      : { background: 'rgba(22,163,74,0.10)', color: '#16A34A' }}>
+                      {u.is_active === false ? 'Inativo' : 'Ativo'}
+                    </span>
+                  </td>
+                  <td className="table-cell hidden md:table-cell">
+                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.last_access || '—'}</span>
+                  </td>
+                  <td className="table-cell" style={{ textAlign: 'right' }}>
+                    <button onClick={() => onEdit(u)} className="btn-secondary btn-sm">
+                      <Pencil size={12} /> Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function HistoryTab({ history }) {
+  if (history.length === 0) {
+    return (
+      <EmptyState
+        icon={Clock}
+        title="Nenhum registro encontrado"
+        description="O histórico de alterações desta empresa (criação, edição de dados, mudança de plano, inclusão/edição/remoção de usuários, bloqueio e desbloqueio) aparecerá aqui automaticamente assim que o endpoint de auditoria for implementado no backend."
+      />
+    )
+  }
+  return (
+    <div className="flex flex-col gap-3">
+      {history.map(ev => (
+        <div key={ev.id} className="card p-4 flex items-start gap-3">
+          <div style={{ width: 3, borderRadius: 3, background: 'var(--border-medium)', alignSelf: 'stretch', minHeight: 36 }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{ev.label}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              {ev.actor ? `${ev.actor} · ` : ''}{ev.createdAt}
+            </p>
+            {ev.field && (
+              <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
+                <strong>{ev.field}:</strong> {ev.oldValue ?? '—'} → {ev.newValue ?? '—'}
+              </p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function FinancialTab({ company, stats }) {
+  const financial = stats?.financial
+  return (
+    <div className="card p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
+      <Field label="Plano"               value={company.plan} />
+      <Field label="Situação"            value={financial?.situacao} />
+      <Field label="Vencimento"          value={financial?.vencimento} />
+      <Field label="Data de contratação" value={financial?.contratadoEm} />
+      {!financial && (
+        <p className="sm:col-span-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+          Situação, vencimento e data de contratação aparecem aqui assim que o endpoint de estatísticas financeiras da empresa for implementado no backend.
+        </p>
+      )}
+    </div>
+  )
+}
+
+function SettingsTab() {
+  return (
+    <div className="card p-6">
+      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+        Configurações administrativas desta empresa estarão disponíveis em breve.
+      </p>
+    </div>
+  )
+}

@@ -30,6 +30,19 @@ const platformService = {
 
   deleteCompanyUser: (companyId, userId) =>
     api.delete(`/platform/companies/${companyId}/users/${userId}`).then(r => r.data),
+
+  // ⚠️ NOVO — endpoint provavelmente ainda não existe no backend.
+  // Esperado: { projects, clients, files, lastAccess, financial: { situacao,
+  // vencimento, contratadoEm } } dentro do envelope plano. CompanyDetailPage
+  // trata ausência/erro como "—", sem travar a página.
+  getCompanyStats: (companyId) =>
+    api.get(`/platform/companies/${companyId}/stats`).then(r => r.data),
+
+  // ⚠️ NOVO — endpoint provavelmente ainda não existe no backend.
+  // Esperado: { history: [{ id, label, actor, createdAt, field, oldValue,
+  // newValue }] }. CompanyDetailPage trata ausência/erro como lista vazia.
+  getCompanyHistory: (companyId) =>
+    api.get(`/platform/companies/${companyId}/history`).then(r => r.data.history || []),
 }
 
 export default platformService

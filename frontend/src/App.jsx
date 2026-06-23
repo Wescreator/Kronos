@@ -10,6 +10,7 @@ import LoginPage           from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
 import ResetPasswordPage  from './pages/auth/ResetPasswordPage'
 import AdminPage          from './pages/admin/AdminPage'
+import CompanyDetailPage  from './pages/admin/CompanyDetailPage'
 import DashboardPage      from './pages/dashboard/DashboardPage'
 import ProjectsPage       from './pages/projects/ProjectsPage'
 import ProjectDetailPage  from './pages/projects/ProjectDetailPage'
@@ -25,8 +26,6 @@ import TeamMemberPage     from './pages/team/TeamMemberPage'
 import CalendarPage       from './pages/calendar/CalendarPage'
 import ProposalsPage      from './pages/proposals/ProposalsPage'
 import ProposalDetailPage from './pages/proposals/ProposalDetailPage'
-
-
 
 /**
  * Restaura o `user` (nome, role, scope, company_id) a partir do token salvo
@@ -91,6 +90,15 @@ export default function App() {
           element={
             <ScopeRoute scope="global">
               <AdminPage />
+            </ScopeRoute>
+          }
+        />
+        {/* Rota adicionada: detalhes/gestão de uma empresa específica */}
+        <Route
+          path="/admin/companies/:id"
+          element={
+            <ScopeRoute scope="global">
+              <CompanyDetailPage />
             </ScopeRoute>
           }
         />
