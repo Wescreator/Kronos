@@ -21,6 +21,13 @@ const update     = async (req, res) => {
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
+const remove     = async (req, res) => {
+  try {
+    await taskService.remove(req.params.id, req.tenant.id)
+    return R.success(res, { message: 'Tarefa excluída com sucesso' })
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
+}
+
 const addComment = async (req, res) => {
   try {
     // req.file (buffer) é passado diretamente ao service, que faz o
@@ -41,4 +48,4 @@ const getDashboard = async (req, res) => {
   catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
-module.exports = { getAll, getById, create, update, addComment, getDashboard }
+module.exports = { getAll, getById, create, update, remove, addComment, getDashboard }

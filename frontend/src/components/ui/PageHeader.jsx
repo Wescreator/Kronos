@@ -18,7 +18,7 @@ export default function PageHeader({ title, subtitle, actions, tag }) {
           {title}
         </h1>
         {subtitle && (
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
             {subtitle}
           </p>
         )}

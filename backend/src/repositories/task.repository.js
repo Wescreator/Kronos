@@ -82,6 +82,14 @@ const update = async (id, companyId, fields) => {
   return rows[0]
 }
 
+const remove = async (id, companyId) => {
+  const { rows } = await pool.query(
+    `DELETE FROM tasks WHERE id = $1 AND company_id = $2 RETURNING id`,
+    [id, companyId]
+  )
+  return rows[0]
+}
+
 const setAssignees = async (taskId, userIds, companyId) => {
   await pool.query(
     'DELETE FROM task_assignments WHERE task_id = $1',
@@ -134,4 +142,4 @@ const getDashboardStats = async (companyId) => {
   return rows[0]
 }
 
-module.exports = { findAll, findById, create, update, setAssignees, findComments, addComment, getDashboardStats }
+module.exports = { findAll, findById, create, update, remove, setAssignees, findComments, addComment, getDashboardStats }

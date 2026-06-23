@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, Clock, FolderKanban } from 'lucide-react'
-import { getTask, updateTask, addTaskComment } from '../../services/tasks.service'
+import { ArrowLeft, Send, Clock, FolderKanban, Trash2 } from 'lucide-react'
+import { getTask, updateTask, addTaskComment, deleteTask } from '../../services/tasks.service'
 import Spinner from '../../components/ui/Spinner'
 import Badge from '../../components/ui/Badge'
 import Avatar from '../../components/ui/Avatar'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { formatDate, formatDateTime, statusLabel, statusColors, priorityLabel, priorityColors } from '../../utils/format'
 import { toast } from 'react-hot-toast'
 import useAuthStore from '../../store/authStore'
@@ -19,6 +20,7 @@ export default function TaskDetailPage() {
   const [loading, setLoading] = useState(true)
   const [comment, setComment] = useState('')
   const [sending, setSending] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -47,20 +49,36 @@ export default function TaskDetailPage() {
     finally { setSending(false) }
   }
 
+  const handleDelete = async () => {
+    try {
+      await deleteTask(id)
+      toast.success('Tarefa excluída')
+      navigate('/app/tasks')
+    } catch { toast.error('Erro ao excluir tarefa') }
+  }
+
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
   if (!task) return null
 
   return (
     <div className="max-w-4xl mx-auto fade-in">
-      <button
-        onClick={() => navigate('/app/tasks')}
-        className="flex items-center gap-2 text-sm mb-5 transition-colors"
-        style={{ color: 'var(--text-muted)' }}
-        onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-      >
-        <ArrowLeft size={15} /> Voltar para Tarefas
-      </button>
+      <div className="flex items-center justify-between mb-5">
+        <button
+          onClick={() => navigate('/app/tasks')}
+          className="flex items-center gap-2 text-sm transition-colors"
+          style={{ color: 'var(--text-muted)' }}
+          onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+        >
+          <ArrowLeft size={15} /> Voltar para Tarefas
+        </button>
+        <button
+          onClick={() => setConfirmDelete(true)}
+          className="btn-danger flex items-center gap-2 text-xs"
+        >
+          <Trash2 size={14} /> Excluir Tarefa
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Coluna principal */}
@@ -183,6 +201,15 @@ export default function TaskDetailPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmDelete}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={handleDelete}
+        title="Excluir tarefa"
+        message={`Tem certeza que deseja excluir a tarefa "${task.title}"? Esta ação não pode ser desfeita.`}
+        danger
+      />
     </div>
   )
 }

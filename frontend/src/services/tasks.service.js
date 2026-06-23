@@ -4,6 +4,7 @@ export const getTasks        = (params) => api.get('/tasks', { params })
 export const getTask         = (id)     => api.get(`/tasks/${id}`)
 export const createTask      = (data)   => api.post('/tasks', data)
 export const updateTask      = (id, d)  => api.patch(`/tasks/${id}`, d)
+export const deleteTask      = (id)     => api.delete(`/tasks/${id}`)
 export const getTasksDashboard = ()     => api.get('/tasks/dashboard')
 export const addTaskComment  = (id, data) => {
   const fd = new FormData()

@@ -33,7 +33,7 @@ const create = async (data, userId, companyId) => {
   })
 
   if (data.assignees?.length) {
-    await taskRepo.setAssignees(task.id, data.assignees, company_id)
+    await taskRepo.setAssignees(task.id, data.assignees, companyId)
   }
 
   return await taskRepo.findById(task.id, companyId)
@@ -58,10 +58,16 @@ const update = async (id, data, userId, companyId) => {
   }
 
   if (data.assignees !== undefined) {
-    await taskRepo.setAssignees(id, data.assignees)
+    await taskRepo.setAssignees(id, data.assignees, companyId)
   }
 
   return await taskRepo.findById(id, companyId)
+}
+
+const remove = async (id, companyId) => {
+  const task = await taskRepo.findById(id, companyId)
+  if (!task) throw { status: 404, message: 'Tarefa não encontrada' }
+  await taskRepo.remove(id, companyId)
 }
 
 const addComment = async (taskId, userId, content, fileUrl, companyId) => {
@@ -74,4 +80,4 @@ const getDashboardStats = async (companyId) => {
   return await taskRepo.getDashboardStats(companyId)
 }
 
-module.exports = { getAll, getById, create, update, addComment, getDashboardStats }
+module.exports = { getAll, getById, create, update, remove, addComment, getDashboardStats }

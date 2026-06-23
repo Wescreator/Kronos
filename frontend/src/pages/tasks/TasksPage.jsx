@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, CheckSquare, Clock, Circle } from 'lucide-react'
+import { Plus, CheckSquare, Clock, Circle, Trash2 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 import { useTasks } from '../../hooks/useTasks'
-import { getTasksDashboard } from '../../services/tasks.service'
+import { getTasksDashboard, deleteTask } from '../../services/tasks.service'
 import PageHeader from '../../components/ui/PageHeader'
 import Spinner from '../../components/ui/Spinner'
 import Badge from '../../components/ui/Badge'
 import Avatar from '../../components/ui/Avatar'
 import EmptyState from '../../components/ui/EmptyState'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import NewTaskModal from '../../components/modals/NewTaskModal'
 import {
   formatDate, statusLabel, statusColors,
@@ -33,6 +35,7 @@ export default function TasksPage() {
   const [showModal, setShowModal] = useState(false)
   const [filters,   setFilters]   = useState({ status: '', priority: '' })
   const [stats,     setStats]     = useState(null)
+  const [taskToDelete, setTaskToDelete] = useState(null)
   const { tasks, loading, refetch } = useTasks(filters)
 
   useEffect(() => {
@@ -42,6 +45,17 @@ export default function TasksPage() {
   const daysOpen = (createdAt) => {
     const diff = Date.now() - new Date(createdAt).getTime()
     return Math.floor(diff / (1000 * 60 * 60 * 24))
+  }
+
+  const handleDelete = async () => {
+    if (!taskToDelete) return
+    try {
+      await deleteTask(taskToDelete.id)
+      toast.success('Tarefa excluída')
+      refetch()
+    } catch {
+      toast.error('Erro ao excluir tarefa')
+    }
   }
 
   return (
@@ -122,6 +136,7 @@ export default function TasksPage() {
                 <th className="table-header hidden lg:table-cell">Responsável</th>
                 <th className="table-header hidden lg:table-cell">Prazo</th>
                 <th className="table-header hidden xl:table-cell">Aberta há</th>
+                <th className="table-header">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -185,6 +200,18 @@ export default function TasksPage() {
                       {daysOpen(t.created_at)}d
                     </span>
                   </td>
+                  <td className="table-cell">
+                    <button
+                      onClick={() => setTaskToDelete(t)}
+                      className="p-1.5 rounded-lg transition-colors"
+                      style={{ color: 'var(--text-muted)' }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#FB7185'}
+                      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                      title="Excluir tarefa"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -196,6 +223,15 @@ export default function TasksPage() {
         open={showModal}
         onClose={() => setShowModal(false)}
         onSuccess={() => { setShowModal(false); refetch() }}
+      />
+
+      <ConfirmDialog
+        open={!!taskToDelete}
+        onClose={() => setTaskToDelete(null)}
+        onConfirm={handleDelete}
+        title="Excluir tarefa"
+        message={`Tem certeza que deseja excluir a tarefa "${taskToDelete?.title}"? Esta ação não pode ser desfeita.`}
+        danger
       />
     </div>
   )

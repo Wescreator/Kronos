@@ -14,6 +14,7 @@ router.get('/',          ctrl.getAll)
 router.get('/:id',       ctrl.getById)
 router.post('/',   validate(V.create), ctrl.create)
 router.patch('/:id', validate(V.update), ctrl.update)
+router.delete('/:id', ctrl.remove)
 router.post('/:id/comments', uploadFile.single('file'), ctrl.addComment)
 
 module.exports = router
