@@ -323,6 +323,130 @@ export default function LoginPage() {
           color:#6B7280;
           font-size:14px;
         } 
+
+        /* ==========================
+           RESPONSIVIDADE MOBILE
+           Branding empilhado acima do
+           formulário, sem ser removido.
+        ========================== */
+
+        @media (max-width:768px){
+
+          .login-page{
+            display:flex;
+            flex-direction:column;
+          }
+
+          .branding-panel{
+            border-right:none;
+            border-bottom:1px solid #b7bcc1;
+            padding:40px 24px 28px;
+          }
+
+          .clock-watermark{
+            width:420px;
+            height:420px;
+            right:-160px;
+          }
+
+          .branding-content{
+            height:auto;
+            padding-left:0;
+            align-items:center;
+            text-align:center;
+          }
+
+          /* a logo usa width inline no JSX; !important é necessário
+             para sobrepor o style inline sem alterar o componente */
+          .branding-content img{
+            width:64px !important;
+            margin-bottom:16px !important;
+          }
+
+          .kronos-title{
+            font-size:40px;
+          }
+
+          .slogan{
+            font-size:15px;
+            text-align:center;
+          }
+
+          .branding-footer{
+            position:static;
+            left:auto;
+            right:auto;
+            bottom:auto;
+            flex-direction:column;
+            gap:10px;
+            margin-top:24px;
+            font-size:13px;
+          }
+
+          .footer-spacer{
+            display:none;
+          }
+
+          .login-panel{
+            padding:32px 20px 48px;
+          }
+
+          .login-content{
+            max-width:100%;
+            padding:32px 24px;
+            border-radius:16px;
+          }
+
+          .login-title{
+            font-size:28px;
+          }
+
+          .login-subtitle{
+            margin-bottom:28px;
+          }
+
+        }
+
+        @media (max-width:480px){
+
+          .branding-panel{
+            padding:32px 20px 24px;
+          }
+
+          .kronos-title{
+            font-size:32px;
+          }
+
+          .login-panel{
+            padding:20px 14px 36px;
+          }
+
+          .login-content{
+            padding:28px 18px;
+          }
+
+          .login-title{
+            font-size:24px;
+          }
+
+          .field{
+            margin-bottom:20px;
+          }
+
+          .kn-input{
+            height:50px;
+          }
+
+          .btn-login{
+            height:50px;
+          }
+
+          .options{
+            flex-wrap:wrap;
+            gap:12px;
+          }
+
+        }
        
       `}</style>
 
