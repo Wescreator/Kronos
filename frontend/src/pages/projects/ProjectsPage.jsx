@@ -182,7 +182,7 @@ export default function ProjectsPage() {
             maxWidth: 340,
             background: '#FFFFFF',
             borderRadius: 14,
-            border: '1px solid #D1D5DB',
+            border: '1px solid #5d6269',
           }}
         >
           <Search
@@ -190,14 +190,14 @@ export default function ProjectsPage() {
             style={{
               position: 'absolute', left: 14, top: '50%',
               transform: 'translateY(-50%)',
-              color: 'var(--bg-card)', pointerEvents: 'none',
+              color: 'var(--text-muted)', pointerEvents: 'none',
             }}
           />
           <input
             style={{
               width: '100%', background: 'transparent',
               paddingLeft: 38, paddingRight: 16, paddingTop: 10, paddingBottom: 10,
-              fontSize: 13, color: 'var(--bg-card)', outline: 'none',
+              fontSize: 13, color: 'var(--text-primary)', outline: 'none',
               boxSizing: 'border-box',
             }}
             placeholder="Buscar projeto..."

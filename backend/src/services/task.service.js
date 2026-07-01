@@ -9,7 +9,8 @@ const getAll = async (query, companyId) => {
     status:    query.status,
     priority:  query.priority,
     projectId: query.project_id,
-    userId:    query.user_id
+    userId:    query.user_id,
+    search:    query.search
   })
   return paginatedResponse(rows, total, page, limit)
 }

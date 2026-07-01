@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, CheckSquare, Clock, Circle, Trash2 } from 'lucide-react'
+import { Plus, CheckSquare, Clock, Circle, Trash2, Search } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { useTasks } from '../../hooks/useTasks'
 import { getTasksDashboard, deleteTask } from '../../services/tasks.service'
@@ -33,7 +33,8 @@ const STATUS_FILTERS = [
 
 export default function TasksPage() {
   const [showModal, setShowModal] = useState(false)
-  const [filters,   setFilters]   = useState({ status: '', priority: '' })
+  const [filters,   setFilters]   = useState({ status: '', priority: '', search: '' })
+  const [searchInput, setSearchInput] = useState('')
   const [stats,     setStats]     = useState(null)
   const [taskToDelete, setTaskToDelete] = useState(null)
   const { tasks, loading, refetch } = useTasks(filters)
@@ -41,6 +42,14 @@ export default function TasksPage() {
   useEffect(() => {
     getTasksDashboard().then(({ data }) => setStats(data.stats))
   }, [])
+
+  // Debounce do campo de busca: evita disparar uma requisição a cada tecla digitada
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters(f => ({ ...f, search: searchInput.trim() }))
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   const daysOpen = (createdAt) => {
     const diff = Date.now() - new Date(createdAt).getTime()
@@ -91,14 +100,35 @@ export default function TasksPage() {
         </div>
       )}
 
+      {/* Busca */}
+      <div className="relative mb-4 w-full md:max-w-[25%]">
+        <Search
+          size={15}
+          className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ color: 'var(--text-primary)' }}
+        />
+        <input
+          type="text"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          placeholder="Buscar por título ou membro..."
+          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-150"
+          style={{
+            background: '#ffffff',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--text-primary)'
+          }}
+        />
+      </div>
+
       {/* Filtros */}
       <div className="flex flex-wrap gap-2 mb-5">
         {STATUS_FILTERS.map(f => (
           <button key={f.value} onClick={() => setFilters({ ...filters, status: f.value })}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={filters.status === f.value
-              ? { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(124,92,252,0.30)' }
-              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.06)' }
+              ? { background: 'rgb(255, 255, 255)', color: '#000000', border: '1px solid rgb(122, 122, 122)' }
+              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgb(122, 122, 122)' }
             }>
             {f.label}
           </button>
@@ -108,8 +138,8 @@ export default function TasksPage() {
           <button key={f.value} onClick={() => setFilters({ ...filters, priority: f.value })}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={filters.priority === f.value
-              ? { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(124,92,252,0.30)' }
-              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.06)' }
+              ? { background: 'rgb(255, 255, 255)', color: '#000000', border: '1px solid rgb(122, 122, 122)' }
+              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgb(122, 122, 122)' }
             }>
             {f.label}
           </button>

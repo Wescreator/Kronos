@@ -228,7 +228,7 @@ export default function ProposalsPage() {
       <div className="flex flex-col sm:flex-row gap-3 mb-7">
         <div
           className="prop-search relative"
-          style={{ flex: '1 1 0%', maxWidth: 340, background: 'rgba(0,0,0,0.02)', borderRadius: 14, border: '1px solid #E5E7EB' }}
+          style={{ flex: '1 1 0%', maxWidth: 340, background: 'rgb(255, 255, 255)', borderRadius: 14, border: '1px solid #414141' }}
         >
           <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
           <input

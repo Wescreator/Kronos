@@ -1,6 +1,6 @@
 const pool = require('../config/database')
 
-const findAll = async ({ companyId, limit, offset, status, priority, projectId, userId }) => {
+const findAll = async ({ companyId, limit, offset, status, priority, projectId, userId, search }) => {
   const conditions = ['t.company_id = $1']
   const params     = [companyId]
 
@@ -8,6 +8,26 @@ const findAll = async ({ companyId, limit, offset, status, priority, projectId, 
   if (priority)  { params.push(priority);  conditions.push(`t.priority = $${params.length}`) }
   if (projectId) { params.push(projectId); conditions.push(`t.project_id = $${params.length}`) }
   if (userId)    { params.push(userId);    conditions.push(`ta.user_id = $${params.length}`) }
+
+  if (search) {
+    // Escapa caracteres especiais do ILIKE (%, _, \) para tratar o termo como texto literal
+    const term = `%${search.replace(/[%_\\]/g, '\\$&')}%`
+    params.push(term)
+    const idx = params.length
+    // Usa EXISTS (subquery independente) para o critério de assignee, em vez de
+    // filtrar via o LEFT JOIN ta/au usado no ARRAY_AGG abaixo. Se filtrássemos
+    // diretamente no LEFT JOIN principal, o agregado de assignees exibiria apenas
+    // o membro que bateu na busca, escondendo os demais responsáveis da tarefa.
+    conditions.push(`(
+      t.title ILIKE $${idx}
+      OR u.name ILIKE $${idx}
+      OR EXISTS (
+        SELECT 1 FROM task_assignments ta_s
+        JOIN users au_s ON au_s.id = ta_s.user_id
+        WHERE ta_s.task_id = t.id AND au_s.name ILIKE $${idx}
+      )
+    )`)
+  }
 
   const where = `WHERE ${conditions.join(' AND ')}`
   params.push(limit, offset)
@@ -33,6 +53,7 @@ const findAll = async ({ companyId, limit, offset, status, priority, projectId, 
   const { rows: cnt } = await pool.query(
     `SELECT COUNT(DISTINCT t.id) FROM tasks t
      LEFT JOIN task_assignments ta ON ta.task_id = t.id
+     LEFT JOIN users u             ON u.id = t.created_by
      ${where}`,
     params.slice(0, -2)
   )

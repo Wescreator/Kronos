@@ -63,12 +63,12 @@ export default function TeamPage() {
       <div className="flex items-center gap-3 mb-7">
         <div
           className="relative flex-1 max-w-sm"
-          style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)' }}
+          style={{ background: 'rgb(255, 255, 255)', borderRadius: 14, border: '1px solid rgb(41, 41, 41)' }}
         >
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--bg-card)' }} />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-primary)' }} />
           <input
             className="w-full bg-transparent pl-9 pr-4 py-2.5 text-sm outline-none"
-            style={{ color: 'var(--bg-hover)' }}
+            style={{ color: 'var(--text-primary)' }}
             placeholder="Buscar membro..."
             value={search}
             onChange={e => setSearch(e.target.value)}
