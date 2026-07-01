@@ -79,7 +79,7 @@ export default function Topbar() {
               rounded-xl
               bg-slate-100
               text-sm font-bold text-slate-700
-              border border-slate-200
+              border border-slate-400
             "
           >
             K
@@ -90,7 +90,7 @@ export default function Topbar() {
         </NavLink>
 
         {/* ── SEPARADOR ────────────────────────────────────────────── */}
-        <div className="hidden lg:block h-5 w-px shrink-0 bg-slate-200" />
+        <div className="hidden lg:block h-5 w-px shrink-0 bg-slate-400" />
 
         {/* ── NAVEGAÇÃO DESKTOP (lg+) ───────────────────────────────*/}
         <nav className="hidden lg:flex items-center gap-0.5">
@@ -104,8 +104,8 @@ export default function Topbar() {
                 text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-200'
-                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-400'
+                  : 'text-slate-500 hover:bg-slate-300 hover:text-slate-800'
                 }
               `}
             >
@@ -127,8 +127,8 @@ export default function Topbar() {
                 rounded-xl
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-200'
-                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-400'
+                  : 'text-slate-500 hover:bg-slate-300 hover:text-slate-800'
                 }
               `}
             >
@@ -153,7 +153,7 @@ export default function Topbar() {
                 rounded-xl
                 text-slate-500
                 transition-all duration-200
-                hover:bg-slate-100 hover:text-slate-800
+                hover:bg-slate-300 hover:text-slate-800
               "
             >
               <Bell size={18} />
@@ -238,7 +238,7 @@ export default function Topbar() {
                 flex items-center gap-2
                 rounded-2xl px-2 py-1.5
                 transition-all duration-200
-                hover:bg-slate-100
+                hover:bg-slate-300
               "
             >
               <Avatar
