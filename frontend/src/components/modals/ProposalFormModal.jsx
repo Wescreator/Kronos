@@ -365,7 +365,9 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
       >
         {/* Campo 1: Título */}
         <div>
-          <label className="label">Título <span style={{ color: '#FB7185' }}>*</span></label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Título <span style={{ color: '#FB7185' }}>*</span></label>
           <input
             className="input"
             placeholder="Ex: Proposta de Projeto Arquitetônico — Residência Silva"
@@ -376,7 +378,12 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
 
         {/* Campo 2: Cliente */}
         <div>
-          <label className="label">Cliente</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Cliente
+          </label>
           {clients.length > 0 ? (
             <select
               className="input"
@@ -417,7 +424,12 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
 
         {/* Campo 3: Objeto do Serviço */}
         <div>
-          <label className="label">Objeto do Serviço <span style={{ color: '#FB7185' }}>*</span></label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Objeto do Serviço <span style={{ color: '#FB7185' }}>*</span>
+          </label>
           <input
             className="input"
             placeholder="Ex: Elaboração de projeto arquitetônico de residência unifamiliar"
@@ -463,7 +475,12 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
 
         {/* Campo 7: Considerações Finais */}
         <div>
-          <label className="label">Considerações Finais</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Considerações Finais
+          </label>
           <RichTextArea
             value={form.final_notes}
             onChange={val => set('final_notes', val)}
@@ -474,7 +491,12 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
         {/* Campos 8 + 9: Prazo e Validade */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Prazo dos Serviços</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Prazo dos Serviços
+            </label>
             <input
               className="input"
               placeholder="Ex: 30 dias corridos"
@@ -483,7 +505,12 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
             />
           </div>
           <div>
-            <label className="label">Validade da Proposta</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Validade da Proposta
+            </label>
             <input
               className="input"
               type="date"

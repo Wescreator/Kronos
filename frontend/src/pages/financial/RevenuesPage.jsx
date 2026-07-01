@@ -101,8 +101,8 @@ export default function RevenuesPage() {
             <button key={i} onClick={() => setSelectedMonth(i + 1)}
               className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
               style={selectedMonth === i + 1
-                ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+                ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
+                : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }
               }>
               {m.slice(0, 3)}
             </button>
@@ -136,9 +136,8 @@ export default function RevenuesPage() {
           <button key={f.value} onClick={() => setStatusFilter(f.value)}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={statusFilter === f.value
-              ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-              : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
-            }>
+              ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
+              : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }            }>
             {f.label}
           </button>
         ))}

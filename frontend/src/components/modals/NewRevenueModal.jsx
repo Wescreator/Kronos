@@ -125,7 +125,12 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
 
         {revenueMode === 'project' && (
           <div>
-            <label className="label">Projeto *</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Projeto *
+            </label>
             <select className="input" value={form.project_id}
               onChange={e => handleProjectSelect(e.target.value)} required>
               <option value="">Selecione um projeto...</option>
@@ -137,28 +142,41 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
         )}
 
         <div>
-          <label className="label">Título *</label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Título*</label>
           <input className="input" required placeholder="Nome da receita"
             value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
         </div>
 
         {revenueMode === 'new' && (
           <div>
-            <label className="label">Cliente</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Cliente
+            </label>
             <input className="input" placeholder="Nome do cliente"
               value={form.client} onChange={e => setForm({ ...form, client: e.target.value })} />
           </div>
         )}
 
         <div>
-          <label className="label">Parcelas</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Parcelas
+          </label>
           <div className="space-y-2.5">
             {form.installments_list.map((inst, index) => (
               <div key={index}
                 className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end p-3 rounded-xl"
                 style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.06)' }}>
                 <div>
-                  <label className="label text-[10px] mb-1">
+                  <label className="block mb-1 text-sm font-semibold"
+                    style={{ color: "var(--text-primary)" }}>
                     Parcela {index + 1} — Valor *
                   </label>
                   <input type="number" step="0.01" min="0" className="input py-2 text-sm" required
@@ -167,7 +185,10 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
                     onChange={e => updateInstallmentField(index, 'amount', e.target.value)} />
                 </div>
                 <div>
-                  <label className="label text-[10px] mb-1">Vencimento *</label>
+                  <label className="block mb-1 text-sm font-semibold"
+                    style={{ color: "var(--text-primary)" }}>
+                    Vencimento *
+                  </label>
                   <input type="date" className="input py-2 text-sm" required
                     value={inst.due_date}
                     onChange={e => updateInstallmentField(index, 'due_date', e.target.value)} />
@@ -201,7 +222,12 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
         </div>
 
         <div>
-          <label className="label">Descrição</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Descrição
+          </label>
           <textarea className="input resize-none" rows={2}
             value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
         </div>

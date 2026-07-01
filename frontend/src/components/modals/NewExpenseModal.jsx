@@ -186,7 +186,9 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
     <PortalModal open={open} onClose={onClose} title={isEdit ? 'Editar Despesa' : 'Nova Despesa'} size="md">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="label">Título *</label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Título*</label>
           <input
             className="input"
             required
@@ -197,7 +199,12 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="label">Valor *</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Valor *
+            </label>
             <input
               type="number" step="0.01" min="0"
               className="input" required
@@ -206,7 +213,12 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
             />
           </div>
           <div>
-            <label className="label">Vencimento *</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Vencimento *
+            </label>
             <input
               type="date" className="input" required
               value={form.due_date}
@@ -226,7 +238,12 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
         />
 
         <div>
-          <label className="label">Descrição</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Descrição
+          </label>
           <textarea
             className="input resize-none" rows={2}
             value={form.description}

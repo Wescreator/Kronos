@@ -161,8 +161,8 @@ export default function ExpensesPage() {
               onClick={() => handleMonthChange(i + 1)}
               className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
               style={selectedMonth === i + 1
-                ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+                ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
+                : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }
               }
             >
               {m.slice(0, 3)}
@@ -213,8 +213,8 @@ export default function ExpensesPage() {
               onClick={() => handleStatusFilter(f.value)}
               className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
               style={statusFilter === f.value
-                ? { background: 'rgba(124,92,252,0.20)', color: '#A78BFA', border: '1px solid rgba(124,92,252,0.30)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }
+                ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
+                : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }
               }
             >
               {f.label}
@@ -223,12 +223,12 @@ export default function ExpensesPage() {
         </div>
 
         {categories.length > 0 && (
-          <div className="w-px h-5 shrink-0" style={{ background: 'rgba(255,255,255,0.08)' }} />
+          <div className="w-px h-5 shrink-0" style={{ background: 'rgba(116, 116, 116, 0.88)' }} />
         )}
 
         {categories.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Categoria:</span>
+            <span className="text-xs font-semibold" style={{ color: 'var(--bg-card)' }}>Categoria:</span>
             <select
               className="input text-xs py-2"
               style={{ minWidth: 140, height: 'auto' }}
@@ -245,7 +245,7 @@ export default function ExpensesPage() {
 
         <span
           className="ml-auto text-xs font-semibold px-3 py-2 rounded-xl shrink-0"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }}
         >
           {pagination.total} {pagination.total === 1 ? 'registro' : 'registros'}
         </span>

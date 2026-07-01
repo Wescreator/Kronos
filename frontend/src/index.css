@@ -209,7 +209,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.10em;
-  color: var(--text-muted);
+  color: var(--bg-card);
   margin-bottom: 6px;
 }
 

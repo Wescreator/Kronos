@@ -56,25 +56,34 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
     <PortalModal open={open} onClose={onClose} title="Nova Tarefa" size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label className="label">Título *</label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Título *
+          </label>
           <input className="input" placeholder="Título da tarefa" required
             value={form.title} onChange={e => set('title', e.target.value)} />
         </div>
         <div>
-          <label className="label">Descrição</label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Descrição</label>
           <textarea className="input resize-none" rows={3} placeholder="Detalhes da tarefa..."
             value={form.description} onChange={e => set('description', e.target.value)} />
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="label">Projeto</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}>Projeto</label>
             <select className="input" value={form.project_id} onChange={e => set('project_id', e.target.value)}>
               <option value="">Sem projeto</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
             </select>
           </div>
           <div>
-            <label className="label">Prioridade</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}>Prioridade</label>
             <div className="flex gap-1.5 mt-1">
               {priorityOpts.map(opt => (
                 <button
@@ -93,13 +102,17 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
             </div>
           </div>
           <div>
-            <label className="label">Prazo</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}>Prazo</label>
             <input type="date" className="input" value={form.due_date}
               onChange={e => set('due_date', e.target.value)} />
           </div>
         </div>
         <div>
-          <label className="label">Responsáveis</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}>Responsáveis</label>
           <div className="flex flex-wrap gap-2 mt-1.5">
             {users.map(u => (
               <button

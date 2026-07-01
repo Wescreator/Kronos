@@ -100,17 +100,23 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         )}
 
         <div>
-          <label className="label">Título *</label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Título *</label>
           <input className="input" placeholder="Nome do projeto" required
             value={form.title} onChange={e => set('title', e.target.value)} />
         </div>
         <div>
-          <label className="label">Cliente</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}>Cliente</label>
           <input className="input" placeholder="Nome do cliente"
             value={form.client} onChange={e => set('client', e.target.value)} />
         </div>
         <div>
-          <label className="label">Descrição</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}>Descrição</label>
           <textarea className="input resize-none" rows={3}
             placeholder="Descreva o objetivo do projeto"
             value={form.description} onChange={e => set('description', e.target.value)} />
@@ -118,12 +124,16 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
 
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="label">Orçamento (R$)</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}>Orçamento (R$)</label>
             <input type="number" min="0" className="input" placeholder="0,00"
               value={form.budget} onChange={e => set('budget', e.target.value)} />
           </div>
           <div>
-            <label className="label">
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}>
               Data de início
               {blockedUntil && (
                 <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded"
@@ -137,7 +147,11 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
               style={blockedUntil ? { borderColor: 'rgba(251,191,36,0.30)' } : {}} />
           </div>
           <div>
-            <label className="label">Previsão de entrega</label>
+            <label
+              className="block mb-1 text-sm font-semibold"
+              style={{ color: "var(--text-primary)" }}>
+              Previsão de entrega
+            </label>
             <input type="date" className="input"
               min={form.start_date || format(new Date(), 'yyyy-MM-dd')}
               value={form.expected_date} onChange={e => set('expected_date', e.target.value)} />
@@ -145,7 +159,11 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         </div>
 
         <div>
-          <label className="label">Capa do projeto</label>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}>
+            Capa do projeto
+          </label>
           <div className="relative rounded-2xl text-center py-5 px-4"
             style={{ background: 'rgba(0,0,0,0.02)', border: '1px dashed rgba(0,0,0,0.10)' }}>
             <input type="file" accept="image/*"
