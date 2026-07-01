@@ -12,10 +12,10 @@ import ProposalFormModal   from '../modals/ProposalFormModal'
 
 /* ── Mesmos estilos de glassmorphism usados na Dashboard ── */
 const tileStyle = {
-  background: '#55555500', // Fundo cinza neutro
-  border: '1px solid rgba(255,255,255,0.07)', // Borda sutil
-  border: '1px solid rgba(63, 63, 63, 0.07)',
-  borderTop: '1px solid rgba(63, 63, 63, 0.07)',
+  background: '#3a3a3a00', // Fundo cinza neutro
+  border: '2px solid rgba(255,255,255,0.07)', // Borda sutil
+  border: '2px solid rgba(63, 63, 63, 0.07)',
+  borderTop: '2px solid rgba(63, 63, 63, 0.07)',
 }
 
 const tileHoverEnter = (e) => {
@@ -24,7 +24,7 @@ const tileHoverEnter = (e) => {
 }
 const tileHoverLeave = (e) => {
   e.currentTarget.style.background  = tileStyle.background
-  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'
+  e.currentTarget.style.borderColor = 'rgba(63, 63, 63, 0.07)'
 }
 
 export default function QuickActions({ onActionSuccess }) {
@@ -69,8 +69,8 @@ export default function QuickActions({ onActionSuccess }) {
   if (ACTIONS.length === 0) return null
 
   return (
-    <div className="card p-6">
-      <div className="mb-5">
+    <div className="card px-6 py-4">
+      <div className="mb-3">
         <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
           style={{ color: 'var(--text-muted)' }}>Atalhos</p>
         <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -86,17 +86,17 @@ export default function QuickActions({ onActionSuccess }) {
               key={action.key}
               type="button"
               onClick={() => setOpenModal(action.key)}
-              className="flex flex-col items-center justify-center gap-2.5 rounded-2xl py-5 px-3 transition-all duration-200"
+              className="flex flex-col items-center justify-center gap-2 rounded-2xl py-3 px-3 transition-all duration-200"
               style={tileStyle}
               onMouseEnter={tileHoverEnter}
               onMouseLeave={tileHoverLeave}
             >
               <div style={{
-                width: 40, height: 40, borderRadius: 12,
+                width: 36, height: 36, borderRadius: 10,
                 background: action.iconBg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}>
-                <Icon size={18} style={{ color: action.iconColor }} />
+                <Icon size={14} style={{ color: action.iconColor }} />
               </div>
               <span className="text-xs font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>
                 {action.label}
