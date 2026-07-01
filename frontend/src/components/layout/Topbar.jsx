@@ -1,4 +1,4 @@
-import {Bell, Menu, X, Search, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText} from 'lucide-react'
+import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard'  },
   { to: '/app/agenda',    icon: Calendar,        label: 'Agenda' },
   { to: '/app/projects',  icon: FolderKanban,    label: 'Projetos'   },
+  { to: '/app/clients',   icon: Users,           label: 'Clientes'   }, // ── NOVO MÓDULO ADICIONADO AQUI ──
   { to: '/app/financial', icon: DollarSign,       label: 'Financeiro' },
   { to: '/app/tasks',     icon: CheckSquare,      label: 'Tarefas'    },
   { to: '/app/chat',      icon: MessageSquare,    label: 'Chat'       },
@@ -22,9 +23,9 @@ export default function Topbar() {
   const { user, logout } = useAuthStore()
 
   // ─── Estados (idênticos ao original + showMobileMenu) ────────────
-  const [notifs,         setNotifs]         = useState([])
-  const [showNotifs,     setShowNotifs]     = useState(false)
-  const [showUser,       setShowUser]       = useState(false)
+  const [notifs,          setNotifs]         = useState([])
+  const [showNotifs,      setShowNotifs]     = useState(false)
+  const [showUser,        setShowUser]       = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
 
   // ─── Busca de notificações (lógica original preservada) ──────────
@@ -136,45 +137,8 @@ export default function Topbar() {
           ))}
         </nav>
 
-        {/* ── BUSCA (md+) ───────────────────────────────────────────*/}
-        <div className="hidden md:flex flex-1 justify-end">
-          <div
-            className="
-              flex h-9 w-full max-w-xs items-center gap-3
-              rounded-xl
-              border border-slate-200
-              bg-slate-50
-              px-3
-            "
-          >
-            <Search size={15} className="shrink-0 text-slate-400" />
-            <input
-              placeholder="Buscar projetos, tarefas, membros..."
-              className="
-                flex-1 min-w-0
-                bg-transparent
-                text-sm text-slate-800
-                placeholder:text-slate-400
-                outline-none
-              "
-            />
-            <span
-              className="
-                shrink-0
-                rounded-md
-                border border-slate-200
-                bg-slate-50
-                px-1.5 py-0.5
-                text-xs text-slate-400
-              "
-            >
-              ⌘K
-            </span>
-          </div>
-        </div>
-
         {/* ── DIREITA ──────────────────────────────────────────────── */}
-        <div className="flex items-center gap-1.5 ml-auto md:ml-0 shrink-0">
+        <div className="flex items-center gap-1.5 ml-auto shrink-0">
 
           {/* NOTIFICAÇÕES — lógica 100% original preservada */}
           <div className="relative">
@@ -359,30 +323,6 @@ export default function Topbar() {
             md:hidden
           "
         >
-          {/* Busca mobile */}
-          <div className="border-b border-slate-100 px-4 py-3">
-            <div
-              className="
-                flex h-10 items-center gap-3
-                rounded-xl
-                border border-slate-200
-                bg-slate-50
-                px-3
-              "
-            >
-              <Search size={15} className="shrink-0 text-slate-400" />
-              <input
-                placeholder="Buscar projetos, tarefas, membros..."
-                className="
-                  flex-1 bg-transparent
-                  text-sm text-slate-800
-                  placeholder:text-slate-400
-                  outline-none
-                "
-              />
-            </div>
-          </div>
-
           {/* Links de navegação mobile */}
           <nav className="px-3 py-3">
             {NAV_LINKS.map(({ to, icon: Icon, label }) => (
