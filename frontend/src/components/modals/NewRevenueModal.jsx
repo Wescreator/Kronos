@@ -100,7 +100,9 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
     <PortalModal open={open} onClose={onClose} title="Nova Receita" size="lg">
       <form onSubmit={handleCreate} className="space-y-5">
         <div>
-          <label className="label">Tipo de receita</label>
+          <label
+          className="block mb-1 text-sm font-semibold"
+          style={{ color: "var(--text-primary)" }}>Tipo de Receita</label>
           <div className="grid grid-cols-2 gap-3 mt-1">
             {REVENUE_MODES.map(mode => {
               const Icon = mode.icon
