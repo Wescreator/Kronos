@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
           box-shadow: 0 0 0 3px rgba(220,38,38,0.12);
         }
         .kn-btn {
-          width: 100%; height: 56px; border-radius: 10px;
+          width: 100%; min-height: 56px; border-radius: 10px;
           background: #374151;
           border: none;
           color: #fff; font-size: 15px; font-weight: 600;
@@ -103,6 +103,14 @@ export default function ResetPasswordPage() {
         }
         .kn-btn:hover:not(:disabled)  { background: #1f2937; }
         .kn-btn:disabled              { background: #9CA3AF; cursor: not-allowed; }
+
+        .kn-page-wrap { padding: 0 20px; }
+        .kn-card { padding: 48px 44px; }
+
+        @media (max-width: 480px) {
+          .kn-page-wrap { padding: 0 14px; }
+          .kn-card { padding: 32px 22px; border-radius: 16px; }
+        }
       `}</style>
 
       <div style={{
@@ -115,8 +123,8 @@ export default function ResetPasswordPage() {
           style: { background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: 12 },
         }} />
 
-        <div style={{
-          position: 'relative', zIndex: 10, width: '100%', maxWidth: 480, padding: '0 20px',
+        <div className="kn-page-wrap" style={{
+          position: 'relative', zIndex: 10, width: '100%', maxWidth: 480,
           animation: 'kronosFadeUp 0.65s cubic-bezier(.22,1,.36,1) forwards',
         }}>
           {/* Logo */}
@@ -133,11 +141,11 @@ export default function ResetPasswordPage() {
           </div>
 
           {/* Card */}
-          <div style={{
+          <div className="kn-card" style={{
             background: '#FFFFFF',
             borderRadius: 20,
             boxShadow: '0 30px 70px -20px rgba(20,24,28,0.45), 0 1px 0 rgba(255,255,255,0.6) inset',
-            padding: '48px 44px', position: 'relative', overflow: 'hidden',
+            position: 'relative', overflow: 'hidden',
           }}>
 
             <div style={{ position: 'relative', zIndex: 1 }}>
