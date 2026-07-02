@@ -15,7 +15,7 @@ import useAuthStore  from '../../store/authStore'
 import { can }       from '../../utils/permissions'
 
 const STATUS_META = {
-  draft:    { label: 'Rascunho',  color: 'rgba(255,255,255,0.08)', text: 'rgba(255,255,255,0.55)', icon: Clock },
+  draft:    { label: 'Rascunho',  color: 'rgba(196, 196, 196, 0.65)', text: '#6B7280',                icon: Clock },
   sent:     { label: 'Enviada',   color: 'rgba(56, 191, 248, 0.02)',  text: '#38BDF8',                icon: Send },
   approved: { label: 'Aprovada',  color: 'rgba(52, 211, 153, 0.06)',  text: '#34D399',                icon: CheckCircle2 },
   rejected: { label: 'Rejeitada', color: 'rgba(251, 113, 134, 0.07)', text: '#FB7185',                icon: XCircle },
@@ -48,7 +48,8 @@ function StatusBadge({ status }) {
 function InfoBlock({ label, children }) {
   return (
     <div>
-      <p className="label">{label}</p>
+      <p className="mb-2 text-sm font-semibold"
+      style={{ color: "#374151" }}> {label}</p>
       <div className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>
         {children || <span style={{ color: 'var(--text-muted)' }}>—</span>}
       </div>
@@ -338,9 +339,9 @@ export default function ProposalDetailPage() {
       <button
         onClick={() => navigate('/app/proposals')}
         className="flex items-center gap-2 text-sm mb-5 transition-colors"
-        style={{ color: 'var(--text-muted)' }}
+        style={{ color: 'var(--bg-card)' }}
         onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--bg-card)'}
       >
         <ArrowLeft size={15} /> Voltar para Propostas
       </button>
@@ -350,7 +351,7 @@ export default function ProposalDetailPage() {
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#ffffff', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#6B7280', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                 {proposal.proposal_number}
               </span>
               <StatusBadge status={proposal.status} />
@@ -394,8 +395,8 @@ export default function ProposalDetailPage() {
 
         {/* Alterar status */}
         {canEdit && (
-          <div className="mt-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-            <p className="label mb-2">Alterar status</p>
+          <div className="mt-5 pt-4" style={{ borderTop: '1px solid #b9b9b9' }}>
+            <p className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Alterar status</p>
             <div className="flex gap-2 flex-wrap">
               {STATUS_OPTIONS.map(s => (
                 <button
@@ -421,10 +422,11 @@ export default function ProposalDetailPage() {
           { label: 'Valor Total', value: totalServices > 0 ? `R$ ${totalServices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '—', icon: <DollarSign size={14} />, color: '#34D399' },
           { label: 'Validade',    value: proposal.valid_until ? formatDate(proposal.valid_until) : '—', icon: <Calendar size={14} />, color: '#38BDF8' },
           { label: 'Prazo',       value: proposal.service_deadline || '—', icon: <Clock size={14} />, color: '#A78BFA' },
-          { label: 'Criada em',   value: formatDate(proposal.created_at), icon: <FileText size={14} />, color: 'rgba(255,255,255,0.45)' },
+          { label: 'Criada em',   value: formatDate(proposal.created_at), icon: <FileText size={14} />, color: '#6B7280' },
         ].map(item => (
           <div key={item.label} className="card p-4">
-            <p className="label">{item.label}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide"
+            style={{ color: "#6B7280" }}> {item.label}</p>
             <div className="flex items-center gap-2 mt-1">
               <span style={{ color: item.color }}>{item.icon}</span>
               <span className="text-sm font-semibold" style={{ color: item.color }}>{item.value}</span>
@@ -445,11 +447,12 @@ export default function ProposalDetailPage() {
       {/* Escopo */}
       {(proposal.scope_items || []).length > 0 && (
         <div className="card p-5 mb-4">
-          <p className="label mb-3">Descrição dos Serviços</p>
+          <p className="mb-3 text-sm font-semibold"
+          style={{ color: "#374151" }}>Descrição dos Serviços</p>
           <ul className="space-y-2">
             {proposal.scope_items.map((item, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                <span style={{ color: '#A78BFA', fontWeight: 700, flexShrink: 0 }}>•</span>
+              <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-primary)' }}>
+                <span style={{ color: '#000000', fontWeight: 700, flexShrink: 0 }}>•</span>
                 {item.description}
               </li>
             ))}
@@ -460,7 +463,8 @@ export default function ProposalDetailPage() {
       {/* Tabela de serviços */}
       {(proposal.services || []).length > 0 && (
         <div className="card p-5 mb-4">
-          <p className="label mb-3">Cálculo Técnico dos Serviços</p>
+          <p className="mb-3 text-sm font-semibold"
+          style={{ color: "#374151" }}>Cálculo Técnico dos Serviços</p>
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -472,7 +476,7 @@ export default function ProposalDetailPage() {
               </thead>
               <tbody>
                 {proposal.services.map((s, i) => (
-                  <tr key={i} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  <tr key={i} style={{ borderTop: '1px solid #b9b9b9' }}>
                     <td className="table-cell" style={{ paddingLeft: 0 }}>{s.description}</td>
                     <td className="table-cell" style={{ paddingLeft: 0, color: '#34D399', fontWeight: 600 }}>
                       R$ {parseFloat(s.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -480,7 +484,7 @@ export default function ProposalDetailPage() {
                     <td className="table-cell" style={{ paddingLeft: 0 }}>{s.deadline_days} dias</td>
                   </tr>
                 ))}
-                <tr style={{ borderTop: '2px solid rgba(124,92,252,0.25)' }}>
+                <tr style={{ borderTop: '2px solid #b9b9b9' }}>
                   <td className="table-cell font-bold" style={{ paddingLeft: 0, color: 'var(--text-primary)' }}>Total</td>
                   <td className="table-cell font-bold" style={{ paddingLeft: 0, color: '#34D399', fontSize: 15 }}>
                     R$ {totalServices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -496,11 +500,12 @@ export default function ProposalDetailPage() {
       {/* Condições de pagamento */}
       {(proposal.payment_terms || []).length > 0 && (
         <div className="card p-5 mb-4">
-          <p className="label mb-3">Condições de Pagamento</p>
+          <p className="mb-3 text-sm font-semibold"
+          style={{ color: "#374151" }}>Condições de Pagamento</p>
           <div className="space-y-2 mb-3">
             {proposal.payment_terms.map((pt, i) => (
               <div key={i} className="flex items-center justify-between py-2"
-                style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                style={{ borderBottom: '1px solid #b9b9b9' }}>
                 <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{pt.description}</span>
                 <span className="text-sm font-semibold" style={{ color: '#34D399' }}>
                   R$ {parseFloat(pt.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
@@ -519,7 +524,8 @@ export default function ProposalDetailPage() {
       {/* Considerações finais */}
       {proposal.final_notes && (
         <div className="card p-5 mb-4">
-          <p className="label mb-3">Considerações Finais</p>
+          <p className="mb-3 text-sm font-semibold"
+          style={{ color: "#374151" }}>Considerações Finais</p>
           <p className="text-sm" style={{ color: 'var(--text-secondary)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
             {proposal.final_notes}
           </p>
