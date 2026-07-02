@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, Trash2, Plus, Building2, Users, Clock,
-  CreditCard, Settings, LayoutGrid, ShieldCheck,
+  CreditCard, Settings, LayoutGrid, ShieldCheck, ImagePlus, Upload,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import platformService from '../../services/platform.service'
@@ -141,6 +141,12 @@ export default function CompanyDetailPage() {
   const openEditUser = (u) => { setEditingUser(u); setShowUserModal(true) }
   const handleUserSaved = () => { setShowUserModal(false); setEditingUser(null); loadUsers() }
 
+  /* ── Configurações: logo + responsável técnico ──────────────────────── */
+  const handleCompanyUpdated = (updated) => {
+    setCompany(updated)
+    setCompanyEdit(toCompanyEdit(updated))
+  }
+
   if (loading) {
     return <div className="flex justify-center py-32"><Spinner size="lg" /></div>
   }
@@ -216,7 +222,9 @@ export default function CompanyDetailPage() {
 
       {activeTab === 'financeiro' && <FinancialTab company={company} stats={stats} />}
 
-      {activeTab === 'config' && <SettingsTab />}
+      {activeTab === 'config' && (
+        <SettingsTab company={company} companyId={id} onUpdated={handleCompanyUpdated} />
+      )}
 
       <UserModal
         open={showUserModal}
@@ -435,12 +443,150 @@ function FinancialTab({ company, stats }) {
   )
 }
 
-function SettingsTab() {
+/**
+ * Configurações de identidade visual/assinatura, usadas na emissão de
+ * propostas em PDF/DOCX: logo da empresa, nome e cargo do responsável
+ * técnico que assina os documentos.
+ */
+function SettingsTab({ company, companyId, onUpdated }) {
+  const fileInputRef = useRef(null)
+
+  const [responsibleName, setResponsibleName] = useState(company.responsible_name || '')
+  const [responsibleRole, setResponsibleRole] = useState(company.responsible_role || '')
+  const [savingResponsible, setSavingResponsible] = useState(false)
+
+  const [logoPreview, setLogoPreview] = useState(company.logo_url || null)
+  const [logoFile,    setLogoFile]    = useState(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
+
+  useEffect(() => {
+    setResponsibleName(company.responsible_name || '')
+    setResponsibleRole(company.responsible_role || '')
+    setLogoPreview(company.logo_url || null)
+    setLogoFile(null)
+  }, [company])
+
+  const handlePickLogo = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setLogoFile(file)
+    setLogoPreview(URL.createObjectURL(file))
+  }
+
+  const handleUploadLogo = async () => {
+    if (!logoFile) return
+    setUploadingLogo(true)
+    try {
+      const updated = await platformService.uploadCompanyLogo(companyId, logoFile)
+      toast.success('Logo atualizado')
+      onUpdated(updated)
+      setLogoFile(null)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao enviar logo')
+    } finally {
+      setUploadingLogo(false)
+    }
+  }
+
+  const handleSaveResponsible = async () => {
+    setSavingResponsible(true)
+    try {
+      const updated = await platformService.updateCompany(companyId, {
+        responsible_name: responsibleName,
+        responsible_role: responsibleRole,
+      })
+      toast.success('Responsável técnico atualizado')
+      onUpdated(updated)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao salvar responsável')
+    } finally {
+      setSavingResponsible(false)
+    }
+  }
+
   return (
-    <div className="card p-6">
-      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Configurações administrativas desta empresa estarão disponíveis em breve.
-      </p>
+    <div className="flex flex-col gap-5">
+      {/* Logo da empresa */}
+      <div className="card p-6">
+        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+          Logomarca da empresa
+        </p>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-secondary)' }}>
+          Usada no cabeçalho das propostas comerciais geradas em PDF e Word.
+        </p>
+
+        <div className="flex items-center gap-5 flex-wrap">
+          <div
+            style={{
+              width: 96, height: 96, borderRadius: 16,
+              border: '1px dashed var(--border-medium)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              overflow: 'hidden', background: 'rgba(0,0,0,0.02)', flexShrink: 0,
+            }}
+          >
+            {logoPreview
+              ? <img src={logoPreview} alt="Logo da empresa" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              : <ImagePlus size={22} style={{ color: 'var(--text-muted)' }} />
+            }
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={handlePickLogo}
+              style={{ display: 'none' }}
+            />
+            <button type="button" onClick={() => fileInputRef.current?.click()} className="btn-secondary">
+              Escolher imagem
+            </button>
+            {logoFile && (
+              <button type="button" onClick={handleUploadLogo} disabled={uploadingLogo} className="btn-primary">
+                <Upload size={13} /> {uploadingLogo ? 'Enviando...' : 'Salvar logo'}
+              </button>
+            )}
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>PNG, JPG ou WebP.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Responsável técnico (assinatura dos documentos) */}
+      <div className="card p-6">
+        <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+          Responsável pela assinatura
+        </p>
+        <p className="text-xs mb-4" style={{ color: 'var(--text-secondary)' }}>
+          Nome e cargo exibidos no campo de assinatura das propostas em PDF e Word.
+        </p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="label">Nome do responsável</label>
+            <input
+              className="input"
+              value={responsibleName}
+              onChange={e => setResponsibleName(e.target.value)}
+              placeholder="Ex: Romulo Sandes"
+            />
+          </div>
+          <div>
+            <label className="label">Cargo / Função</label>
+            <input
+              className="input"
+              value={responsibleRole}
+              onChange={e => setResponsibleRole(e.target.value)}
+              placeholder="Ex: Responsável Técnico"
+            />
+          </div>
+        </div>
+
+        <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          <button onClick={handleSaveResponsible} disabled={savingResponsible} className="btn-primary">
+            {savingResponsible ? 'Salvando...' : 'Salvar responsável'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

@@ -39,9 +39,9 @@ const create = async (data, userId, companyId) => {
 
   // Salva relacionamentos em paralelo
   await Promise.all([
-    proposalRepo.replaceScopeItems(proposal.id,   data.scope_items    || []),
-    proposalRepo.replaceServices(proposal.id,      data.services       || []),
-    proposalRepo.replacePaymentTerms(proposal.id,  data.payment_terms  || []),
+    proposalRepo.replaceScopeItems(proposal.id,   companyId, data.scope_items    || []),
+    proposalRepo.replaceServices(proposal.id,      companyId, data.services       || []),
+    proposalRepo.replacePaymentTerms(proposal.id,  companyId, data.payment_terms  || []),
   ])
 
   return proposalRepo.findById(proposal.id, companyId)
@@ -67,9 +67,9 @@ const update = async (id, data, companyId) => {
   }
 
   await Promise.all([
-    data.scope_items   !== undefined && proposalRepo.replaceScopeItems(id,  data.scope_items),
-    data.services      !== undefined && proposalRepo.replaceServices(id,    data.services),
-    data.payment_terms !== undefined && proposalRepo.replacePaymentTerms(id, data.payment_terms),
+    data.scope_items   !== undefined && proposalRepo.replaceScopeItems(id,  companyId, data.scope_items),
+    data.services      !== undefined && proposalRepo.replaceServices(id,    companyId, data.services),
+    data.payment_terms !== undefined && proposalRepo.replacePaymentTerms(id, companyId, data.payment_terms),
   ])
 
   return proposalRepo.findById(id, companyId)
@@ -97,9 +97,9 @@ const duplicate = async (id, userId, companyId) => {
   })
 
   await Promise.all([
-    proposalRepo.replaceScopeItems(copy.id,  original.scope_items),
-    proposalRepo.replaceServices(copy.id,    original.services),
-    proposalRepo.replacePaymentTerms(copy.id, original.payment_terms),
+    proposalRepo.replaceScopeItems(copy.id,  companyId, original.scope_items),
+    proposalRepo.replaceServices(copy.id,    companyId, original.services),
+    proposalRepo.replacePaymentTerms(copy.id, companyId, original.payment_terms),
   ])
 
   return proposalRepo.findById(copy.id, companyId)

@@ -16,6 +16,18 @@ const platformService = {
   updateCompany: (companyId, payload) =>
     api.patch(`/platform/companies/${companyId}`, payload).then(r => r.data.company),
 
+  // Upload do logo da empresa (multipart/form-data).
+  // Retorna a company atualizada, já com logo_url novo.
+  uploadCompanyLogo: (companyId, file) => {
+    const formData = new FormData()
+    formData.append('logo', file)
+    return api
+      .post(`/platform/companies/${companyId}/logo`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then(r => r.data.company)
+  },
+
   setCompanyActive: (companyId, isActive) =>
     api.patch(`/platform/companies/${companyId}/active`, { is_active: isActive }).then(r => r.data),
 

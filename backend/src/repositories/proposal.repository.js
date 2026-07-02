@@ -61,9 +61,14 @@ const findById = async (id, companyId) => {
     `SELECT
        p.*,
        p.client_name AS client_display_name,
-       u.name AS created_by_name
+       u.name AS created_by_name,
+       c.name              AS company_name,
+       c.logo_url          AS company_logo_url,
+       c.responsible_name  AS responsible_name,
+       c.responsible_role  AS responsible_role
      FROM proposals p
-     LEFT JOIN users u ON u.id = p.created_by
+     LEFT JOIN users u     ON u.id = p.created_by
+     LEFT JOIN companies c ON c.id = p.company_id
      WHERE p.id = $1 AND p.company_id = $2`,
     [id, companyId]
   )
@@ -134,35 +139,35 @@ const remove = async (id, companyId) => {
 }
 
 // ── SCOPE ITEMS ───────────────────────────────────────────────
-const replaceScopeItems = async (proposalId, items) => {
+const replaceScopeItems = async (proposalId, companyId, items) => {
   await pool.query('DELETE FROM proposal_scope_items WHERE proposal_id = $1', [proposalId])
   for (let i = 0; i < items.length; i++) {
     await pool.query(
-      'INSERT INTO proposal_scope_items (proposal_id, description, order_index) VALUES ($1,$2,$3)',
-      [proposalId, items[i].description, i]
+      'INSERT INTO proposal_scope_items (proposal_id, company_id, description, order_index) VALUES ($1,$2,$3,$4)',
+      [proposalId, companyId, items[i].description, i]
     )
   }
 }
 
 // ── SERVICES ──────────────────────────────────────────────────
-const replaceServices = async (proposalId, services) => {
+const replaceServices = async (proposalId, companyId, services) => {
   await pool.query('DELETE FROM proposal_services WHERE proposal_id = $1', [proposalId])
   for (let i = 0; i < services.length; i++) {
     await pool.query(
-      `INSERT INTO proposal_services (proposal_id, description, amount, deadline_days, order_index)
-       VALUES ($1,$2,$3,$4,$5)`,
-      [proposalId, services[i].description, services[i].amount || 0, services[i].deadline_days || 0, i]
+      `INSERT INTO proposal_services (proposal_id, company_id, description, amount, deadline_days, order_index)
+       VALUES ($1,$2,$3,$4,$5,$6)`,
+      [proposalId, companyId, services[i].description, services[i].amount || 0, services[i].deadline_days || 0, i]
     )
   }
 }
 
 // ── PAYMENT TERMS ─────────────────────────────────────────────
-const replacePaymentTerms = async (proposalId, terms) => {
+const replacePaymentTerms = async (proposalId, companyId, terms) => {
   await pool.query('DELETE FROM proposal_payment_terms WHERE proposal_id = $1', [proposalId])
   for (let i = 0; i < terms.length; i++) {
     await pool.query(
-      'INSERT INTO proposal_payment_terms (proposal_id, description, amount, order_index) VALUES ($1,$2,$3,$4)',
-      [proposalId, terms[i].description, terms[i].amount || 0, i]
+      'INSERT INTO proposal_payment_terms (proposal_id, company_id, description, amount, order_index) VALUES ($1,$2,$3,$4,$5)',
+      [proposalId, companyId, terms[i].description, terms[i].amount || 0, i]
     )
   }
 }

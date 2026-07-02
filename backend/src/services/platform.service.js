@@ -19,17 +19,20 @@ const slugify = (s) =>
 
 // Normaliza para snake_case (convencao usada pelo frontend).
 const toCompanyDTO = (c) => ({
-  id:         c.id,
-  name:       c.name,
-  trade_name: c.trade_name,
-  document:   c.document,
-  email:      c.email,
-  phone:      c.phone,
-  plan:       c.plan,
-  status:     c.status,
-  slug:       c.slug,
-  is_active:  c.isActive,
-  created_at: c.createdAt,
+  id:               c.id,
+  name:             c.name,
+  trade_name:       c.trade_name,
+  document:         c.document,
+  email:            c.email,
+  phone:            c.phone,
+  plan:             c.plan,
+  status:           c.status,
+  slug:             c.slug,
+  is_active:        c.isActive,
+  created_at:       c.createdAt,
+  logo_url:         c.logo_url,
+  responsible_name: c.responsible_name,
+  responsible_role: c.responsible_role,
 })
 
 const listCompanies = async () => {
@@ -157,17 +160,19 @@ const updateCompany = async (companyId, fields) => {
   if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
 
   const data = {}
-  if (fields.name       !== undefined) {
+  if (fields.name             !== undefined) {
     if (!String(fields.name).trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
     data.name = String(fields.name).trim()
   }
-  if (fields.trade_name !== undefined) data.trade_name = fields.trade_name || null
-  if (fields.document   !== undefined) data.document   = fields.document || null
-  if (fields.email      !== undefined) data.email      = fields.email || null
-  if (fields.phone      !== undefined) data.phone      = fields.phone || null
-  if (fields.plan       !== undefined) data.plan       = fields.plan || null
-  if (fields.status     !== undefined) data.status     = fields.status || null
-  if (fields.is_active  !== undefined) data.isActive   = !!fields.is_active
+  if (fields.trade_name       !== undefined) data.trade_name       = fields.trade_name || null
+  if (fields.document         !== undefined) data.document         = fields.document || null
+  if (fields.email            !== undefined) data.email            = fields.email || null
+  if (fields.phone            !== undefined) data.phone            = fields.phone || null
+  if (fields.plan             !== undefined) data.plan             = fields.plan || null
+  if (fields.status           !== undefined) data.status           = fields.status || null
+  if (fields.is_active        !== undefined) data.isActive         = !!fields.is_active
+  if (fields.responsible_name !== undefined) data.responsible_name = fields.responsible_name || null
+  if (fields.responsible_role !== undefined) data.responsible_role = fields.responsible_role || null
   data.updated_at = new Date()
 
   try {
@@ -180,6 +185,24 @@ const updateCompany = async (companyId, fields) => {
     }
     throw err
   }
+}
+
+// ── Logo da empresa ───────────────────────────────────────────
+
+/**
+ * Atualiza a URL do logo da empresa (usado após upload via multer).
+ * Recebe a URL publica ja resolvida pelo controller.
+ */
+const uploadCompanyLogo = async (companyId, logoUrl) => {
+  const company = await prisma.company.findUnique({ where: { id: companyId } })
+  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+
+  const updated = await prisma.company.update({
+    where: { id: companyId },
+    data:  { logo_url: logoUrl, updated_at: new Date() },
+  })
+  const count = await prisma.companyUser.count({ where: { companyId } })
+  return { ...toCompanyDTO(updated), users_count: count }
 }
 
 const updateCompanyUser = async (companyId, userId, { name, position, role, isActive, password }) => {
@@ -233,6 +256,7 @@ module.exports = {
   listCompanies,
   createCompany,
   updateCompany,
+  uploadCompanyLogo,
   listCompanyUsers,
   createCompanyUser,
   setCompanyActive,

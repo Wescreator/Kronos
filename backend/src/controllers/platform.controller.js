@@ -26,6 +26,19 @@ const updateCompany = asyncHandler(async (req, res) => {
   return R.success(res, { company })
 })
 
+// Monta a URL pública a partir da própria requisição (protocolo + host),
+// já que o server.js expõe `uploads/` estaticamente em `/uploads`
+// (app.use('/uploads', express.static(...))). Isso funciona em dev e em
+// produção sem depender de nenhuma variável de ambiente extra.
+const uploadCompanyLogo = asyncHandler(async (req, res) => {
+  if (!req.file) throw { status: 400, message: 'Nenhum arquivo enviado.' }
+
+  const publicUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`
+
+  const company = await platformService.uploadCompanyLogo(req.params.id, publicUrl)
+  return R.success(res, { company })
+})
+
 const listCompanyUsers = asyncHandler(async (req, res) => {
   const users = await platformService.listCompanyUsers(req.params.id)
   return R.success(res, { users })
@@ -53,6 +66,7 @@ module.exports = {
   listCompanies,
   createCompany,
   updateCompany,
+  uploadCompanyLogo,
   setCompanyActive,
   listCompanyUsers,
   createCompanyUser,

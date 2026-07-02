@@ -70,6 +70,20 @@ const formatDateBR = (dateString) => {
   return `${day}/${month}/${year}`
 }
 
+  // ── Identidade da empresa emissora (multi-tenant) ──────────────────
+  // company_logo_url, responsible_name e responsible_role vêm do JOIN
+  // com a tabela companies (ver proposal.repository.js -> findById).
+  // Se a empresa ainda não configurou logo/responsável (ver aba
+  // Configurações no painel de plataforma), cai em um fallback textual
+  // neutro em vez de deixar a proposta sem identificação.
+  const companyLogoUrl   = proposal.company_logo_url || null
+  const companyLabel     = proposal.company_name || 'Empresa'
+  const responsibleName  = proposal.responsible_name || 'Responsável'
+  const responsibleRole  = proposal.responsible_role || 'Responsável Técnico'
+
+  const headerBrandHtml = companyLogoUrl
+    ? `<img src="${companyLogoUrl}" alt="${companyLabel}" style="max-height:56px;max-width:220px;object-fit:contain;" />`
+    : `<div class="logo-name">${companyLabel}</div>`
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -141,8 +155,7 @@ const formatDateBR = (dateString) => {
 </div>
   <div class="header">
     <div>
-      <div class="logo-name">KRONOS</div>
-      <div class="logo-sub">Gestão de Escritórios de Arquitetura</div>
+      ${headerBrandHtml}
     </div>
     <div class="prop-number">
       <p>Proposta Comercial</p>
@@ -194,12 +207,13 @@ const formatDateBR = (dateString) => {
     <div class="signature-box">
       <div class="signature-line"></div>
       <div class="signature-name">
-        Romulo Sandes
+        ${responsibleName}
       </div>
       <div class="signature-role">
-        Responsável Técnico      
+        ${responsibleRole}
+      </div>
       <div class="signature-role">
-        4Lados Arquitetura
+        ${companyLabel}
       </div>
     </div>
 
@@ -210,7 +224,7 @@ const formatDateBR = (dateString) => {
 
 <div class="footer-fixed">
   <span>${proposal.proposal_number}</span>
-  <span>KRONOS</span>
+  <span>${companyLabel}</span>
 </div>
 </div>
 </body>
@@ -227,12 +241,21 @@ const formatDateBR = (dateString) => {
 function generateDOCX(proposal) {
   const totalServices = (proposal.services || []).reduce((s, x) => s + parseFloat(x.amount || 0), 0)
 
+  // Mesma identidade multi-tenant usada no PDF. O formato RTF não suporta
+  // embutir uma imagem de logo de forma simples (exigiria converter o
+  // arquivo para hex e usar \pict, o que é pesado para este fluxo), então
+  // aqui usamos o nome da empresa como texto no cabeçalho. O logo em si
+  // aparece normalmente na versão PDF.
+  const companyLabel    = proposal.company_name || 'KRONOS'
+  const responsibleName = proposal.responsible_name || ''
+  const responsibleRole = proposal.responsible_role || 'Responsável Técnico'
+
   const rtf = `{\\rtf1\\ansi\\deff0
 {\\fonttbl{\\f0 Arial;}}
 {\\colortbl ;\\red124\\green92\\blue252;}
 \\f0\\fs24
-\\pard\\qc\\b\\fs32\\cf1 KRONOS\\b0\\fs24\\cf0\\par
-\\pard\\qc Gestao de Escritorios de Arquitetura\\par
+\\pard\\qc\\b\\fs32\\cf1 ${companyLabel}\\b0\\fs24\\cf0\\par
+\\pard\\qc Proposta Comercial\\par
 \\pard\\par
 \\pard\\b PROPOSTA COMERCIAL\\b0\\par
 \\pard ${proposal.proposal_number}\\par
@@ -249,6 +272,7 @@ ${(proposal.payment_terms || []).length > 0 ? `\\pard\\b\\cf1 CONDICOES DE PAGAM
 ${proposal.payment_message ? `\\pard\\i ${proposal.payment_message}\\i0\\par\\par` : ''}
 ${proposal.final_notes ? `\\pard\\b\\cf1 CONSIDERACOES FINAIS:\\cf0\\b0\\par\\pard ${proposal.final_notes.replace(/\n/g, '\\par\\pard ')}\\par\\par` : ''}
 \\pard\\par
+${responsibleName ? `\\pard\\b Responsavel:\\b0  ${responsibleName} — ${responsibleRole}\\par` : ''}
 \\pard\\b Emitida em:\\b0  ${formatDateBR(proposal.valid_until)}\\par
 }`
 
