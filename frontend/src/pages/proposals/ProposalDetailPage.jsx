@@ -159,7 +159,7 @@ const formatDateBR = (dateString) => {
     <div class="meta-item"><div class="meta-label">Prazo Para Execução do Serviço</div><div class="meta-value">${proposal.service_deadline || '—'}</div></div>
   </div>
   ${proposal.service_object ? `<div class="section"><div class="section-title">Objeto do Serviço</div><p class="section-text">${proposal.service_object}</p></div>` : ''}
-  ${(proposal.scope_items || []).length > 0 ? `<div class="section"><div class="section-title">Descrição dos Serviços</div><ul class="scope-list">${proposal.scope_items.map(i => `<li>${i.description}</li>`).join('')}</ul></div>` : ''}
+  ${(proposal.scope_items || []).length > 0 ? `<div class="section"><div class="section-title">Etapas dos Serviços</div><ul class="scope-list">${proposal.scope_items.map(i => `<li>${i.description}</li>`).join('')}</ul></div>` : ''}
   ${(proposal.services || []).length > 0 ? `<div class="section"><div class="section-title">Cálculo Técnico dos Serviços</div><table><tr><th>Serviço</th><th class="text-right">Valor</th><th class="text-right">Prazo</th></tr>${proposal.services.map(s => `<tr><td>${s.description}</td><td class="text-right">R$ ${parseFloat(s.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td class="text-right">${s.deadline_days} dias</td></tr>`).join('')}<tr class="total-row"><td>TOTAL</td><td class="text-right">R$ ${totalServices.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td><td></td></tr></table><div class="total-box">
   <span>Valor Total da Proposta</span>
 
@@ -448,7 +448,7 @@ export default function ProposalDetailPage() {
       {(proposal.scope_items || []).length > 0 && (
         <div className="card p-5 mb-4">
           <p className="mb-3 text-sm font-semibold"
-          style={{ color: "#374151" }}>Descrição dos Serviços</p>
+          style={{ color: "#374151" }}>Etapas dos Serviços</p>
           <ul className="space-y-2">
             {proposal.scope_items.map((item, i) => (
               <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--text-primary)' }}>

@@ -100,7 +100,7 @@ function ServicesTable({ items, onChange, disabled }) {
               style={{ minHeight: 38, padding: '8px 12px' }}
               value={item.description}
               onChange={e => edit(i, 'description', e.target.value)}
-              placeholder="Descrição do serviço"
+              placeholder="Etapas do serviço"
               disabled={disabled}
             />
             <input
@@ -439,7 +439,7 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
         </div>
 
         {/* Campo 4: Escopo */}
-        <Section title="▸ Descrição dos Serviços">
+        <Section title="▸ Etapas dos Serviços">
           <ScopeList
             items={form.scope_items}
             onChange={val => set('scope_items', val)}
