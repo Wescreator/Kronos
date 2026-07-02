@@ -70,7 +70,7 @@ const update = async (id, fields) => {
   const { rows } = await pool.query(
     `UPDATE users SET ${sets}, updated_at = NOW()
      WHERE id = $${values.length}
-     RETURNING id, name, email, role, position, phone, avatar_url, admitted_at`,
+     RETURNING id, name, email, role, position, phone, avatar_url, admitted_at, is_active`,
     values
   )
   return rows[0]

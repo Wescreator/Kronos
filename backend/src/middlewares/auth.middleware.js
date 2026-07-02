@@ -44,4 +44,4 @@ const authorize = (...roles) => (req, res, next) => {
   next()
 }
 
-module.exports = { authenticate, authorize }
+module.exports = { authenticate, authorize, BYPASS_ROLES }

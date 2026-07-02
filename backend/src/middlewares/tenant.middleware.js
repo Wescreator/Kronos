@@ -2,6 +2,12 @@ const companyRepo = require('../repositories/company.repository')
 const R            = require('../utils/response')
 const { setCompanyId } = require('../config/tenantContext')
 
+// Valida formato UUID antes de consultar o banco. Sem essa checagem, um
+// header malformado (ex: "X-Impersonate-Company: abc123") chega cru no
+// Postgres, gera erro de driver (22P02) e cairia no catch genérico como
+// 500 — quando na verdade é erro de input do client (400).
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /**
  * TenantMiddleware
  *
@@ -30,6 +36,10 @@ const tenantMiddleware = async (req, res, next) => {
         return next()
       }
 
+      if (!UUID_REGEX.test(impersonateId)) {
+        return R.error(res, 'Identificador de empresa para impersonação é inválido.', 400)
+      }
+
       const company = await companyRepo.findById(impersonateId)
       if (!company) return R.notFound(res, 'Empresa não encontrada')
       if (!company.is_active) return R.forbidden(res, 'Empresa inativa ou suspensa')
@@ -54,7 +64,10 @@ const tenantMiddleware = async (req, res, next) => {
     return next()
 
   } catch (err) {
-    return R.error(res, err.message, 500)
+    // Erros inesperados (ex: falha de conexão com o banco) ficam só no
+    // log do servidor — o client nunca recebe err.message cru.
+    console.error('[tenantMiddleware] Erro inesperado:', err)
+    return R.error(res, 'Erro interno ao processar a solicitação.', 500)
   }
 }
 

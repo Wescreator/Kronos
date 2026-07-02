@@ -15,6 +15,15 @@ const ROLE_STYLES = {
   member:  { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.10)' },
 }
 
+// Converte a data vinda da API (Date/ISO string) para o formato aceito pelo
+// input type="date" (YYYY-MM-DD). Retorna string vazia se não houver data.
+const toDateInputValue = (value) => {
+  if (!value) return ''
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toISOString().slice(0, 10)
+}
+
 export default function TeamMemberPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
@@ -32,10 +41,11 @@ export default function TeamMemberPage() {
       const { data } = await getUser(id)
       setUser(data.user)
       setForm({
-        name:      data.user.name,
-        position:  data.user.position  || '',
-        phone:     data.user.phone     || '',
-        is_active: data.user.is_active,
+        name:        data.user.name,
+        position:    data.user.position    || '',
+        phone:       data.user.phone       || '',
+        admitted_at: toDateInputValue(data.user.admitted_at),
+        is_active:   data.user.is_active,
       })
     } catch { toast.error('Membro não encontrado') }
     finally { setLoading(false) }
@@ -46,14 +56,17 @@ export default function TeamMemberPage() {
   const handleSave = async () => {
     try {
       const { data } = await updateUser(id, {
-        name:     form.name,
-        position: form.position,
-        phone:    form.phone,
+        name:        form.name,
+        position:    form.position,
+        phone:       form.phone,
+        admitted_at: form.admitted_at || null,
       })
       setUser(data.user)
       setEditing(false)
       toast.success('Perfil atualizado!')
-    } catch { toast.error('Erro ao salvar') }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erro ao salvar')
+    }
   }
 
   const handleAvatar = async (e) => {
@@ -155,6 +168,12 @@ export default function TeamMemberPage() {
                   style={{ color: "var(--text-primary)" }}>Telefone</label>
                   <input className="input" value={form.phone}
                     onChange={e => setForm({...form, phone: e.target.value})} />
+                </div>
+                <div>
+                  <label className="block mb-1 text-sm font-semibold"
+                  style={{ color: "var(--text-primary)" }}>Admissão</label>
+                  <input type="date" className="input" value={form.admitted_at}
+                    onChange={e => setForm({...form, admitted_at: e.target.value})} />
                 </div>
               </div>
             ) : (
