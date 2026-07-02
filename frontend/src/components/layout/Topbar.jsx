@@ -8,16 +8,16 @@ import { formatDateTime } from '../../utils/format'
 
 // ─── Links extraídos diretamente do Sidebar original ──────────────
 const NAV_LINKS = [
-  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard'  },
-  { to: '/app/agenda',    icon: Calendar,        label: 'Agenda' },
-  { to: '/app/projects',  icon: FolderKanban,    label: 'Projetos'   },
-  { to: '/app/clients',   icon: Users,           label: 'Clientes'   }, // ── NOVO MÓDULO ADICIONADO AQUI ──
-  { to: '/app/financial', icon: DollarSign,       label: 'Financeiro' },
-  { to: '/app/tasks',     icon: CheckSquare,      label: 'Tarefas'    },
-  { to: '/app/chat',      icon: MessageSquare,    label: 'Chat'       },
-  { to: '/app/team',      icon: Users,            label: 'Equipe'     },
-  { to: '/app/proposals', icon: FileText,        label: 'Propostas' }
-]
+  { to: '/app/dashboard', icon: LayoutDashboard,    label: 'Dashboard' },
+  { to: '/app/agenda',    icon: Calendar,           label: 'Agenda'    },
+  { to: '/app/chat',      icon: MessageSquare,      label: 'Chat'      },
+  { to: '/app/clients',   icon: Users,              label: 'Clientes'  }, // ── NOVO MÓDULO ADICIONADO AQUI ──
+  { to: '/app/team',      icon: Users,              label: 'Equipe'    },
+  { to: '/app/financial', icon: DollarSign,         label: 'Financeiro'},
+  { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos'  },
+  { to: '/app/proposals', icon: FileText,           label: 'Propostas' },
+  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas'   }  
+] 
 
 export default function Topbar() {
   const { user, logout } = useAuthStore()
