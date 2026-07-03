@@ -89,13 +89,6 @@ export default function CompanyDetailPage() {
     }
   }
 
-  const loadStats = async () => {
-    try {
-      setStats(await platformService.getCompanyStats(id))
-    } catch {
-      setStats(null) // endpoint ainda não existe — telas degradam para "—"
-    }
-  }
 
   const loadHistory = async () => {
     try {
