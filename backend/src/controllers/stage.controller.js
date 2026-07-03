@@ -54,6 +54,7 @@ const addPhase = asyncHandler(async (req, res) => {
     phaseName:  phase_name.trim(),
     comment,
     createdBy:  req.user.user_id,
+    companyId:  req.tenant.id,
   })
 
   return R.created(res, { phase })

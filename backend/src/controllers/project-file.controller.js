@@ -39,4 +39,18 @@ const listFiles = async (req, res) => {
   }
 }
 
-module.exports = {uploadFile, listFiles}
+const deleteFile = async (req, res) => {
+  try {
+    const projectId = req.params.id
+    const fileId = req.params.fileId
+
+    await projectService.getById(projectId, req.tenant.id)
+    await fileService.deleteProjectFile(fileId, projectId)
+
+    return R.success(res, { message: 'Arquivo excluído' })
+  } catch (err) {
+    return R.error(res, err.message, err.status || 500)
+  }
+}
+
+module.exports = {uploadFile, listFiles, deleteFile}

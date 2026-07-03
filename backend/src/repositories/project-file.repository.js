@@ -31,7 +31,19 @@ if (companyId) {
   return rows
 }
 
+const findById = async (fileId) => {
+  const { rows } = await pool.query(`SELECT * FROM project_files WHERE id = $1`, [fileId])
+  return rows[0] || null
+}
+
+const deleteById = async (fileId) => {
+  const { rowCount } = await pool.query(`DELETE FROM project_files WHERE id = $1`, [fileId])
+  return rowCount > 0
+}
+
 module.exports = {
   create,
-  findByProject
+  findByProject,
+  findById,
+  deleteById
 }

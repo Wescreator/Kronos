@@ -38,7 +38,7 @@ const create = async (data, userId, companyId) => {
   const project = await projectRepo.create(buildProjectPayload(data, userId, companyId))
 
   await projectRepo.addMember(project.id, userId, 'manager')
-  await projectRepo.addStatusHistory(project.id, null, 'in_progress', userId, 'Projeto criado')
+  await projectRepo.addStatusHistory(project.id, companyId, null, 'in_progress', userId, 'Projeto criado')
   await stageRepo.createDefaultStages(project.id, companyId)
 
   return project
@@ -49,7 +49,7 @@ const update = async (id, data, userId, companyId) => {
   if (!project) throw { status: 404, message: 'Projeto não encontrado' }
 
   if (data.status && data.status !== project.status) {
-    await projectRepo.addStatusHistory(id, project.status, data.status, userId, data.status_note)
+    await projectRepo.addStatusHistory(id, companyId, project.status, data.status, userId, data.status_note)
   }
 
   const fields = {}
@@ -93,4 +93,28 @@ const removeMember = async (projectId, userId, companyId) => {
   await projectRepo.removeMember(projectId, userId)
 }
 
-module.exports = {getAll, getById, create, update, updateCover, getStatusHistory, addMember, removeMember,}
+// Exclui o projeto. Bloqueia se houver tarefas, despesas, receitas ou
+// leads/clientes vinculados (essas FKs não têm ON DELETE CASCADE).
+const remove = async (id, companyId) => {
+  const project = await projectRepo.findById(id, companyId)
+  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+
+  const dep = await projectRepo.countDependents(id)
+  const blocks = []
+  if (dep.tasks    > 0) blocks.push(`${dep.tasks} tarefa(s)`)
+  if (dep.expenses > 0) blocks.push(`${dep.expenses} despesa(s)`)
+  if (dep.revenues > 0) blocks.push(`${dep.revenues} receita(s)`)
+  if (dep.leads    > 0) blocks.push(`${dep.leads} cliente(s)/lead(s)`)
+
+  if (blocks.length > 0) {
+    throw {
+      status: 400,
+      message: `Não é possível excluir: existem ${blocks.join(', ')} vinculado(s) a este projeto.`
+    }
+  }
+
+  const deleted = await projectRepo.remove(id, companyId)
+  if (!deleted) throw { status: 404, message: 'Projeto não encontrado' }
+}
+
+module.exports = {getAll, getById, create, update, updateCover, getStatusHistory, addMember, removeMember, remove}

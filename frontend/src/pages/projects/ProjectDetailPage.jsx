@@ -12,10 +12,10 @@ import {
   getStages, addPhase, updatePhase, deletePhase
 } from '../../services/projects.service'
 import { getUsers }        from '../../services/team.service'
-import Spinner             from '../../components/ui/Spinner'
-import Badge               from '../../components/ui/Badge'
-import Avatar              from '../../components/ui/Avatar'
-import ConfirmDialog       from '../../components/ui/ConfirmDialog'
+import Spinner              from '../../components/ui/Spinner'
+import Badge                from '../../components/ui/Badge'
+import Avatar                from '../../components/ui/Avatar'
+import ConfirmDialog        from '../../components/ui/ConfirmDialog'
 import { formatCurrency, formatDate, statusLabel, statusColors, ACTIVE_PROJECT_STATUSES } from '../../utils/format'
 import { toast }           from 'react-hot-toast'
 import api                 from '../../services/api'
@@ -153,7 +153,7 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
 
 // ── Componente de etapa ───────────────────────────────────────────
 function StageItem({ stage, projectId, onUpdate, canEdit }) {
-  const [expanded,    setExpanded]    = useState(true)
+  const [expanded,    setExpanded]    = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newPhase,    setNewPhase]    = useState({ phase_name: '', comment: '' })
   const [adding,      setAdding]      = useState(false)
@@ -304,6 +304,7 @@ export default function ProjectDetailPage() {
   const { user }   = useAuthStore()
   const role       = user?.role || 'member'
   const canEdit    = can(role, 'projects', 'edit')
+  const canDelete  = can(role, 'projects', 'delete')
 
   const [project,       setProject]      = useState(null)
   const [history,       setHistory]      = useState([])
@@ -317,6 +318,7 @@ export default function ProjectDetailPage() {
   const [removingId,    setRemovingId]   = useState(null)
   const [files,         setFiles]        = useState([])
   const [uploading,     setUploading]    = useState(false)
+  const [deletingFileId,setDeletingFileId] = useState(null)
   const fileRef = useRef()
 
   const load = async () => {
@@ -392,22 +394,33 @@ export default function ProjectDetailPage() {
   }
 
   const handleFileUpload = async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-  setUploading(true)
-  try {
-    const fd = new FormData()
-    fd.append('file', file)
-    await api.post(`/projects/${id}/files`, fd)   // endpoint correto
-    toast.success('Arquivo enviado!')
-    loadFiles()
-  } catch (err) {
-    toast.error(err?.response?.data?.message || 'Erro ao enviar arquivo')
-  } finally {
-    setUploading(false)
-    if (fileRef.current) fileRef.current.value = ''
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      await api.post(`/projects/${id}/files`, fd)   // endpoint correto
+      toast.success('Arquivo enviado!')
+      loadFiles()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao enviar arquivo')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
   }
-}
+
+  const handleDeleteFile = async () => {
+    try {
+      await api.delete(`/projects/${id}/files/${deletingFileId}`)
+      toast.success('Arquivo excluído')
+      setDeletingFileId(null)
+      loadFiles()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao excluir arquivo')
+    }
+  }
 
   const nonMembers = allUsers.filter(u => !(project?.members || []).some(m => m.id === u.id))
 
@@ -447,7 +460,7 @@ export default function ProjectDetailPage() {
             ? <input className="input text-xl font-bold mb-2" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             : <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{project.title}</h1>
           }
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{project.client || 'Sem cliente'}</p>
+          <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{project.client || 'Sem cliente'}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge className={statusColors[project.status]}>{statusLabel[project.status]}</Badge>
@@ -500,7 +513,7 @@ export default function ProjectDetailPage() {
       {/* Status em edição */}
       {editing && (
         <div className="card p-5 mb-6">
-          <label className="label">Status do projeto</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Status do Projeto</label>
           <select className="input" value={form.status} onChange={e => setForm({...form, status: e.target.value})}>
             {ACTIVE_PROJECT_STATUSES.map(s => (
               <option key={s.value} value={s.value}>{s.label}</option>
@@ -512,7 +525,7 @@ export default function ProjectDetailPage() {
       {/* Descrição em edição */}
       {editing && (
         <div className="card p-5 mb-6">
-          <label className="label">Descrição</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Descrição</label>
           <textarea rows={4} className="input resize-none" value={form.description}
             onChange={e => setForm({...form, description: e.target.value})} />
         </div>
@@ -642,49 +655,61 @@ export default function ProjectDetailPage() {
           ) : (
             <div className="space-y-2">
               {files.map(f => (
-  <div
-    key={f.id}
-    className="flex items-center gap-3 p-3 rounded-xl"
-    style={{
-      background: '#FAFAFA',
-      border: '1px solid #E5E7EB'
-    }}
-  >
-    <File size={16} style={{ color: '#374151' }} />
+                <div
+                  key={f.id}
+                  className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{
+                    background: '#FAFAFA',
+                    border: '1px solid #E5E7EB'
+                  }}
+                >
+                  <File size={16} style={{ color: '#374151' }} />
 
-    <div className="flex-1 min-w-0">
-      <p
-        className="text-sm font-medium truncate"
-        style={{ color: 'var(--text-primary)' }}
-      >
-        {f.file_name}
-      </p>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="text-sm font-medium truncate"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {f.file_name}
+                    </p>
 
-      <p
-        className="text-xs"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        {f.uploaded_by_name} · {formatDate(f.created_at)}
-      </p>
-    </div>
+                    <p
+                      className="text-xs"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {f.uploaded_by_name} · {formatDate(f.created_at)}
+                    </p>
+                  </div>
 
-    {/* era f.file_url */}
-    {f.drive_url && (
-      <a
-        href={f.drive_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-xs px-2.5 py-1 rounded-lg font-semibold"
-        style={{
-          background: 'rgba(55,65,81,0.08)',
-          color: '#374151'
-        }}
-      >
-        Abrir
-      </a>
-    )}
-  </div>
-))}
+                  {/* era f.file_url */}
+                  {f.drive_url && (
+                    <a
+                      href={f.drive_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs px-2.5 py-1 rounded-lg font-semibold"
+                      style={{
+                        background: 'rgba(55,65,81,0.08)',
+                        color: '#374151'
+                      }}
+                    >
+                      Abrir
+                    </a>
+                  )}
+
+                  {canDelete && (
+                    <button
+                      onClick={() => setDeletingFileId(f.id)}
+                      className="p-1.5 rounded-lg transition-all duration-150"
+                      style={{ color: 'var(--text-muted)' }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -726,6 +751,14 @@ export default function ProjectDetailPage() {
         onConfirm={() => handleRemoveMember(removingId)}
         title="Remover membro"
         message="Deseja remover este membro do projeto?"
+        danger
+      />
+
+      <ConfirmDialog
+        open={!!deletingFileId} onClose={() => setDeletingFileId(null)}
+        onConfirm={handleDeleteFile}
+        title="Excluir arquivo"
+        message="Deseja excluir este arquivo? Esta ação não pode ser desfeita."
         danger
       />
     </div>

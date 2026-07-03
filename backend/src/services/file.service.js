@@ -88,10 +88,23 @@ const remove = async (objectKey) => {
   await r2.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: objectKey }))
 }
 
+// Exclui um arquivo anexado ao projeto: valida que o arquivo pertence ao
+// projeto informado, remove o objeto do R2 e depois a linha em project_files.
+const deleteProjectFile = async (fileId, projectId) => {
+  const file = await fileRepo.findById(fileId)
+  if (!file || file.project_id !== projectId) {
+    throw { status: 404, message: 'Arquivo não encontrado' }
+  }
+
+  await remove(file.drive_file_id)
+  await fileRepo.deleteById(fileId)
+}
+
 module.exports = {
   upload,
   uploadForProject,
   listByProject,
   getUrlFromKey,
   remove,
+  deleteProjectFile,
 }

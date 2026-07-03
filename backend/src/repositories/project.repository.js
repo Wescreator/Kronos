@@ -124,6 +124,48 @@ const update = async (id, companyId, fields) => {
   return rows[0]
 }
 
+// Atualiza apenas a capa do projeto. Faltava neste repository — era a
+// causa do erro ao trocar a capa (uploadCover chamava um método inexistente).
+const updateCover = async (id, companyId, coverUrl) => {
+  const { rows } = await pool.query(
+    `
+    UPDATE projects
+    SET cover_url = $1, updated_at = NOW()
+    WHERE id = $2 AND company_id = $3
+    RETURNING *
+    `,
+    [coverUrl, id, companyId]
+  )
+
+  return rows[0]
+}
+// Adicionar membro ao projeto
+const addMember = async (projectId, userId, role) => {
+  const { rows } = await pool.query(
+    `
+    INSERT INTO project_members (project_id, user_id, role)
+    VALUES ($1, $2, $3)
+    RETURNING *
+    `,
+    [projectId, userId, role || 'member']
+  )
+  return rows[0]
+}
+
+// Adicionar histórico de status
+const addStatusHistory = async (projectId, companyId, fromStatus, toStatus, changedBy, note) => {
+  const { rows } = await pool.query(
+    `
+    INSERT INTO project_status_history 
+    (project_id, company_id, from_status, to_status, changed_by, note)
+    VALUES ($1, $2, $3, $4, $5, $6)
+    RETURNING *
+    `,
+    [projectId, companyId, fromStatus, toStatus, changedBy, note]
+  )
+  return rows[0]
+}
+
 const findMembers = async (projectId) => {
   const { rows } = await pool.query(
     `
@@ -139,4 +181,34 @@ const findMembers = async (projectId) => {
   return rows
 }
 
-module.exports = {findAll, findById, create, update, findStatusHistory, findMembers}
+// Conta registros que impedem a exclusão do projeto (FKs sem CASCADE:
+// tasks, expenses, revenues, clients_leads).
+const countDependents = async (id) => {
+  const { rows } = await pool.query(
+    `
+    SELECT
+      (SELECT COUNT(*) FROM tasks         WHERE project_id = $1) AS tasks,
+      (SELECT COUNT(*) FROM expenses      WHERE project_id = $1) AS expenses,
+      (SELECT COUNT(*) FROM revenues      WHERE project_id = $1) AS revenues,
+      (SELECT COUNT(*) FROM clients_leads WHERE project_id = $1) AS leads
+    `,
+    [id]
+  )
+  const r = rows[0]
+  return {
+    tasks:    Number(r.tasks),
+    expenses: Number(r.expenses),
+    revenues: Number(r.revenues),
+    leads:    Number(r.leads),
+  }
+}
+
+const remove = async (id, companyId) => {
+  const { rowCount } = await pool.query(
+    `DELETE FROM projects WHERE id = $1 AND company_id = $2`,
+    [id, companyId]
+  )
+  return rowCount > 0
+}
+
+module.exports = {findAll, findById, create, update, updateCover, findStatusHistory, findMembers, addMember, addStatusHistory, countDependents, remove}

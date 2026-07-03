@@ -72,4 +72,11 @@ const removeMember = async (req, res) => {
   } catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 
-module.exports = { getAll, getById, create, update, uploadCover, getStatusHistory, addMember, removeMember }
+const remove = async (req, res) => {
+  try {
+    await projectService.remove(req.params.id, req.tenant.id)
+    return R.success(res, { message: 'Projeto excluído' })
+  } catch (err) { return R.error(res, err.message, err.status || 500) }
+}
+
+module.exports = { getAll, getById, create, update, uploadCover, getStatusHistory, addMember, removeMember, remove }

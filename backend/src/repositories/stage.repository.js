@@ -59,11 +59,11 @@ const findPhaseById = async (phaseId) => {
   return rows[0] || null
 }
 
-const createPhase = async ({ stageId, phaseName, comment, createdBy }) => {
+const createPhase = async ({ stageId, phaseName, comment, createdBy, companyId }) => {
   const { rows } = await pool.query(
-    `INSERT INTO project_phases (project_stage_id, phase_name, comment, created_by)
-     VALUES ($1,$2,$3,$4) RETURNING *`,
-    [stageId, phaseName, comment || null, createdBy]
+    `INSERT INTO project_phases (project_stage_id, phase_name, comment, created_by, company_id)
+     VALUES ($1,$2,$3,$4,$5) RETURNING *`,
+    [stageId, phaseName, comment || null, createdBy, companyId]
   )
   return rows[0]
 }

@@ -2,16 +2,19 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
   Plus, Search, FolderOpen, Calendar, DollarSign,
-  Building2, Users, Layers, Activity, CheckCircle2, PauseCircle,
+  Building2, Users, Layers, Activity, CheckCircle2, PauseCircle, Trash2,
 } from 'lucide-react'
+import { toast }         from 'react-hot-toast'
 import { useProjects }   from '../../hooks/useProjects'
 import useAuthStore      from '../../store/authStore'
 import { can }           from '../../utils/permissions'
+import { deleteProject } from '../../services/projects.service'
 import PageHeader        from '../../components/ui/PageHeader'
 import Spinner           from '../../components/ui/Spinner'
 import Badge             from '../../components/ui/Badge'
 import Avatar            from '../../components/ui/Avatar'
 import EmptyState        from '../../components/ui/EmptyState'
+import ConfirmDialog     from '../../components/ui/ConfirmDialog'
 import NewProjectModal   from '../../components/modals/NewProjectModal'
 import { formatCurrency, formatDate, statusLabel, statusColors } from '../../utils/format'
 
@@ -47,10 +50,28 @@ export default function ProjectsPage() {
   const { user }  = useAuthStore()
   const role      = user?.role || 'member'
   const canCreate = can(role, 'projects', 'create')
+  const canDelete = can(role, 'projects', 'delete')
 
   const [showModal, setShowModal] = useState(false)
   const [filters,   setFilters]   = useState({ status: '', search: '' })
   const { projects, loading, refetch } = useProjects(filters)
+
+  const [deletingProject, setDeletingProject] = useState(null)
+  const [deleteLoading,   setDeleteLoading]   = useState(false)
+
+  const handleDeleteProject = async () => {
+    setDeleteLoading(true)
+    try {
+      await deleteProject(deletingProject.id)
+      toast.success('Projeto excluído')
+      setDeletingProject(null)
+      refetch()
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao excluir projeto')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
 
   /* ── Totalizadores calculados em memória — sem nova query ── */
   const stats = useMemo(() => ({
@@ -279,8 +300,27 @@ export default function ProjectsPage() {
                 overflow:     'hidden',
                 boxShadow:    '0 4px 20px rgba(20,24,28,0.08)',
                 animationDelay: `${idx * 0.04}s`,
+                position:     'relative',
               }}
             >
+              {/* Excluir projeto — Admin/Owner */}
+              {canDelete && (
+                <button
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setDeletingProject(p) }}
+                  className="p-2 rounded-lg transition-all duration-150"
+                  style={{
+                    position: 'absolute', top: 10, right: 10, zIndex: 2,
+                    background: 'rgba(255,255,255,0.92)',
+                    border: '1px solid #E5E7EB',
+                    color: 'var(--text-muted)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.92)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+                >
+                  <Trash2 size={14} />
+                </button>
+              )}
+
               {/* ── Capa ── */}
               {p.cover_url ? (
                 <div style={{ position: 'relative', height: 136 }}>
@@ -470,6 +510,16 @@ export default function ProjectsPage() {
         open={showModal}
         onClose={() => setShowModal(false)}
         onSuccess={() => { setShowModal(false); refetch() }}
+      />
+
+      <ConfirmDialog
+        open={!!deletingProject}
+        onClose={() => setDeletingProject(null)}
+        onConfirm={handleDeleteProject}
+        title="Excluir projeto"
+        message={`Deseja excluir o projeto "${deletingProject?.title}"? Esta ação não pode ser desfeita.`}
+        danger
+        deleteLoading={deleteLoading}
       />
     </div>
   )
