@@ -3,10 +3,6 @@ const prisma = require('../config/prisma')
 
 /**
  * Servico de plataforma (escopo global / super admin).
- *
- * Opera sobre os modelos de plataforma (Company, User, CompanyUser),
- * que NAO sao multi-tenant - portanto nao passam pela extensao de
- * isolamento. Usa metodos de modelo do Prisma (idiomatico).
  */
 
 const slugify = (s) =>
@@ -17,7 +13,6 @@ const slugify = (s) =>
 
 // ── Empresas ────────────────────────────────────────────────────
 
-// Normaliza para snake_case (convencao usada pelo frontend).
 const toCompanyDTO = (c) => ({
   id:               c.id,
   name:             c.name,
@@ -37,7 +32,6 @@ const toCompanyDTO = (c) => ({
 
 const listCompanies = async () => {
   const companies = await prisma.company.findMany({ orderBy: { name: 'asc' } })
-  // Conta usuarios por empresa para exibir no painel
   const counts = await prisma.companyUser.groupBy({
     by: ['companyId'],
     _count: { _all: true },
@@ -81,26 +75,22 @@ const createCompany = async ({ name, slug, plan, trade_name, document, email, ph
 
 // ── Histórico de Auditoria ─────────────────────────────────────
 
-// ── Histórico de Auditoria ─────────────────────────────────────
-
 const getCompanyHistory = async (companyId) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
   if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
 
-  // Alterado de prisma.auditLog para prisma.activity_logs
   const history = await prisma.activity_logs.findMany({
-    where: { company_id: companyId }, // Ajustado para o campo company_id do schema
-    orderBy: { created_at: 'desc' }, // Ajustado para o campo created_at
+    where: { company_id: companyId },
+    orderBy: { created_at: 'desc' },
   })
 
-  // Mapeamos para o formato esperado pelo front-end
   return history.map(h => ({
     id: h.id,
     label: h.action || 'Alteração realizada',
-    actor: h.user_id || 'Sistema', // Ajustado para os campos disponíveis em activity_logs
-    createdAt: h.created_at.toLocaleString('pt-BR'),
-    field: h.entity_type || null, 
-    oldValue: null, // activity_logs armazena JSON em 'payload', se precisar de detalhes
+    actor: h.user_id || 'Sistema',
+    createdAt: h.created_at ? h.created_at.toLocaleString('pt-BR') : null,
+    field: h.entity_type || null,
+    oldValue: null,
     newValue: null,
   }))
 }
@@ -184,17 +174,17 @@ const updateCompany = async (companyId, fields) => {
   if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
 
   const data = {}
-  if (fields.name           !== undefined) {
+  if (fields.name !== undefined) {
     if (!String(fields.name).trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
     data.name = String(fields.name).trim()
   }
-  if (fields.trade_name       !== undefined) data.trade_name       = fields.trade_name || null
-  if (fields.document         !== undefined) data.document         = fields.document || null
-  if (fields.email            !== undefined) data.email            = fields.email || null
-  if (fields.phone            !== undefined) data.phone            = fields.phone || null
-  if (fields.plan             !== undefined) data.plan             = fields.plan || null
-  if (fields.status           !== undefined) data.status           = fields.status || null
-  if (fields.is_active        !== undefined) data.isActive         = !!fields.is_active
+  if (fields.trade_name !== undefined) data.trade_name = fields.trade_name || null
+  if (fields.document !== undefined) data.document = fields.document || null
+  if (fields.email !== undefined) data.email = fields.email || null
+  if (fields.phone !== undefined) data.phone = fields.phone || null
+  if (fields.plan !== undefined) data.plan = fields.plan || null
+  if (fields.status !== undefined) data.status = fields.status || null
+  if (fields.is_active !== undefined) data.isActive = !!fields.is_active
   if (fields.responsible_name !== undefined) data.responsible_name = fields.responsible_name || null
   if (fields.responsible_role !== undefined) data.responsible_role = fields.responsible_role || null
   data.updated_at = new Date()
