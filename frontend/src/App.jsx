@@ -26,7 +26,8 @@ import TeamMemberPage     from './pages/team/TeamMemberPage'
 import CalendarPage       from './pages/calendar/CalendarPage'
 import ProposalsPage      from './pages/proposals/ProposalsPage'
 import ProposalDetailPage from './pages/proposals/ProposalDetailPage'
-import InProductionPage   from './pages/common/InProductionPage'
+import ClientPage         from './pages/client/ClientPage'
+
 
 /**
  * Restaura o `user` (nome, role, scope, company_id) a partir do token salvo
@@ -120,7 +121,7 @@ export default function App() {
           <Route path="dashboard"           element={<DashboardPage />} />
           <Route path="projects"            element={<ProjectsPage />} />
           <Route path="projects/:id"        element={<ProjectDetailPage />} />
-          <Route path="clients"             element={<InProductionPage />} />
+          <Route path="clients"             element={<ClientPage />} />
           <Route path="tasks"               element={<TasksPage />} />
           <Route path="tasks/:id"           element={<TaskDetailPage />} />
           <Route path="financial"           element={<FinancialPage />} />

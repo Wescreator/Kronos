@@ -48,16 +48,20 @@ app.get('/api/health', (req, res) => {
 })
 
 // ── Rotas ─────────────────────────────────────────────────────────────────────
-app.use('/api/auth',          require('./routes/auth.routes'))
-app.use('/api/users',         require('./routes/users.routes'))
-app.use('/api/projects',      require('./routes/projects.routes'))
-app.use('/api/tasks',         require('./routes/tasks.routes'))
-app.use('/api/financial',     require('./routes/financial.routes'))
-app.use('/api/chat',          require('./routes/chat.routes'))
+app.use('/api/auth',        require('./routes/auth.routes'))
+app.use('/api/users',       require('./routes/users.routes'))
+app.use('/api/projects',    require('./routes/projects.routes'))
+app.use('/api/tasks',       require('./routes/tasks.routes'))
+app.use('/api/financial',   require('./routes/financial.routes'))
+app.use('/api/chat',        require('./routes/chat.routes'))
 app.use('/api/notifications', require('./routes/notifications.routes'))
-app.use('/api/calendar',      authenticate, require('./routes/calendarRoutes'))
-app.use('/api/proposals',     require('./routes/proposals.routes'))
-app.use('/api/platform',      require('./routes/platform.routes'))
+app.use('/api/calendar',    authenticate, require('./routes/calendarRoutes'))
+app.use('/api/proposals',   require('./routes/proposals.routes'))
+app.use('/api/platform',    require('./routes/platform.routes'))
+
+// Novas rotas adicionadas no lugar correto (Antes do Error Handler)
+app.use('/api/clients',     require('./routes/client.routes'))
+app.use('/api/posts',       require('./routes/post.routes'))
 
 // ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {

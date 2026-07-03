@@ -10,6 +10,7 @@
     "migrate": "node src/database/migrate.js",
     "seed": "node src/database/seeds/001_seed_initial_data.js",
     "seed:dev": "node src/database/seeds/003_seed_developer.js",
+    "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
     "prisma:studio": "prisma studio"
