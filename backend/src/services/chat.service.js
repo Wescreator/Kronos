@@ -38,7 +38,7 @@ const getMessages = async (roomId, userId, limit, offset) => {
 const createMessage = async ({ roomId, userId, content }) => {
   const room = await chatRepo.findRoomByIdAndMember(roomId, userId)
   if (!room) throw { status: 403, message: 'Sala não encontrada ou acesso negado' }
-  const message = await chatRepo.createMessage({ roomId, userId, content })
+  const message = await chatRepo.createMessage({ roomId, userId, content, companyId: room.company_id })
   const allMemberIds  = await chatRepo.findRoomMemberIds(roomId)
   const otherMemberIds = allMemberIds.filter(id => id !== userId)
   global.broadcastToRoom(otherMemberIds, { type: 'new_message', roomId, message })

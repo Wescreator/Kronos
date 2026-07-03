@@ -63,10 +63,12 @@ const findMessages = async (roomId, limit, offset) => {
   return rows.reverse()
 }
 
-const createMessage = async ({ roomId, userId, content }) => {
+// company_id é NOT NULL em chat_messages — vem da sala (chat_rooms.company_id),
+// já resolvida pelo service via findRoomByIdAndMember antes de chamar isso.
+const createMessage = async ({ roomId, userId, content, companyId }) => {
   const { rows } = await pool.query(
-    `INSERT INTO chat_messages (room_id, user_id, content) VALUES ($1,$2,$3) RETURNING *`,
-    [roomId, userId, content]
+    `INSERT INTO chat_messages (room_id, user_id, content, company_id) VALUES ($1,$2,$3,$4) RETURNING *`,
+    [roomId, userId, content, companyId]
   )
   return rows[0]
 }
