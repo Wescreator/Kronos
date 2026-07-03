@@ -90,15 +90,24 @@ export default function CompanyDetailPage() {
   }
 
 
+ // 1. Corrija o loadHistory para usar o platformService corretamente
   const loadHistory = async () => {
     try {
-      setHistory(await platformService.getCompanyHistory(id))
-    } catch {
-      setHistory([]) // endpoint ainda não existe — aba mostra vazio
+      const data = await platformService.getCompanyHistory(id);
+      setHistory(data);
+    } catch (err) {
+      console.error("Erro ao carregar histórico:", err);
+      setHistory([]); 
     }
   }
 
-  useEffect(() => { load(); loadUsers(); loadStats(); loadHistory() }, [id])
+  // 2. Corrija o useEffect para chamar as funções certas
+  useEffect(() => { 
+    load(); 
+    loadUsers(); 
+    // loadStats(); // <--- Se você não tem essa função, remova a chamada
+    loadHistory(); 
+  }, [id])
 
   /* ── Resumo: editar empresa ──────────────────────────────────────────── */
   const handleSaveCompany = async () => {
