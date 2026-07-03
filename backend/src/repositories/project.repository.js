@@ -152,6 +152,16 @@ const addMember = async (projectId, userId, role) => {
   return rows[0]
 }
 
+
+const removeMember = async (projectId, userId) => {
+  const { rowCount } = await pool.query(
+    `DELETE FROM project_members 
+     WHERE project_id = $1 AND user_id = $2`,
+    [projectId, userId]
+  )
+  return rowCount > 0
+}
+
 // Adicionar histórico de status
 const addStatusHistory = async (projectId, companyId, fromStatus, toStatus, changedBy, note) => {
   const { rows } = await pool.query(
@@ -211,4 +221,4 @@ const remove = async (id, companyId) => {
   return rowCount > 0
 }
 
-module.exports = {findAll, findById, create, update, updateCover, findStatusHistory, findMembers, addMember, addStatusHistory, countDependents, remove}
+module.exports = {findAll, findById, create, update, updateCover, findStatusHistory, findMembers, addMember, removeMember, addStatusHistory, countDependents, remove}
