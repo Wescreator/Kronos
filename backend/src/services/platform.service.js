@@ -81,23 +81,27 @@ const createCompany = async ({ name, slug, plan, trade_name, document, email, ph
 
 // ── Histórico de Auditoria ─────────────────────────────────────
 
+// ── Histórico de Auditoria ─────────────────────────────────────
+
 const getCompanyHistory = async (companyId) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
   if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
 
-  const history = await prisma.auditLog.findMany({
-    where: { companyId },
-    orderBy: { createdAt: 'desc' },
+  // Alterado de prisma.auditLog para prisma.activity_logs
+  const history = await prisma.activity_logs.findMany({
+    where: { company_id: companyId }, // Ajustado para o campo company_id do schema
+    orderBy: { created_at: 'desc' }, // Ajustado para o campo created_at
   })
 
+  // Mapeamos para o formato esperado pelo front-end
   return history.map(h => ({
     id: h.id,
     label: h.action || 'Alteração realizada',
-    actor: h.actorName || 'Sistema',
-    createdAt: h.createdAt.toLocaleString('pt-BR'),
-    field: h.fieldName || null,
-    oldValue: h.oldValue || null,
-    newValue: h.newValue || null,
+    actor: h.user_id || 'Sistema', // Ajustado para os campos disponíveis em activity_logs
+    createdAt: h.created_at.toLocaleString('pt-BR'),
+    field: h.entity_type || null, 
+    oldValue: null, // activity_logs armazena JSON em 'payload', se precisar de detalhes
+    newValue: null,
   }))
 }
 
