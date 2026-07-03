@@ -24,16 +24,20 @@ model User {
   resetToken                                        String?                @map("reset_token") @db.VarChar(255)
   resetTokenExpiresAt                               DateTime?              @map("reset_token_expires_at") @db.Timestamptz(6)
   companyId                                         String?                @map("company_id") @db.Uuid
+  expires_at                                        DateTime?              @db.Timestamptz(6)
   activity_logs                                     activity_logs[]
   calendar_events_calendar_events_created_byTousers CalendarEvent[]        @relation("calendar_events_created_byTousers")
   calendar_events_calendar_events_user_idTousers    CalendarEvent[]        @relation("calendar_events_user_idTousers")
   chat_messages                                     chat_messages[]
   chat_room_members                                 chat_room_members[]
   chat_rooms                                        ChatRoom[]
+  clients_leads                                     ClientLead[]
+  comments                                          comments[]
   company_users                                     CompanyUser[]
   expense_categories                                ExpenseCategory[]
   expenses                                          Expense[]
   notifications                                     Notification[]
+  posts                                             posts[]
   project_files                                     project_files[]
   project_members                                   project_members[]
   project_phases_project_phases_completed_byTousers project_phases[]       @relation("project_phases_completed_byTousers")
@@ -68,10 +72,13 @@ model Company {
   updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
   slug                   String                   @unique(map: "companies_slug_unique")
   isActive               Boolean                  @default(true) @map("is_active")
+  responsible_name       String?                  @db.VarChar(150)
+  responsible_role       String?                  @db.VarChar(100)
   activity_logs          activity_logs[]
   calendar_events        CalendarEvent[]
   chat_messages          chat_messages[]
   chat_rooms             ChatRoom[]
+  clients_leads          ClientLead[]
   company_users          CompanyUser[]
   expense_categories     ExpenseCategory[]
   expenses               Expense[]
@@ -109,6 +116,26 @@ model CompanyUser {
   @@index([companyId], map: "idx_company_users_company")
   @@index([userId], map: "idx_company_users_user")
   @@map("company_users")
+}
+
+model ClientLead {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  companyId  String    @map("company_id") @db.Uuid
+  name       String    @db.VarChar(255)
+  email      String?   @db.VarChar(255)
+  phone      String?   @db.VarChar(50)
+  status     String?   @default("lead") @db.VarChar(20)
+  situacao   String?   @db.VarChar(30)
+  financeiro String?   @db.VarChar(20)
+  projectId  String?   @map("project_id") @db.Uuid
+  userId     String?   @map("user_id") @db.Uuid
+  createdAt  DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime? @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  companies  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_clients_leads_company")
+  projects   Project?  @relation(fields: [projectId], references: [id], onUpdate: NoAction)
+  users      User?     @relation(fields: [userId], references: [id], onUpdate: NoAction)
+
+  @@map("clients_leads")
 }
 
 model Notification {
@@ -150,7 +177,9 @@ model Project {
   drive_folder_id                  String?                @db.VarChar(255)
   drive_folder_url                 String?
   companyId                        String                 @map("company_id") @db.Uuid
+  clients_leads                    ClientLead[]
   expenses                         Expense[]
+  posts                            posts[]
   project_files                    project_files[]
   project_members                  project_members[]
   project_stages                   project_stages[]
@@ -611,6 +640,31 @@ model task_comments {
   users      User     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@index([company_id], map: "idx_task_comments_company")
+}
+
+model comments {
+  id         Int       @id @default(autoincrement())
+  company_id Int
+  post_id    Int
+  user_id    String    @db.Uuid
+  content    String
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  posts      posts     @relation(fields: [post_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model posts {
+  id          Int        @id @default(autoincrement())
+  company_id  Int
+  project_id  String     @db.Uuid
+  user_id     String     @db.Uuid
+  content     String
+  attachments Json?      @default("[]")
+  created_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  comments    comments[]
+  projects    Project    @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       User       @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 enum calendar_event_status {
