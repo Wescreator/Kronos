@@ -23,7 +23,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
       {/* Backdrop */}
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(8px)' }}
+        style={{ background: 'rgba(0,0,0,0.82)', backdropFilter: 'blur(1px)' }}
         onClick={onClose}
       />
 
@@ -31,7 +31,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
       <div
         className={`relative w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
         style={{
-          background: 'linear-gradient(180deg, #1B1B1B 0%, #171717 100%)',
+          background: 'linear-gradient(180deg, #ffffff 0%, #383838 100%)',
           border: '1px solid rgba(255,255,255,0.07)',
           borderTop: '1px solid rgba(255,255,255,0.10)',
           borderRadius: '24px',
