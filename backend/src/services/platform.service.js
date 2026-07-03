@@ -30,14 +30,29 @@ const toCompanyDTO = (c) => ({
   responsible_role: c.responsible_role,
 })
 
+/**
+ * CORREÇÃO APLICADA AQUI:
+ * removido groupBy (causa provável do 500 em runtime Prisma)
+ * substituído por agregação segura via findMany + reduce
+ */
 const listCompanies = async () => {
-  const companies = await prisma.company.findMany({ orderBy: { name: 'asc' } })
-  const counts = await prisma.companyUser.groupBy({
-    by: ['companyId'],
-    _count: { _all: true },
+  const companies = await prisma.company.findMany({
+    orderBy: { name: 'asc' },
   })
-  const countMap = Object.fromEntries(counts.map(c => [c.companyId, c._count._all]))
-  return companies.map(c => ({ ...toCompanyDTO(c), users_count: countMap[c.id] || 0 }))
+
+  const links = await prisma.companyUser.findMany({
+    select: { companyId: true },
+  })
+
+  const countMap = links.reduce((acc, l) => {
+    acc[l.companyId] = (acc[l.companyId] || 0) + 1
+    return acc
+  }, {})
+
+  return companies.map(c => ({
+    ...toCompanyDTO(c),
+    users_count: countMap[c.id] || 0,
+  }))
 }
 
 const createCompany = async ({ name, slug, plan, trade_name, document, email, phone }) => {
