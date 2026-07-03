@@ -50,7 +50,7 @@ async function canToggleStatus(req) {
  */
 router.get(
   '/',
-  authorize('admin', 'manager'),
+  authorize('admin', 'manager' , 'owner' , 'employee'),
   async (req, res) => {
     try {
       if (!req.tenant) {

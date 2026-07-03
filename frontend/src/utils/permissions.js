@@ -47,11 +47,6 @@ export const ROLE_STYLES = {
     color:      '#34D399',
     border:     '1px solid rgba(52,211,153,0.20)',
   },
-  member: {
-    background: 'rgba(52,211,153,0.10)',
-    color:      '#34D399',
-    border:     '1px solid rgba(52,211,153,0.20)',
-  },
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -69,7 +64,7 @@ export const VISIBLE_MODULES = {
 // ─────────────────────────────────────────────────────────────────
 
 const ADMIN_ROLES = ['developer', 'owner', 'admin']
-const ALL_ROLES   = ['developer', 'owner', 'admin', 'manager', 'employee', 'member']
+const ALL_ROLES   = ['developer', 'owner', 'admin', 'manager', 'employee']
 
 export const PERMISSIONS = {
   dashboard: {
