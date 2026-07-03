@@ -37,11 +37,15 @@ const create = async (data, userId, companyId) => {
     createdBy:       userId,
   })
 
-  // Salva relacionamentos em paralelo
+  // CORREÇÃO: normalização defensiva dos arrays
+  const scopeItems = Array.isArray(data.scope_items) ? data.scope_items : []
+  const services = Array.isArray(data.services) ? data.services : []
+  const paymentTerms = Array.isArray(data.payment_terms) ? data.payment_terms : []
+
   await Promise.all([
-    proposalRepo.replaceScopeItems(proposal.id,   companyId, data.scope_items    || []),
-    proposalRepo.replaceServices(proposal.id,      companyId, data.services       || []),
-    proposalRepo.replacePaymentTerms(proposal.id,  companyId, data.payment_terms  || []),
+    proposalRepo.replaceScopeItems(proposal.id, companyId, scopeItems),
+    proposalRepo.replaceServices(proposal.id, companyId, services),
+    proposalRepo.replacePaymentTerms(proposal.id, companyId, paymentTerms),
   ])
 
   return proposalRepo.findById(proposal.id, companyId)
