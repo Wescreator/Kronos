@@ -20,7 +20,7 @@ const getStages = asyncHandler(async (req, res) => {
 
   const alreadyHas = await stageRepo.hasStages(projectId)
   if (!alreadyHas) {
-    await stageRepo.createDefaultStages(projectId)
+    await stageRepo.createDefaultStages(projectId, req.tenant.id)
   }
 
   const stages = await stageRepo.findStagesByProject(projectId)

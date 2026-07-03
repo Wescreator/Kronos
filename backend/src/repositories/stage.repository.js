@@ -8,11 +8,13 @@ const DEFAULT_STAGES = [
   { stage_name: 'Entrega Final',     stage_order: 5 },
 ]
 
-const createDefaultStages = async (projectId) => {
+// company_id é NOT NULL em project_stages — precisa ser passado explicitamente
+// (não dá pra derivar só do projectId sem uma consulta extra).
+const createDefaultStages = async (projectId, companyId) => {
   for (const stage of DEFAULT_STAGES) {
     await pool.query(
-      `INSERT INTO project_stages (project_id, stage_name, stage_order) VALUES ($1,$2,$3)`,
-      [projectId, stage.stage_name, stage.stage_order]
+      `INSERT INTO project_stages (project_id, company_id, stage_name, stage_order) VALUES ($1,$2,$3,$4)`,
+      [projectId, companyId, stage.stage_name, stage.stage_order]
     )
   }
 }

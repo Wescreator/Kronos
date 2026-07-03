@@ -39,7 +39,7 @@ const create = async (data, userId, companyId) => {
 
   await projectRepo.addMember(project.id, userId, 'manager')
   await projectRepo.addStatusHistory(project.id, null, 'in_progress', userId, 'Projeto criado')
-  await stageRepo.createDefaultStages(project.id)
+  await stageRepo.createDefaultStages(project.id, companyId)
 
   return project
 }
