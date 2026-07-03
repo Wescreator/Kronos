@@ -1,20 +1,18 @@
 import axios from 'axios'
 
-// Em produção, usamos diretamente a URL do servidor. 
-// Em desenvolvimento, usamos o proxy (deixamos a string vazia para o axios usar a URL relativa)
+/**
+ * CONFIGURAÇÃO DA URL BASE
+ * Em produção: https://kronos-h6m5.onrender.com/api
+ * Em desenvolvimento: /api (o proxy do Vite redireciona para localhost:3001/api)
+ */
 const baseURL = import.meta.env.MODE === 'production' 
-  ? import.meta.env.VITE_API_URL 
-  : ''
-
-if (import.meta.env.DEV) {
-  console.log('[API] Modo:', import.meta.env.MODE)
-  console.log('[API] baseURL definida:', baseURL)
-}
+  ? `${import.meta.env.VITE_API_URL}/api` 
+  : '/api'
 
 const api = axios.create({
-  baseURL, // Agora aponta diretamente para o seu Render em produção
+  baseURL,
   timeout: 60000,
-  withCredentials: true, // Alterado para true para permitir envio de cookies/auth entre domínios
+  withCredentials: true,
 })
 
 /* ─── Helpers de storage ─── */
@@ -44,10 +42,8 @@ api.interceptors.response.use(
         const refreshToken = getRefreshToken()
         if (!refreshToken) throw new Error('Sem refresh token')
 
-        // Ajuste aqui: garantir que o refresh token chame a URL correta
-        // Se estiver em produção, ele usará a baseURL (Render). 
-        // Se estiver em dev, o proxy cuidará disso.
-        const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken })
+        // Chamada de refresh token usando a URL base correta
+        const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken })
 
         if (localStorage.getItem('refreshToken')) {
           localStorage.setItem('accessToken', data.accessToken)
