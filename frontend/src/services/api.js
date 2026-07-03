@@ -1,18 +1,20 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.PROD
-  ? `${import.meta.env.VITE_API_URL}/api`
-  : '/api'
+// Em produção, usamos diretamente a URL do servidor. 
+// Em desenvolvimento, usamos o proxy (deixamos a string vazia para o axios usar a URL relativa)
+const baseURL = import.meta.env.MODE === 'production' 
+  ? import.meta.env.VITE_API_URL 
+  : ''
 
 if (import.meta.env.DEV) {
-  console.log('[API] baseURL:', baseURL)
-  console.log('[API] VITE_API_URL:', import.meta.env.VITE_API_URL)
+  console.log('[API] Modo:', import.meta.env.MODE)
+  console.log('[API] baseURL definida:', baseURL)
 }
 
 const api = axios.create({
-  baseURL,
+  baseURL, // Agora aponta diretamente para o seu Render em produção
   timeout: 60000,
-  withCredentials: false,
+  withCredentials: true, // Alterado para true para permitir envio de cookies/auth entre domínios
 })
 
 /* ─── Helpers de storage ─── */
@@ -23,11 +25,6 @@ api.interceptors.request.use((config) => {
   const token = getAccessToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
 
-  /* ── Developer: impersonação de empresa ──────────────────────────
-   * Quando o developer impersona uma empresa, o company_id fica
-   * gravado no sessionStorage e é injetado como header em cada
-   * requisição. O TenantMiddleware no backend usa este valor.
-   */
   const impersonateCompany = sessionStorage.getItem('impersonateCompany')
   if (impersonateCompany) {
     config.headers['X-Impersonate-Company'] = impersonateCompany
@@ -41,21 +38,16 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config
 
-    if (import.meta.env.DEV) {
-      console.error('[API Error]', {
-        url:    original?.url,
-        status: error.response?.status,
-        data:   error.response?.data,
-      })
-    }
-
     if (error.response?.status === 401 && !original._retry) {
       original._retry = true
       try {
         const refreshToken = getRefreshToken()
         if (!refreshToken) throw new Error('Sem refresh token')
 
-        const { data } = await axios.post(`${baseURL}/auth/refresh`, { refreshToken })
+        // Ajuste aqui: garantir que o refresh token chame a URL correta
+        // Se estiver em produção, ele usará a baseURL (Render). 
+        // Se estiver em dev, o proxy cuidará disso.
+        const { data } = await axios.post(`${baseURL}/api/auth/refresh`, { refreshToken })
 
         if (localStorage.getItem('refreshToken')) {
           localStorage.setItem('accessToken', data.accessToken)
