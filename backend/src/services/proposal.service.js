@@ -6,7 +6,8 @@ const getAll = async (query, companyId) => {
   const { page, limit, offset } = paginate(query)
   const { rows, total } = await proposalRepo.findAll({
     companyId,
-    limit, offset,
+    limit,
+    offset,
     search: query.search,
   })
   return paginatedResponse(rows, total, page, limit)
@@ -21,20 +22,32 @@ const getById = async (id, companyId) => {
 
 // ── Criar ──────────────────────────────────────────────────────
 const create = async (data, userId, companyId) => {
+  if (!data.title || !data.title.trim()) {
+    throw { status: 400, message: 'Título é obrigatório' }
+  }
+
+  if (!userId) {
+    throw { status: 400, message: 'createdBy inválido' }
+  }
+
+  if (!companyId) {
+    throw { status: 400, message: 'companyId inválido' }
+  }
+
   const proposalNumber = await proposalRepo.nextProposalNumber()
 
   const proposal = await proposalRepo.create({
     companyId,
     proposalNumber,
-    title:           data.title,
-    clientId:        data.client_id   || null,
-    clientName:      data.client_name || null,
-    serviceObject:   data.service_object  || '',
-    finalNotes:      data.final_notes     || null,
+    title: data.title.trim(),
+    clientId: data.client_id || null,
+    clientName: data.client_name || null,
+    serviceObject: data.service_object || '',
+    finalNotes: data.final_notes || null,
     serviceDeadline: data.service_deadline || null,
-    validUntil:      data.valid_until     || null,
-    paymentMessage:  data.payment_message || null,
-    createdBy:       userId,
+    validUntil: data.valid_until || null,
+    paymentMessage: data.payment_message || null,
+    createdBy: userId,
   })
 
   // CORREÇÃO: normalização defensiva dos arrays
@@ -57,10 +70,17 @@ const update = async (id, data, companyId) => {
   if (!existing) throw { status: 404, message: 'Proposta não encontrada' }
 
   const allowed = [
-    'title', 'client_id', 'client_name', 'service_object',
-    'final_notes', 'service_deadline', 'valid_until',
-    'payment_message', 'status'
+    'title',
+    'client_id',
+    'client_name',
+    'service_object',
+    'final_notes',
+    'service_deadline',
+    'valid_until',
+    'payment_message',
+    'status',
   ]
+
   const fields = {}
   for (const key of allowed) {
     if (data[key] !== undefined) fields[key] = data[key]
@@ -71,9 +91,14 @@ const update = async (id, data, companyId) => {
   }
 
   await Promise.all([
-    data.scope_items   !== undefined && proposalRepo.replaceScopeItems(id,  companyId, data.scope_items),
-    data.services      !== undefined && proposalRepo.replaceServices(id,    companyId, data.services),
-    data.payment_terms !== undefined && proposalRepo.replacePaymentTerms(id, companyId, data.payment_terms),
+    data.scope_items !== undefined &&
+      proposalRepo.replaceScopeItems(id, companyId, data.scope_items),
+
+    data.services !== undefined &&
+      proposalRepo.replaceServices(id, companyId, data.services),
+
+    data.payment_terms !== undefined &&
+      proposalRepo.replacePaymentTerms(id, companyId, data.payment_terms),
   ])
 
   return proposalRepo.findById(id, companyId)
@@ -89,20 +114,20 @@ const duplicate = async (id, userId, companyId) => {
   const copy = await proposalRepo.create({
     companyId,
     proposalNumber,
-    title:           `${original.title} (cópia)`,
-    clientId:        original.client_id,
-    clientName:      original.client_name,
-    serviceObject:   original.service_object,
-    finalNotes:      original.final_notes,
+    title: `${original.title} (cópia)`,
+    clientId: original.client_id,
+    clientName: original.client_name,
+    serviceObject: original.service_object,
+    finalNotes: original.final_notes,
     serviceDeadline: original.service_deadline,
-    validUntil:      original.valid_until,
-    paymentMessage:  original.payment_message,
-    createdBy:       userId,
+    validUntil: original.valid_until,
+    paymentMessage: original.payment_message,
+    createdBy: userId,
   })
 
   await Promise.all([
-    proposalRepo.replaceScopeItems(copy.id,  companyId, original.scope_items),
-    proposalRepo.replaceServices(copy.id,    companyId, original.services),
+    proposalRepo.replaceScopeItems(copy.id, companyId, original.scope_items),
+    proposalRepo.replaceServices(copy.id, companyId, original.services),
     proposalRepo.replacePaymentTerms(copy.id, companyId, original.payment_terms),
   ])
 
@@ -113,7 +138,15 @@ const duplicate = async (id, userId, companyId) => {
 const remove = async (id, companyId) => {
   const existing = await proposalRepo.findById(id, companyId)
   if (!existing) throw { status: 404, message: 'Proposta não encontrada' }
+
   await proposalRepo.remove(id, companyId)
 }
 
-module.exports = { getAll, getById, create, update, duplicate, remove }
+module.exports = {
+  getAll,
+  getById,
+  create,
+  update,
+  duplicate,
+  remove,
+}
