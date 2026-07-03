@@ -1,9 +1,10 @@
 const router = require('express').Router()
 const ctrl   = require('../controllers/platform.controller')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
-// ⚠️ Confirme o caminho/nome real deste arquivo — assumido a partir do
-// module.exports que você enviou (uploadImage, uploadFile, uploadDriveFile).
-const { uploadImage } = require('../middlewares/upload.middleware')
+// Caminho corrigido: o multer é configurado em config/multer.js
+// (confirmado pelo uso em project.routes.js). uploadImageMemory usa
+// memoryStorage — necessário para o upload direto ao R2 (sem disco).
+const { uploadImageMemory } = require('../config/multer')
 
 /**
  * Rotas de plataforma (super admin).
@@ -21,8 +22,7 @@ router.get('/companies',              ctrl.listCompanies)
 router.post('/companies',             ctrl.createCompany)
 router.patch('/companies/:id/active', ctrl.setCompanyActive)
 router.patch('/companies/:id',        ctrl.updateCompany)
-router.post('/companies/:id/logo',    uploadImage.single('logo'), ctrl.uploadCompanyLogo)
-// ... suas outras rotas de empresas
+router.post('/companies/:id/logo',    uploadImageMemory.single('logo'), ctrl.uploadCompanyLogo)
 router.get('/companies/:id/history', ctrl.getCompanyHistory)
 
 // Usuarios de uma empresa
@@ -30,6 +30,5 @@ router.get('/companies/:id/users',             ctrl.listCompanyUsers)
 router.post('/companies/:id/users',            ctrl.createCompanyUser)
 router.patch('/companies/:id/users/:userId',   ctrl.updateCompanyUser)
 router.delete('/companies/:id/users/:userId',  ctrl.deleteCompanyUser)
-
 
 module.exports = router

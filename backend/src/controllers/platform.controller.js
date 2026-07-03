@@ -1,4 +1,5 @@
 const platformService = require('../services/platform.service')
+const fileService     = require('../services/file.service')
 const R = require('../utils/response')
 
 const asyncHandler = fn => (req, res) =>
@@ -26,16 +27,21 @@ const updateCompany = asyncHandler(async (req, res) => {
   return R.success(res, { company })
 })
 
-// Monta a URL pública a partir da própria requisição (protocolo + host),
-// já que o server.js expõe `uploads/` estaticamente em `/uploads`
-// (app.use('/uploads', express.static(...))). Isso funciona em dev e em
-// produção sem depender de nenhuma variável de ambiente extra.
+// Upload de logo — agora persiste no Cloudflare R2 (bucket público via
+// r2.dev). O disco do Render é efêmero: qualquer arquivo salvo localmente
+// é perdido a cada deploy/restart, por isso não usamos mais diskStorage
+// nem montamos a URL a partir de req.protocol/req.get('host').
 const uploadCompanyLogo = asyncHandler(async (req, res) => {
   if (!req.file) throw { status: 400, message: 'Nenhum arquivo enviado.' }
 
-  const publicUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`
+  const { url } = await fileService.upload({
+    buffer:           req.file.buffer,
+    originalFilename: req.file.originalname,
+    mimeType:         req.file.mimetype,
+    folder:           `companies/${req.params.id}/logo`,
+  })
 
-  const company = await platformService.uploadCompanyLogo(req.params.id, publicUrl)
+  const company = await platformService.uploadCompanyLogo(req.params.id, url)
   return R.success(res, { company })
 })
 
@@ -63,7 +69,6 @@ const deleteCompanyUser = asyncHandler(async (req, res) => {
 })
 
 const getCompanyHistory = asyncHandler(async (req, res) => {
-  // Chamamos o serviço para buscar o histórico
   const history = await platformService.getCompanyHistory(req.params.id)
   return R.success(res, { history })
 })
@@ -78,5 +83,5 @@ module.exports = {
   createCompanyUser,
   updateCompanyUser,
   deleteCompanyUser,
-  getCompanyHistory, // <--- Adicione esta linha
+  getCompanyHistory,
 }
