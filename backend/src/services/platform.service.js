@@ -49,8 +49,6 @@ const listCompanies = async () => {
 const createCompany = async ({ name, slug, plan, trade_name, document, email, phone }) => {
   if (!name || !name.trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
 
-  // O slug e interno (coluna NOT NULL UNIQUE), gerado a partir do nome.
-  // Garante unicidade automaticamente, sem expor isso ao usuario.
   const base = (slug && slug.trim() ? slugify(slug) : slugify(name)) || 'empresa'
   let finalSlug = base
   let n = 1
@@ -79,6 +77,28 @@ const createCompany = async ({ name, slug, plan, trade_name, document, email, ph
     }
     throw err
   }
+}
+
+// ── Histórico de Auditoria ─────────────────────────────────────
+
+const getCompanyHistory = async (companyId) => {
+  const company = await prisma.company.findUnique({ where: { id: companyId } })
+  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+
+  const history = await prisma.auditLog.findMany({
+    where: { companyId },
+    orderBy: { createdAt: 'desc' },
+  })
+
+  return history.map(h => ({
+    id: h.id,
+    label: h.action || 'Alteração realizada',
+    actor: h.actorName || 'Sistema',
+    createdAt: h.createdAt.toLocaleString('pt-BR'),
+    field: h.fieldName || null,
+    oldValue: h.oldValue || null,
+    newValue: h.newValue || null,
+  }))
 }
 
 // ── Usuarios de uma empresa ─────────────────────────────────────
@@ -126,13 +146,13 @@ const createCompanyUser = async ({ companyId, name, email, password, role, posit
   return prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
-        name:         name.trim(),
-        email:        normalizedEmail,
+        name:        name.trim(),
+        email:       normalizedEmail,
         passwordHash,
-        role:         companyRole,
-        position:     position || null,
+        role:        companyRole,
+        position:    position || null,
         companyId,
-        isActive:     true,
+        isActive:    true,
       },
     })
 
@@ -160,7 +180,7 @@ const updateCompany = async (companyId, fields) => {
   if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
 
   const data = {}
-  if (fields.name             !== undefined) {
+  if (fields.name           !== undefined) {
     if (!String(fields.name).trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
     data.name = String(fields.name).trim()
   }
@@ -189,10 +209,6 @@ const updateCompany = async (companyId, fields) => {
 
 // ── Logo da empresa ───────────────────────────────────────────
 
-/**
- * Atualiza a URL do logo da empresa (usado após upload via multer).
- * Recebe a URL publica ja resolvida pelo controller.
- */
 const uploadCompanyLogo = async (companyId, logoUrl) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
   if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
@@ -237,11 +253,9 @@ const deleteCompanyUser = async (companyId, userId) => {
   if (!link) throw { status: 404, message: 'Usuario nao encontrado nesta empresa.' }
 
   try {
-    // O vinculo em company_users sai por cascata ao remover o usuario.
     await prisma.user.delete({ where: { id: userId } })
     return { deleted: true }
   } catch (err) {
-    // 23503 / P2003 = FK RESTRICT (usuario tem registros associados)
     if (err.code === 'P2003' || err.code === '23503') {
       throw {
         status: 409,
@@ -262,4 +276,5 @@ module.exports = {
   setCompanyActive,
   updateCompanyUser,
   deleteCompanyUser,
+  getCompanyHistory,
 }

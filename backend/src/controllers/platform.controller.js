@@ -62,6 +62,12 @@ const deleteCompanyUser = asyncHandler(async (req, res) => {
   return R.success(res, { deleted: true })
 })
 
+const getCompanyHistory = asyncHandler(async (req, res) => {
+  // Chamamos o serviço para buscar o histórico
+  const history = await platformService.getCompanyHistory(req.params.id)
+  return R.success(res, { history })
+})
+
 module.exports = {
   listCompanies,
   createCompany,
@@ -72,4 +78,5 @@ module.exports = {
   createCompanyUser,
   updateCompanyUser,
   deleteCompanyUser,
+  getCompanyHistory, // <--- Adicione esta linha
 }

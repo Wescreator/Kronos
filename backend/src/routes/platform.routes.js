@@ -22,11 +22,14 @@ router.post('/companies',             ctrl.createCompany)
 router.patch('/companies/:id/active', ctrl.setCompanyActive)
 router.patch('/companies/:id',        ctrl.updateCompany)
 router.post('/companies/:id/logo',    uploadImage.single('logo'), ctrl.uploadCompanyLogo)
+// ... suas outras rotas de empresas
+router.get('/companies/:id/history', ctrl.getCompanyHistory)
 
 // Usuarios de uma empresa
 router.get('/companies/:id/users',             ctrl.listCompanyUsers)
 router.post('/companies/:id/users',            ctrl.createCompanyUser)
 router.patch('/companies/:id/users/:userId',   ctrl.updateCompanyUser)
 router.delete('/companies/:id/users/:userId',  ctrl.deleteCompanyUser)
+
 
 module.exports = router
