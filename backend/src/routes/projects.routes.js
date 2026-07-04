@@ -11,16 +11,16 @@ const logger      = require('../middlewares/logger.middleware')
 
 router.use(authenticate, tenantMiddleware, logger)
 
-// Projetos
-router.get('/',                       ctrl.getAll)
-router.get('/:id',                    ctrl.getById)
-router.post('/',    validate(V.create), ctrl.create)
-router.patch('/:id', validate(V.update), ctrl.update)
-router.delete('/:id', authorize('owner', 'admin'), ctrl.remove)
-router.post('/:id/cover', uploadImageMemory.single('cover'), ctrl.uploadCover)
-router.get('/:id/history',            ctrl.getStatusHistory)
-router.post('/:id/members',           ctrl.addMember)
+
 router.delete('/:id/members/:userId', ctrl.removeMember)
+router.post('/:id/members',           ctrl.addMember)
+router.post('/:id/cover',             uploadImageMemory.single('cover'), ctrl.uploadCover)
+router.get('/:id/history',            ctrl.getStatusHistory)
+router.get('/:id',                    ctrl.getById)
+router.patch('/:id',                  validate(V.update), ctrl.update)
+router.delete('/:id',                 authorize('owner', 'admin'), ctrl.remove)
+router.get('/',                       ctrl.getAll)
+router.post('/',                      validate(V.create), ctrl.create)
 
 // Arquivos do projeto (Cloudflare R2)
 router.get('/:id/files',              fileCtrl.listFiles)

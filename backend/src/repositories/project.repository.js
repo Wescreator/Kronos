@@ -153,6 +153,7 @@ const addMember = async (projectId, userId, role) => {
 }
 
 
+// No seu repositories/project.repository.js
 const removeMember = async (projectId, userId) => {
   const { rowCount } = await pool.query(
     `DELETE FROM project_members 
@@ -179,7 +180,7 @@ const addStatusHistory = async (projectId, companyId, fromStatus, toStatus, chan
 const findMembers = async (projectId) => {
   const { rows } = await pool.query(
     `
-    SELECT pm.id, pm.role, pm.joined_at, u.name, u.email, u.avatar_url
+    SELECT pm.id, pm.user_id, pm.role, pm.joined_at, u.name, u.email, u.avatar_url
     FROM project_members pm
     INNER JOIN users u ON u.id = pm.user_id
     WHERE pm.project_id = $1

@@ -66,9 +66,9 @@ const addMember = async (req, res) => {
 }
 
 const removeMember = async (req, res) => {
-  try {
-    await projectService.removeMember(req.params.id, req.params.userId, req.tenant.id)
-    return R.success(res, { message: 'Membro removido' })
+  try {    
+    const members = await projectService.removeMember(req.params.id, req.params.userId, req.tenant.id)    
+    return R.success(res, { message: 'Membro removido', members }) 
   } catch (err) { return R.error(res, err.message, err.status || 500) }
 }
 

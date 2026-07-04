@@ -87,13 +87,14 @@ const addMember = async (projectId, userId, companyId) => {
   await projectRepo.addMember(projectId, userId)
 }
 
-// Remove um membro do projeto. Não é possível remover o dono do projeto.
 const removeMember = async (projectId, userId, companyId) => {
-  const project = await projectRepo.findById(projectId, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
-  await projectRepo.removeMember(projectId, userId)
-  return await projectRepo.findMembers(projectId)
-}
+  const project = await projectRepo.findById(projectId, companyId);
+  if (!project) throw { status: 404, message: 'Projeto não encontrado' };
+  const wasDeleted = await projectRepo.removeMember(projectId, userId);
+  if (!wasDeleted) {
+    throw { status: 404, message: 'Membro não encontrado' };}
+  return await projectRepo.findMembers(projectId);
+};
 
 // Exclui o projeto. Bloqueia se houver tarefas, despesas, receitas ou
 // leads/clientes vinculados (essas FKs não têm ON DELETE CASCADE).

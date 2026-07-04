@@ -388,9 +388,9 @@ export default function ProjectDetailPage() {
     catch { toast.error('Erro ao adicionar membro') }
   }
 
-  const handleRemoveMember = async (userId) => {
-    try { await removeMember(id, userId); toast.success('Membro removido'); setRemovingId(null); load() }
-    catch { toast.error('Erro ao remover membro') }
+  const handleRemoveMember = async (userId) => {  
+  try { await removeMember(id, userId); toast.success('Membro removido'); setRemovingId(null); load() }
+  catch (err) {toast.error('Erro ao remover membro')}
   }
 
   const handleFileUpload = async (e) => {
@@ -422,20 +422,17 @@ export default function ProjectDetailPage() {
     }
   }
 
-  const nonMembers = allUsers.filter(u => !(project?.members || []).some(m => m.id === u.id))
-
+  const nonMembers = allUsers.filter(u => !(project?.members || []).some(m => m.user_id === u.id))
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
   if (!project) return null
-
   return (
     <div className="max-w-5xl mx-auto fade-in">
       <button onClick={() => navigate('/app/projects')}
-        className="flex items-center gap-2 text-sm mb-5 transition-colors"
-        style={{ color: 'var(--text-muted)' }}
-        onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
-        <ArrowLeft size={15} /> Voltar para Projetos
-      </button>
+      className="flex items-center gap-2 text-sm mb-5 transition-colors"
+      style={{ color: 'var(--text-muted)' }}
+      onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
+        <ArrowLeft size={15} /> Voltar para Projetos</button>
 
       {/* Cover */}
       <div className="relative h-52 mb-6 group overflow-hidden" style={{ borderRadius: 24 }}>
@@ -619,7 +616,7 @@ export default function ProjectDetailPage() {
                 <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
                   style={{ background: 'rgba(55,65,81,0.08)', color: '#374151' }}>{m.role}</span>
                 {canEdit && (
-                  <button onClick={() => setRemovingId(m.id)}
+                  <button onClick={() => setRemovingId(m.user_id)}
                     className="p-1.5 rounded-lg transition-all duration-150 ml-1"
                     style={{ color: 'var(--text-muted)' }}
                     onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
