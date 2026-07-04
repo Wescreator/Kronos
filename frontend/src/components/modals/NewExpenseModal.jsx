@@ -32,7 +32,7 @@ function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
 
   return (
     <div>
-      <label className="label">Categoria</label>
+      <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Categoria</label>
       <div className="flex gap-2">
         <select
           className="input flex-1"
