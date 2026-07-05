@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: kronos_postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kronos
+      POSTGRES_PASSWORD: kronos_dev_pass
+      POSTGRES_DB: kronos_db
+    ports:
+      - "5433:5432"   # 5433 no host pra não colidir com um Postgres nativo que você já tenha
+    volumes:
+      - kronos_pg_data:/var/lib/postgresql/data
+
+  minio:
+    image: minio/minio
+    container_name: kronos_minio_dev
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: kronos_dev
+      MINIO_ROOT_PASSWORD: kronos_dev_pass
+    ports:
+      - "9000:9000"   # API S3-compatible
+      - "9001:9001"   # Console web (bucket manager)
+    volumes:
+      - kronos_minio_data:/data
+
+volumes:
+  kronos_pg_data:
+  kronos_minio_data:

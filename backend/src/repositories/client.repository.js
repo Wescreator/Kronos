@@ -11,6 +11,8 @@ const UPDATABLE_FIELDS = {
   email: 'email',
   phone: 'phone',
   status: 'status',
+  situacao: 'situacao',
+  financeiro: 'financeiro',
   projectId: 'project_id',
   userId: 'user_id',
 }
@@ -20,11 +22,13 @@ const UPDATABLE_FIELDS = {
 // Convertendo para null aqui.
 const NULLABLE_UUID_FIELDS = new Set(['projectId', 'userId'])
 
-// Defesa em profundidade: mesmo o client.service.js já validando o enum de
-// status, o repository (última camada antes do banco) também garante que
-// nenhum valor fora do enum seja persistido — caso algum outro service
-// futuro esqueça de validar antes de chamar create/update.
-const VALID_STATUSES = new Set(['lead', 'cliente'])
+// Defesa em profundidade: mesmo o client.service.js já validando os enums de
+// status/situacao/financeiro, o repository (última camada antes do banco)
+// também garante que nenhum valor fora do enum seja persistido — caso algum
+// outro service futuro esqueça de validar antes de chamar create/update.
+const VALID_STATUSES   = new Set(['lead', 'cliente'])
+const VALID_SITUACOES  = new Set(['aguardando_aprovacao', 'revisao_proposta', 'proposta_aprovada', 'contrato_assinado'])
+const VALID_FINANCEIRO = new Set(['adimplente', 'inadimplente'])
 
 const toNullableUuid = (value) => {
   if (value === undefined || value === null || value === '') return null
@@ -103,12 +107,14 @@ const findById = async (id, companyId) => {
 
 // Criar um Lead/Cliente novo
 const create = async (companyId, data) => {
-  const status = VALID_STATUSES.has(data.status) ? data.status : 'lead'
+  const status     = VALID_STATUSES.has(data.status) ? data.status : 'lead'
+  const situacao   = VALID_SITUACOES.has(data.situacao) ? data.situacao : null
+  const financeiro = VALID_FINANCEIRO.has(data.financeiro) ? data.financeiro : null
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO clients_leads (company_id, name, email, phone, status, project_id, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO clients_leads (company_id, name, email, phone, status, situacao, financeiro, project_id, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        RETURNING *`,
       [
         companyId,
@@ -116,6 +122,8 @@ const create = async (companyId, data) => {
         data.email,
         data.phone || null,
         status,
+        situacao,
+        financeiro,
         toNullableUuid(data.projectId),
         toNullableUuid(data.userId),
       ]
@@ -135,9 +143,11 @@ const update = async (id, companyId, fields) => {
     const column = UPDATABLE_FIELDS[key]
     if (!column) continue
 
-    // Defesa em profundidade: ignora um status fora do enum em vez de
-    // deixá-lo ser persistido (o service já deveria ter barrado antes).
+    // Defesa em profundidade: ignora valores fora do enum em vez de
+    // deixá-los serem persistidos (o service já deveria ter barrado antes).
     if (key === 'status' && !VALID_STATUSES.has(value)) continue
+    if (key === 'situacao' && value !== null && !VALID_SITUACOES.has(value)) continue
+    if (key === 'financeiro' && value !== null && !VALID_FINANCEIRO.has(value)) continue
 
     const finalValue = NULLABLE_UUID_FIELDS.has(key) ? toNullableUuid(value) : value
     values.push(finalValue)

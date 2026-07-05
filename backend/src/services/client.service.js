@@ -9,7 +9,9 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // Qualquer valor fora dessa lista é rejeitado aqui, antes de chegar no banco
 // (a coluna é VARCHAR(20) livre — sem essa checagem, um typo no frontend
 // criaria um "status fantasma" que nenhum filtro da UI reconheceria).
-const VALID_STATUSES = ['lead', 'cliente']
+const VALID_STATUSES   = ['lead', 'cliente']
+const VALID_SITUACOES  = ['aguardando_aprovacao', 'revisao_proposta', 'proposta_aprovada', 'contrato_assinado']
+const VALID_FINANCEIRO = ['adimplente', 'inadimplente']
 
 // Limites espelhando exatamente as colunas do Postgres (schema.prisma):
 // name VARCHAR(255), email VARCHAR(255), phone VARCHAR(50).
@@ -87,6 +89,36 @@ const validateStatus = (value) => {
   return value
 }
 
+// situacao é OPCIONAL — alinhado ao formulário (NewClientModal.jsx marca o
+// campo como "opcional", com opção "— Nenhuma —" mapeada para string vazia).
+// String vazia ou não enviado -> null (sem situação definida).
+const validateSituacao = (value) => {
+  if (value === undefined) {
+    return undefined
+  }
+  if (value === null || value === '') {
+    return null
+  }
+  if (!VALID_SITUACOES.includes(value)) {
+    throw validationError(`Situação inválida. Valores aceitos: ${VALID_SITUACOES.join(', ')}.`)
+  }
+  return value
+}
+
+// financeiro é OPCIONAL — mesma lógica de situacao.
+const validateFinanceiro = (value) => {
+  if (value === undefined) {
+    return undefined
+  }
+  if (value === null || value === '') {
+    return null
+  }
+  if (!VALID_FINANCEIRO.includes(value)) {
+    throw validationError(`Financeiro inválido. Valores aceitos: ${VALID_FINANCEIRO.join(', ')}.`)
+  }
+  return value
+}
+
 const getAllClients = async (companyId, filters) => {
   return await clientRepo.findAll(companyId, filters)
 }
@@ -100,16 +132,20 @@ const getClientById = async (id, companyId) => {
 }
 
 const createClientOrLead = async (companyId, data = {}) => {
-  const name = validateName(data.name, { required: true })
-  const email = validateEmail(data.email)
-  const phone = validatePhone(data.phone)
-  const status = validateStatus(data.status) || 'lead'
+  const name       = validateName(data.name, { required: true })
+  const email      = validateEmail(data.email)
+  const phone      = validatePhone(data.phone)
+  const status     = validateStatus(data.status) || 'lead'
+  const situacao   = validateSituacao(data.situacao) || null
+  const financeiro = validateFinanceiro(data.financeiro) || null
 
   return await clientRepo.create(companyId, {
     name,
     email,
     phone,
     status,
+    situacao,
+    financeiro,
     projectId: data.projectId,
     userId: data.userId,
   })
@@ -152,6 +188,12 @@ const updateClientOrLead = async (id, companyId, fields) => {
       throw validationError('O campo "status" não pode ser vazio.')
     }
     sanitized.status = status
+  }
+  if ('situacao' in sanitized) {
+    sanitized.situacao = validateSituacao(sanitized.situacao)
+  }
+  if ('financeiro' in sanitized) {
+    sanitized.financeiro = validateFinanceiro(sanitized.financeiro)
   }
 
   // Garante que o cliente existe e pertence à empresa antes de atualizar

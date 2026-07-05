@@ -5,7 +5,7 @@ const BASE_URL = '/clients'
 // Campos aceitos pelo backend (client.controller.js / client.repository.js).
 // Mantidos em camelCase de propósito: o backend espera exatamente esses nomes
 // no req.body e faz a tradução para snake_case internamente (project_id, user_id).
-const ALLOWED_FIELDS = ['name', 'email', 'phone', 'status', 'projectId', 'userId']
+const ALLOWED_FIELDS = ['name', 'email', 'phone', 'status', 'situacao', 'financeiro', 'projectId', 'userId']
 const UUID_FIELDS = ['projectId', 'userId']
 
 // Monta o payload garantindo:

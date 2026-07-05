@@ -1,18 +1,3 @@
-/**
- * Seed: usuario Developer (super admin / escopo global)
- *
- * Cria um usuario com role 'developer' e SEM vinculo de empresa.
- * O login trata role 'developer' como escopo global (buildAuthPayload),
- * direcionando para /admin.
- *
- * Pre-requisito: users.company_id deve ser NULLABLE. Caso ainda esteja
- * NOT NULL, rode antes:
- *   ALTER TABLE public.users ALTER COLUMN company_id DROP NOT NULL;
- *   npm run prisma:pull && npm run prisma:generate
- *
- * Uso:
- *   DEV_EMAIL=dev@kronos.app DEV_PASSWORD='SuaSenhaForte' npm run seed:dev
- */
 require('dotenv').config()
 const bcrypt = require('bcryptjs')
 const prisma = require('../../config/prisma')

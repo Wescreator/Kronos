@@ -13,7 +13,9 @@
     "postinstall": "prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "dev:local": "cross-env NODE_ENV=development node -r dotenv/config src/server.js dotenv_config_path=.env.development",
+    "seed:local": "node src/database/seeds/004_seed_local_users.js"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -38,6 +40,8 @@
     "ws": "^8.0.0"
   },
   "devDependencies": {
+    "cross-env": "^10.1.0",
+    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.0.0",
     "prisma": "^5.22.0"
   }

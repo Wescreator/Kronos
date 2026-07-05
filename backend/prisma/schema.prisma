@@ -399,6 +399,8 @@ model ClientLead {
   email      String?   @db.VarChar(255)
   phone      String?   @db.VarChar(50)
   status     String    @default("lead") @db.VarChar(20)
+  situacao   String?   @db.VarChar(30)
+  financeiro String?   @db.VarChar(20)
   projectId  String?   @map("project_id") @db.Uuid
   userId     String?   @map("user_id") @db.Uuid
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
