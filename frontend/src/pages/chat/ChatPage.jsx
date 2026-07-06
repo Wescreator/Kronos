@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, Plus, MessageSquare, Hash, Search, ArrowLeft, Smile, CheckCheck, MoreHorizontal, Trash2 } from 'lucide-react'
 import EmojiPicker from 'emoji-picker-react'
+import { useParams } from 'react-router-dom'
 import { getRooms, getMessages, sendMessage, createRoom } from '../../services/chat.service'
 import { getUsers } from '../../services/team.service'
 import useAuthStore from '../../store/authStore'
+import useSocketStore from '../../store/socketStore'
 import Avatar from '../../components/ui/Avatar'
 import NewChatModal from '../../components/modals/NewChatModal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -225,7 +227,9 @@ function EmptyConversation({ onNewChat }) {
 }
 
 export default function ChatPage() {
-  const { user, accessToken } = useAuthStore()
+  const { user } = useAuthStore()
+  const { roomId } = useParams()
+  const socketConnected = useSocketStore((s) => s.connected)
   const role = user?.role || 'member'
 
   const [rooms, setRooms] = useState([])
@@ -243,104 +247,79 @@ export default function ChatPage() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [content, setContent] = useState('')
-  const [myOnlineStatus, setMyOnlineStatus] = useState(false)
 
   const messagesEnd = useRef(null)
   const inputRef = useRef(null)
   const emojiRef = useRef(null)
-  const wsRef = useRef(null)
   const typingTimers = useRef({})
   const sendTypingTimer = useRef(null)
   const activeRoomRef = useRef(null)
 
   useEffect(() => { activeRoomRef.current = activeRoom }, [activeRoom])
 
+  // Usa a conexão WebSocket compartilhada (useSocketStore) em vez de abrir
+  // uma própria — evita duas conexões simultâneas do mesmo usuário
+  // (Topbar + Chat), que se sobrescreveriam no backend.
   useEffect(() => {
-    if (!accessToken) return
+    useSocketStore.getState().ensureConnected()
 
-    const wsUrl = import.meta.env.PROD
-      ? `wss://${new URL(import.meta.env.VITE_API_URL).host}/ws?token=${accessToken}`
-      : `ws://localhost:3001/ws?token=${accessToken}`
+    const unsubscribe = useSocketStore.getState().subscribe((msg) => {
+      if (msg.type === 'new_message') {
+        if (activeRoomRef.current?.id === msg.roomId) {
+          setMessages(prev => {
+            if (prev.some(m => m.id === msg.message.id)) return prev
+            return [...prev, msg.message]
+          })
+        }
+        setRooms(prev => {
+          const exists = prev.some(r => r.id === msg.roomId)
+          if (!exists) return prev
+          const mapped = prev.map(r =>
+            r.id === msg.roomId
+              ? { ...r, last_message: msg.message.content, last_message_at: msg.message.created_at }
+              : r
+          )
+          return [...mapped].sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0))
+        })
+        if (activeRoomRef.current?.id === msg.roomId) {
+          setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 30)
+        }
+      }
 
-    const ws = new WebSocket(wsUrl)
-
-    ws.onopen = () => {
-      setMyOnlineStatus(true)
-      ws.send(JSON.stringify({ type: 'presence', status: 'online', userId: user?.id }))
-    }
-
-    ws.onmessage = (e) => {
-      try {
-        const msg = JSON.parse(e.data)
-
-        if (msg.type === 'new_message') {
-          if (activeRoomRef.current?.id === msg.roomId) {
-            setMessages(prev => {
-              if (prev.some(m => m.id === msg.message.id)) return prev
-              return [...prev, msg.message]
+      if (msg.type === 'typing' && msg.userId !== user?.id) {
+        if (activeRoomRef.current?.id === msg.roomId) {
+          setTypingUsers(prev => ({ ...prev, [msg.userId]: msg.userName || 'Alguém' }))
+          clearTimeout(typingTimers.current[msg.userId])
+          typingTimers.current[msg.userId] = setTimeout(() => {
+            setTypingUsers(prev => {
+              const next = { ...prev }
+              delete next[msg.userId]
+              return next
             })
-          }
-          setRooms(prev => {
-            const exists = prev.some(r => r.id === msg.roomId)
-            if (!exists) return prev
-            const mapped = prev.map(r =>
-              r.id === msg.roomId
-                ? { ...r, last_message: msg.message.content, last_message_at: msg.message.created_at }
-                : r
-            )
-            return [...mapped].sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0))
-          })
-          if (activeRoomRef.current?.id === msg.roomId) {
-            setTimeout(() => messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }), 30)
-          }
+          }, 2500)
         }
+      }
 
-        if (msg.type === 'typing' && msg.userId !== user?.id) {
-          if (activeRoomRef.current?.id === msg.roomId) {
-            setTypingUsers(prev => ({ ...prev, [msg.userId]: msg.userName || 'Alguém' }))
-            clearTimeout(typingTimers.current[msg.userId])
-            typingTimers.current[msg.userId] = setTimeout(() => {
-              setTypingUsers(prev => {
-                const next = { ...prev }
-                delete next[msg.userId]
-                return next
-              })
-            }, 2500)
-          }
-        }
+      if (msg.type === 'presence') {
+        setOnlineUsers(prev => {
+          const next = new Set(prev)
+          if (msg.status === 'online') next.add(msg.userId)
+          if (msg.status === 'offline') next.delete(msg.userId)
+          return next
+        })
+      }
 
-        if (msg.type === 'presence') {
-          setOnlineUsers(prev => {
-            const next = new Set(prev)
-            if (msg.status === 'online') next.add(msg.userId)
-            if (msg.status === 'offline') next.delete(msg.userId)
-            return next
-          })
-        }
-
-        if (msg.type === 'online_users' && Array.isArray(msg.userIds)) {
-          setOnlineUsers(new Set(msg.userIds))
-        }
-
-      } catch { /* erro silenciado */ }
-    }
-
-    ws.onclose = () => {
-      setMyOnlineStatus(false)
-      setOnlineUsers(new Set())
-    }
-
-    wsRef.current = ws
+      if (msg.type === 'online_users' && Array.isArray(msg.userIds)) {
+        setOnlineUsers(new Set(msg.userIds))
+      }
+    })
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'presence', status: 'offline', userId: user?.id }))
-      }
-      ws.close()
+      unsubscribe()
       Object.values(typingTimers.current).forEach(clearTimeout)
       clearTimeout(sendTypingTimer.current)
     }
-  }, [accessToken, user?.id])
+  }, [user?.id])
 
   useEffect(() => {
     const handler = (e) => {
@@ -372,6 +351,21 @@ export default function ChatPage() {
       .then(r => setUsers(r.data.data || []))
       .catch(() => toast.error('Erro ao carregar lista de membros'))
   }, [loadRooms])
+
+  // Deep-link vindo de notificação: /app/chat/:roomId. Abre a sala assim
+  // que a lista carregar. Se não encontrar (ex: sala de grupo da qual o
+  // usuário não é o criador, filtrada para role='member'), avisa em vez
+  // de falhar silenciosamente.
+  useEffect(() => {
+    if (!roomId || loadingRooms) return
+    if (activeRoom?.id === roomId) return
+    const target = rooms.find(r => r.id === roomId)
+    if (target) {
+      openRoom(target)
+    } else if (rooms.length > 0) {
+      toast.error('Conversa não encontrada ou sem acesso')
+    }
+  }, [roomId, rooms, loadingRooms])
 
   const openRoom = useCallback(async (room) => {
     setActiveRoom(room)
@@ -422,15 +416,15 @@ export default function ChatPage() {
 
   const handleTyping = (e) => {
     setContent(e.target.value)
-    if (!activeRoom || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return
+    if (!activeRoom) return
     clearTimeout(sendTypingTimer.current)
     sendTypingTimer.current = setTimeout(() => {
-      wsRef.current.send(JSON.stringify({
+      useSocketStore.getState().send({
         type: 'typing',
         roomId: activeRoom.id,
         userId: user?.id,
         userName: user?.name,
-      }))
+      })
     }, 400)
   }
 
@@ -550,11 +544,11 @@ export default function ChatPage() {
           <div className="flex items-center gap-2.5 px-4 py-3 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)' }}>
             <div className="relative shrink-0">
               <Avatar name={user?.name || ''} src={user?.avatar_url} size="sm" />
-              <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{ background: myOnlineStatus ? '#34D399' : 'rgba(255,255,255,0.4)', border: '2px solid #06080f' }} />
+              <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full" style={{ background: socketConnected ? '#34D399' : 'rgba(255,255,255,0.4)', border: '2px solid #06080f' }} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold truncate" style={{ color: '#ffffff' }}>{user?.name}</p>
-              <p className="text-[10px] font-medium" style={{ color: myOnlineStatus ? '#34D399' : 'rgba(255,255,255,0.4)' }}>{myOnlineStatus ? 'Online' : 'Conectando...'}</p>
+              <p className="text-[10px] font-medium" style={{ color: socketConnected ? '#34D399' : 'rgba(255,255,255,0.4)' }}>{socketConnected ? 'Online' : 'Conectando...'}</p>
             </div>
           </div>
         </div>

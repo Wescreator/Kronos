@@ -1,4 +1,5 @@
 const repo = require('../repositories/financial.repository')
+const notificationService = require('./notification.service')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 const { addMonths, format } = require('date-fns')
 
@@ -61,6 +62,8 @@ const createExpense = async (data, userId, companyId) => {
 const confirmPayment = async (id, paidDate, companyId) => {
   const expense = await repo.confirmPayment(companyId, id, paidDate)
   if (!expense) throw { status: 404, message: 'Despesa não encontrada' }
+  // Remove eventual notificação de "vencido" gerada pelo cron para este item
+  await notificationService.resolveEntity('financial_due', `/app/financial/expenses?highlight=${id}`)
   return expense
 }
 
@@ -133,6 +136,8 @@ const createRevenue = async (data, userId, companyId) => {
 const confirmReceipt = async (installmentId, receivedDate, companyId) => {
   const inst = await repo.confirmReceipt(companyId, installmentId, receivedDate)
   if (!inst) throw { status: 404, message: 'Parcela não encontrada' }
+  // Remove eventual notificação de "em atraso" gerada pelo cron para este item
+  await notificationService.resolveEntity('financial_due', `/app/financial/revenues?highlight=${installmentId}`)
   return inst
 }
 const updateInstallment = async (id, data, companyId) => repo.updateInstallment(companyId, id, data)

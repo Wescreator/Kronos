@@ -1,4 +1,5 @@
 const taskRepo    = require('../repositories/task.repository')
+const notificationService = require('./notification.service')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 const getAll = async (query, companyId) => {
@@ -35,6 +36,17 @@ const create = async (data, userId, companyId) => {
 
   if (data.assignees?.length) {
     await taskRepo.setAssignees(task.id, data.assignees, companyId)
+
+    for (const uid of data.assignees) {
+      await notificationService.notify({
+        companyId,
+        userId: uid,
+        type:   'task_assigned',
+        title:  `Nova tarefa: ${task.title}`,
+        body:   task.description || null,
+        link:   `/app/tasks/${task.id}`,
+      })
+    }
   }
 
   return await taskRepo.findById(task.id, companyId)
@@ -59,7 +71,24 @@ const update = async (id, data, userId, companyId) => {
   }
 
   if (data.assignees !== undefined) {
-    await taskRepo.setAssignees(id, data.assignees, companyId)
+    // Notifica apenas quem foi adicionado agora — quem já era assignee
+    // antes da alteração não recebe notificação de novo.
+    const oldAssigneeIds = (task.assignees || []).map(a => a.id)
+    const newAssigneeIds = data.assignees
+    const addedIds = newAssigneeIds.filter(uid => !oldAssigneeIds.includes(uid))
+
+    await taskRepo.setAssignees(id, newAssigneeIds, companyId)
+
+    for (const uid of addedIds) {
+      await notificationService.notify({
+        companyId,
+        userId: uid,
+        type:   'task_assigned',
+        title:  `Você foi atribuído à tarefa: ${task.title}`,
+        body:   task.description || null,
+        link:   `/app/tasks/${id}`,
+      })
+    }
   }
 
   return await taskRepo.findById(id, companyId)

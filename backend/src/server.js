@@ -83,5 +83,6 @@ const server = app.listen(PORT, () => {
 })
 
 require('./config/websocket')(server)
+require('./jobs/notification.cron').start()
 
 module.exports = server

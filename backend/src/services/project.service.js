@@ -1,6 +1,7 @@
 const projectRepo = require('../repositories/project.repository')
 const stageRepo   = require('../repositories/stage.repository')
 const companyRepo = require('../repositories/company.repository')
+const notificationService = require('./notification.service')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 function buildProjectPayload(data, userId, companyId) {
@@ -85,6 +86,14 @@ const addMember = async (projectId, userId, companyId) => {
   if (!link) throw { status: 400, message: 'Usuário não pertence a esta empresa' }
 
   await projectRepo.addMember(projectId, userId)
+
+  await notificationService.notify({
+    companyId,
+    userId,
+    type:  'project_update',
+    title: `Você foi adicionado ao projeto: ${project.title}`,
+    link:  `/app/projects/${projectId}`,
+  })
 }
 
 const removeMember = async (projectId, userId, companyId) => {

@@ -1,9 +1,10 @@
-import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText} from 'lucide-react'
+import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2} from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
+import useSocketStore from '../../store/socketStore'
 import Avatar from '../ui/Avatar'
-import {getNotifications, markAllRead,} from '../../services/notifications.service'
+import {getNotifications, markRead, markAllRead, deleteNotification,} from '../../services/notifications.service'
 import { formatDateTime } from '../../utils/format'
 
 // ─── Links extraídos diretamente do Sidebar original ──────────────
@@ -21,6 +22,7 @@ const NAV_LINKS = [
 
 export default function Topbar() {
   const { user, logout } = useAuthStore()
+  const navigate = useNavigate()
 
   // ─── Estados (idênticos ao original + showMobileMenu) ────────────
   const [notifs,          setNotifs]         = useState([])
@@ -35,12 +37,55 @@ export default function Topbar() {
     )
   }, [])
 
+  // ─── Tempo real: assina o WebSocket compartilhado (mesma conexão
+  // usada pelo Chat) e insere notificações novas assim que chegam ──
+  useEffect(() => {
+    useSocketStore.getState().ensureConnected()
+
+    const unsubscribe = useSocketStore.getState().subscribe((msg) => {
+      if (msg.type === 'new_notification' && msg.notification) {
+        setNotifs((prev) => {
+          if (prev.some((n) => n.id === msg.notification.id)) return prev
+          return [msg.notification, ...prev]
+        })
+      }
+    })
+
+    return unsubscribe
+  }, [])
+
   const unread = notifs.filter((n) => !n.is_read).length
 
   // ─── Marcar todas como lidas (lógica original preservada) ────────
   const handleMarkAll = async () => {
     await markAllRead()
     setNotifs((n) => n.map((x) => ({ ...x, is_read: true })))
+  }
+
+  // ─── Clique em uma notificação: marca como lida e navega para o link ──
+  const handleNotifClick = async (n) => {
+    if (!n.is_read) {
+      setNotifs((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)))
+      try {
+        await markRead(n.id)
+      } catch {
+        // Falha silenciosa aqui não é crítica: pior caso, aparece como
+        // não lida de novo na próxima busca.
+      }
+    }
+    setShowNotifs(false)
+    if (n.link) navigate(n.link)
+  }
+
+  // ─── Excluir uma notificação (botão de lixeira) ──────────────────
+  const handleDeleteNotif = async (e, id) => {
+    e.stopPropagation() // não deixa disparar a navegação do item
+    setNotifs((prev) => prev.filter((n) => n.id !== id))
+    try {
+      await deleteNotification(id)
+    } catch {
+      // Falha silenciosa: pior caso, reaparece na próxima busca
+    }
   }
 
   // ─── Fecha todos os dropdowns ────────────────────────────────────
@@ -140,7 +185,7 @@ export default function Topbar() {
         {/* ── DIREITA ──────────────────────────────────────────────── */}
         <div className="flex items-center gap-1.5 ml-auto shrink-0">
 
-          {/* NOTIFICAÇÕES — lógica 100% original preservada */}
+          {/* NOTIFICAÇÕES */}
           <div className="relative">
             <button
               onClick={() => {
@@ -197,29 +242,104 @@ export default function Topbar() {
                       Nenhuma notificação
                     </div>
                   ) : (
-                    notifs.slice(0, 15).map((n) => (
-                      <div
-                        key={n.id}
-                        className={`
-                          border-b border-slate-100 p-4
-                          transition-colors
-                          hover:bg-slate-50
-                          ${!n.is_read ? 'bg-slate-50' : ''}
-                        `}
-                      >
-                        <p className="text-sm font-medium text-slate-800">
-                          {n.title}
-                        </p>
-                        {n.body && (
-                          <p className="mt-1 text-xs text-slate-500">
-                            {n.body}
-                          </p>
-                        )}
-                        <p className="mt-2 text-xs text-slate-400">
-                          {formatDateTime(n.created_at)}
-                        </p>
-                      </div>
-                    ))
+                    <>
+                      {notifs.filter((n) => !n.is_read).length > 0 && (
+                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Não lidas
+                        </div>
+                      )}
+                      {notifs
+                        .filter((n) => !n.is_read)
+                        .map((n) => (
+                          <div key={n.id} className="group relative border-b border-slate-100 bg-slate-50">
+                            <button
+                              onClick={() => handleNotifClick(n)}
+                              className={`
+                                block w-full p-4 pr-9
+                                text-left
+                                transition-colors
+                                hover:bg-slate-100
+                                ${n.link ? 'cursor-pointer' : 'cursor-default'}
+                              `}
+                            >
+                              <p className="text-sm font-medium text-slate-800">
+                                {n.title}
+                              </p>
+                              {n.body && (
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {n.body}
+                                </p>
+                              )}
+                              <p className="mt-2 text-xs text-slate-400">
+                                {formatDateTime(n.created_at)}
+                              </p>
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteNotif(e, n.id)}
+                              title="Excluir notificação"
+                              className="
+                                absolute right-2 top-3
+                                rounded-lg p-1.5
+                                text-slate-300 opacity-0
+                                transition-all duration-150
+                                hover:bg-slate-200 hover:text-slate-600
+                                group-hover:opacity-100
+                              "
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+
+                      {notifs.filter((n) => n.is_read).length > 0 && (
+                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                          Lidas
+                        </div>
+                      )}
+                      {notifs
+                        .filter((n) => n.is_read)
+                        .slice(0, 15)
+                        .map((n) => (
+                          <div key={n.id} className="group relative border-b border-slate-100">
+                            <button
+                              onClick={() => handleNotifClick(n)}
+                              className={`
+                                block w-full p-4 pr-9
+                                text-left
+                                transition-colors
+                                hover:bg-slate-50
+                                ${n.link ? 'cursor-pointer' : 'cursor-default'}
+                              `}
+                            >
+                              <p className="text-sm font-medium text-slate-800">
+                                {n.title}
+                              </p>
+                              {n.body && (
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {n.body}
+                                </p>
+                              )}
+                              <p className="mt-2 text-xs text-slate-400">
+                                {formatDateTime(n.created_at)}
+                              </p>
+                            </button>
+                            <button
+                              onClick={(e) => handleDeleteNotif(e, n.id)}
+                              title="Excluir notificação"
+                              className="
+                                absolute right-2 top-3
+                                rounded-lg p-1.5
+                                text-slate-300 opacity-0
+                                transition-all duration-150
+                                hover:bg-slate-200 hover:text-slate-600
+                                group-hover:opacity-100
+                              "
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        ))}
+                    </>
                   )}
                 </div>
               </div>

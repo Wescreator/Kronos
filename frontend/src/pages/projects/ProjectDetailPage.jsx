@@ -429,9 +429,9 @@ export default function ProjectDetailPage() {
     <div className="max-w-5xl mx-auto fade-in">
       <button onClick={() => navigate('/app/projects')}
       className="flex items-center gap-2 text-sm mb-5 transition-colors"
-      style={{ color: 'var(--text-muted)' }}
-      onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>
+      style={{ color: 'var(--text-primary)' }}
+      onMouseEnter={e => e.currentTarget.style.color = 'var(--bg-card)'}
+      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}>
         <ArrowLeft size={15} /> Voltar para Projetos</button>
 
       {/* Cover */}

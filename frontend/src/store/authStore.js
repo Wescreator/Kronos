@@ -52,6 +52,10 @@ const useAuthStore = create((set) => ({
   })),
 
   logout: () => {
+    // Import dinâmico para evitar dependência circular estática
+    // (socketStore importa useAuthStore para ler token/userId).
+    import('./socketStore').then((m) => m.default.getState().disconnect())
+
     localStorage.clear()
     sessionStorage.clear()
     sessionStorage.removeItem('impersonateCompany')

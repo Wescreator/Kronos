@@ -1,5 +1,7 @@
 const chatRepo = require('../repositories/chat.repository')
 const companyRepo = require('../repositories/company.repository')
+const userRepo = require('../repositories/user.repository')
+const notificationService = require('./notification.service')
 
 const getRooms = async (userId) => {
   return chatRepo.findRoomsByUser(userId)
@@ -42,6 +44,23 @@ const createMessage = async ({ roomId, userId, content }) => {
   const allMemberIds  = await chatRepo.findRoomMemberIds(roomId)
   const otherMemberIds = allMemberIds.filter(id => id !== userId)
   global.broadcastToRoom(otherMemberIds, { type: 'new_message', roomId, message })
+
+  // Uma notificação por usuário, sempre criada (sem dedupe — cada mensagem
+  // é um evento novo, diferente do caso de vencidos no cron financeiro).
+  const sender = await userRepo.findById(userId)
+  const preview = content && content.length > 80 ? `${content.slice(0, 80)}…` : content
+
+  for (const memberId of otherMemberIds) {
+    await notificationService.notify({
+      companyId: room.company_id,
+      userId:    memberId,
+      type:      'chat_mention',
+      title:     `Nova mensagem de ${sender?.name || 'usuário'}`,
+      body:      preview || null,
+      link:      `/app/chat/${roomId}`,
+    })
+  }
+
   return message
 }
 

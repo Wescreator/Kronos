@@ -129,6 +129,7 @@ export default function App() {
           <Route path="financial/revenues"  element={<RevenuesPage />} />
           <Route path="financial/dre"       element={<DREPage />} />
           <Route path="chat"                element={<ChatPage />} />
+          <Route path="chat/:roomId"        element={<ChatPage />} />
           <Route path="team"                element={<TeamPage />} />
           <Route path="team/:id"            element={<TeamMemberPage />} />
           <Route path="agenda"              element={<CalendarPage />} />
