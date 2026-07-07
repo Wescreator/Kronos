@@ -245,9 +245,30 @@ export default function CompanyDetailPage() {
 
 function Field({ label, value }) {
   return (
-    <div>
-      <p className="label" style={{ marginBottom: 4 }}>{label}</p>
-      <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{value || '—'}</p>
+    <div
+      style={{
+        background: 'rgba(0, 0, 0, 0.03)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: 12,
+        padding: '14px 16px',
+      }}
+    >
+      <p
+        className="label"
+        style={{
+          marginBottom: 10,
+          color: 'var(--text-primary)',
+        }}
+      >
+        {label}
+      </p>
+
+      <p
+        className="text-sm font-medium"
+        style={{ color: 'var(--text-primary)' }}
+      >
+        {value || '—'}
+      </p>
     </div>
   )
 }
@@ -256,7 +277,7 @@ function ResumoTab({ company, editing, form, onChange, onEdit, onCancel, onSave,
   if (!editing) {
     return (
       <div className="card p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5"  style={{ paddingBottom: 24 }}>
           <Field label="Nome da empresa" value={company.name} />
           <Field label="Nome fantasia"   value={company.trade_name} />
           <Field label="Documento"       value={company.document} />
@@ -265,8 +286,8 @@ function ResumoTab({ company, editing, form, onChange, onEdit, onCancel, onSave,
           <Field label="Plano"           value={company.plan} />
         </div>
         <div className="divider my-5" />
-        <button onClick={onEdit} className="btn-secondary">
-          <Pencil size={13} /> Editar Empresa
+        <button onClick={onEdit} className="btn-secondary mt-4">
+          <Pencil size={10} /> Editar Empresa
         </button>
       </div>
     )
@@ -278,27 +299,27 @@ function ResumoTab({ company, editing, form, onChange, onEdit, onCancel, onSave,
     <div className="card p-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label className="label">Nome da empresa *</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome da Empresa</label>
           <input className="input" value={form.name} onChange={e => set('name', e.target.value)} />
         </div>
         <div>
-          <label className="label">Nome fantasia</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome Fantasia</label>
           <input className="input" value={form.trade_name} onChange={e => set('trade_name', e.target.value)} />
         </div>
         <div>
-          <label className="label">Documento</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Documento</label>
           <input className="input" value={form.document} onChange={e => set('document', e.target.value)} />
         </div>
         <div>
-          <label className="label">E-mail</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>E-mail</label>
           <input className="input" type="email" value={form.email} onChange={e => set('email', e.target.value)} />
         </div>
         <div>
-          <label className="label">Telefone</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Telefone</label>
           <input className="input" value={form.phone} onChange={e => set('phone', e.target.value)} />
         </div>
         <div className="sm:col-span-2">
-          <label className="label">Plano</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Plano</label>
           <input className="input" value={form.plan} onChange={e => set('plan', e.target.value)} />
         </div>
       </div>
@@ -342,54 +363,89 @@ function UsersTab({ users, onAdd, onEdit }) {
   return (
     <div>
       <div className="flex justify-end mb-4">
-        <button onClick={onAdd} className="btn-primary"><Plus size={15} /> Adicionar Usuário</button>
+        <button onClick={onAdd} className="btn-primary">
+          <Plus size={15} /> Adicionar Usuário
+        </button>
       </div>
 
       {users.length === 0 ? (
         <EmptyState icon={Users} title="Nenhum usuário nesta empresa" />
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full">
-            <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-              <tr>
-                <th className="table-header" style={{ color: 'var(--text-secondary)' }}>Usuário</th>
-                <th className="table-header hidden sm:table-cell" style={{ color: 'var(--text-secondary)' }}>Permissão</th>
-                <th className="table-header" style={{ color: 'var(--text-secondary)' }}>Status</th>
-                <th className="table-header hidden md:table-cell" style={{ color: 'var(--text-secondary)' }}>Último acesso</th>
-                <th className="table-header" style={{ color: 'var(--text-secondary)', textAlign: 'right' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u, i) => (
-                <tr key={u.id} style={{ borderBottom: i < users.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
-                  <td className="table-cell">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{u.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.email}</p>
-                  </td>
-                  <td className="table-cell hidden sm:table-cell">
-                    <span className="badge" title={ROLE_DESCRIPTIONS[u.role]} style={{ background: 'var(--bg-sidebar)', color: 'var(--text-primary)', cursor: 'help' }}>
-                      <ShieldCheck size={11} style={{ marginRight: 4 }} /> {ROLE_LABELS[u.role] || u.role}
-                    </span>
-                  </td>
-                  <td className="table-cell">
-                    <span className="badge" style={u.is_active === false
-                      ? { background: 'rgba(220,38,38,0.10)', color: '#DC2626' }
-                      : { background: 'rgba(22,163,74,0.10)', color: '#16A34A' }}>
-                      {u.is_active === false ? 'Inativo' : 'Ativo'}
-                    </span>
-                  </td>
-                  <td className="table-cell hidden md:table-cell">
-                    <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>{u.last_access || '—'}</span>
-                  </td>
-                  <td className="table-cell" style={{ textAlign: 'right' }}>
-                    <button onClick={() => onEdit(u)} className="btn-secondary btn-sm">
-                      <Pencil size={12} /> Editar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-3">
+          {users.map((u) => (
+            <div
+              key={u.id}
+              className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+              style={{
+                background: "#ffffff",
+                border: "1px solid var(--border-subtle)",
+              }}
+            >
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: "var(--text-primary)" }}
+                >
+                  {u.name}
+                </p>
+
+                <p
+                  className="text-xs mt-1"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  {u.email}
+                </p>
+
+                <div className="flex flex-wrap items-center gap-2 mt-3">
+                  <span
+                    className="badge"
+                    title={ROLE_DESCRIPTIONS[u.role]}
+                    style={{
+                      background: "var(--bg-sidebar)",
+                      color: "var(--text-primary)",
+                      cursor: "help",
+                    }}
+                  >
+                    <ShieldCheck size={11} style={{ marginRight: 4 }} />
+                    {ROLE_LABELS[u.role] || u.role}
+                  </span>
+
+                  <span
+                    className="badge"
+                    style={
+                      u.is_active === false
+                        ? {
+                            background: "rgba(220,38,38,0.10)",
+                            color: "#DC2626",
+                          }
+                        : {
+                            background: "rgba(22,163,74,0.10)",
+                            color: "#16A34A",
+                          }
+                    }
+                  >
+                    {u.is_active === false ? "Inativo" : "Ativo"}
+                  </span>
+
+                  <span
+                    className="text-xs"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    Último acesso: {u.last_access || "—"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  onClick={() => onEdit(u)}
+                  className="btn-secondary btn-sm"
+                >
+                  <Pencil size={12} /> Editar
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -564,7 +620,7 @@ function SettingsTab({ company, companyId, onUpdated }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="label">Nome do responsável</label>
+            <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome do Responsável</label>
             <input
               className="input"
               value={responsibleName}
@@ -573,7 +629,7 @@ function SettingsTab({ company, companyId, onUpdated }) {
             />
           </div>
           <div>
-            <label className="label">Cargo / Função</label>
+            <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Cargo / Função</label>
             <input
               className="input"
               value={responsibleRole}
