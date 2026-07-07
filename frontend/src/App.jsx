@@ -27,6 +27,12 @@ import CalendarPage       from './pages/calendar/CalendarPage'
 import ProposalsPage      from './pages/proposals/ProposalsPage'
 import ProposalDetailPage from './pages/proposals/ProposalDetailPage'
 import ClientPage         from './pages/client/ClientPage'
+import PostsPage          from './pages/posts/PostsPage'
+
+// NOVO — portal do cliente (escopo 'client')
+import ClientPortalLoginPage from './pages/portal/ClientPortalLoginPage'
+import ClientPortalLayout    from './components/layout/ClientPortalLayout'
+import ClientPortalPostsPage from './pages/portal/ClientPortalPostsPage'
 
 
 /**
@@ -86,6 +92,9 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password"  element={<ResetPasswordPage />} />
         <Route path="/"                element={<Navigate to="/login" replace />} />
+
+        {/* NOVO — login separado do portal do cliente */}
+        <Route path="/portal/login" element={<ClientPortalLoginPage />} />
         
         {/* ── Painel global — escopo Developer ──────────────────── */}
         <Route
@@ -135,6 +144,22 @@ export default function App() {
           <Route path="agenda"              element={<CalendarPage />} />
           <Route path="proposals"           element={<ProposalsPage />} />
           <Route path="proposals/:id"       element={<ProposalDetailPage />} />
+          <Route path="posts"               element={<PostsPage />} />
+        </Route>
+
+        {/* ── Rotas do portal do cliente — escopo Client ─────────── */}
+        <Route
+          path="/portal"
+          element={
+            <ProtectedRoute>
+              <ScopeRoute scope="client">
+                <ClientPortalLayout />
+              </ScopeRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<Navigate to="posts" replace />} />
+          <Route path="posts" element={<ClientPortalPostsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

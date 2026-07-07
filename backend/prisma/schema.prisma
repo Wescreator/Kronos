@@ -48,6 +48,10 @@ model User {
   task_assignments                                  task_assignments[]
   task_comments                                     task_comments[]
   tasks                                             Task[]
+  posts                                              Post[]                 // NOVO
+  post_attachments                                  PostAttachment[]        // NOVO
+  post_comments                                     PostComment[]           // NOVO
+  client_project_access                             ClientProjectAccess[]   // NOVO — granted_by
   companies                                         Company?               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_company")
 
   @@index([companyId], map: "idx_users_company")
@@ -96,6 +100,11 @@ model Company {
   task_comments          task_comments[]
   tasks                  Task[]
   users                  User[]
+  posts                  Post[]                 // NOVO
+  post_attachments       PostAttachment[]        // NOVO
+  post_comments          PostComment[]           // NOVO
+  comment_attachments    CommentAttachment[]     // NOVO
+  client_project_access  ClientProjectAccess[]   // NOVO
 
   @@map("companies")
 }
@@ -166,6 +175,8 @@ model Project {
   users_projects_owner_idTousers   User                   @relation("projects_owner_idTousers", fields: [ownerId], references: [id], onUpdate: NoAction)
   revenues                         Revenue[]
   tasks                            Task[]
+  posts                            Post[]                 // NOVO
+  client_project_access            ClientProjectAccess[]  // NOVO
 
   @@index([companyId], map: "idx_projects_company")
   @@index([companyId], map: "idx_projects_company_id")
@@ -406,13 +417,135 @@ model ClientLead {
   createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  companies  Company   @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_clients_leads_company")
-  projects   Project?  @relation(fields: [projectId], references: [id], onUpdate: NoAction)
-  users      User?     @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  // ── NOVO: acesso do cliente ao portal de postagens ──────────────────
+  // Campos aditivos. `email` (CRM, acima) continua opcional e sem relação
+  // com login — portalEmail é escolhido livremente no momento da criação
+  // do acesso, feita pelo Dev na Admin Page.
+  portalEmail        String?    @unique @map("portal_email") @db.VarChar(255)
+  portalPasswordHash String?    @map("portal_password_hash") @db.VarChar(255)
+  portalIsActive     Boolean    @default(true) @map("portal_is_active")
+  portalLastLoginAt  DateTime?  @map("portal_last_login_at") @db.Timestamptz(6)
+
+  companies             Company               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_clients_leads_company")
+  projects              Project?              @relation(fields: [projectId], references: [id], onUpdate: NoAction)
+  users                 User?                 @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  client_project_access ClientProjectAccess[] // NOVO
+  post_comments         PostComment[]         // NOVO
 
   @@unique([companyId, email], map: "clients_leads_company_email_key")
   @@index([companyId], map: "idx_clients_leads_company")
   @@map("clients_leads")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NOVO — Vínculo cliente ↔ projeto (many-to-many, portal de acesso)
+// ═══════════════════════════════════════════════════════════════════════
+model ClientProjectAccess {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientLeadId String   @map("client_lead_id") @db.Uuid
+  projectId    String   @map("project_id") @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  grantedBy    String?  @map("granted_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  clients_leads ClientLead @relation(fields: [clientLeadId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users         User?      @relation(fields: [grantedBy], references: [id], onUpdate: NoAction)
+
+  @@unique([clientLeadId, projectId])
+  @@index([companyId], map: "idx_client_project_access_company")
+  @@index([projectId], map: "idx_client_project_access_project")
+  @@map("client_project_access")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NOVO — Módulo de Postagens (feed vinculado a projeto)
+// ═══════════════════════════════════════════════════════════════════════
+model Post {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  createdBy String   @map("created_by") @db.Uuid
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  companies        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  projects         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            User             @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  post_attachments PostAttachment[]
+  post_comments    PostComment[]
+
+  @@index([companyId], map: "idx_posts_company")
+  @@index([projectId], map: "idx_posts_project")
+  @@index([createdAt(sort: Desc)], map: "idx_posts_created_at")
+  @@map("posts")
+}
+
+model PostAttachment {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId     String   @map("post_id") @db.Uuid
+  companyId  String   @map("company_id") @db.Uuid
+  uploadedBy String   @map("uploaded_by") @db.Uuid
+  fileName   String   @map("file_name") @db.VarChar(255)
+  fileSize   BigInt?  @map("file_size")
+  mimeType   String?  @map("mime_type") @db.VarChar(127)
+  objectKey  String   @map("object_key") @db.VarChar(500)
+  url        String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  posts     Post    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users     User    @relation(fields: [uploadedBy], references: [id], onUpdate: NoAction)
+
+  @@index([postId], map: "idx_post_attachments_post")
+  @@index([companyId], map: "idx_post_attachments_company")
+  @@map("post_attachments")
+}
+
+model PostComment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String   @map("post_id") @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  content   String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Autor é OU um usuário interno OU um cliente do portal (nunca os dois
+  // ao mesmo tempo). A regra "exatamente um preenchido" é validada na
+  // camada de service (post.service.js), seguindo o padrão do projeto de
+  // validação em app-level em vez de constraint de banco.
+  userId       String? @map("user_id") @db.Uuid
+  clientLeadId String? @map("client_lead_id") @db.Uuid
+
+  posts               Post                @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                User?               @relation(fields: [userId], references: [id], onUpdate: NoAction)
+  clients_leads        ClientLead?         @relation(fields: [clientLeadId], references: [id], onUpdate: NoAction)
+  comment_attachments  CommentAttachment[]
+
+  @@index([postId], map: "idx_post_comments_post")
+  @@index([companyId], map: "idx_post_comments_company")
+  @@map("post_comments")
+}
+
+model CommentAttachment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commentId String   @map("comment_id") @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  fileName  String   @map("file_name") @db.VarChar(255)
+  fileSize  BigInt?  @map("file_size")
+  mimeType  String?  @map("mime_type") @db.VarChar(127)
+  objectKey String   @map("object_key") @db.VarChar(500)
+  url       String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  post_comments PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([commentId], map: "idx_comment_attachments_comment")
+  @@map("comment_attachments")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -664,6 +797,8 @@ enum notification_type {
   financial_due
   chat_mention
   system
+  post_created  // NOVO
+  post_comment  // NOVO
 }
 
 enum project_status {

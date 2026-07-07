@@ -47,6 +47,8 @@ export default function LoginPage() {
       navigate(
         scope === 'global'
           ? '/admin'
+          : scope === 'client'
+          ? '/portal/posts'
           : '/app/dashboard',
         { replace: true }
       )

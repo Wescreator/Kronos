@@ -49,6 +49,30 @@ const platformService = {
   // newValue }] }. CompanyDetailPage trata ausência/erro como lista vazia.
   getCompanyHistory: (companyId) =>
     api.get(`/platform/companies/${companyId}/history`).then(r => r.data.history || []),
+
+  // ── NOVO — Clientes com acesso ao portal de postagens ──────────────────
+
+  // Lista de projetos da empresa, usada para popular o multi-select de
+  // projetos no ClientAccessModal.
+  listCompanyProjects: (companyId) =>
+    api.get(`/platform/companies/${companyId}/projects`).then(r => r.data.projects),
+
+  // Clientes elegíveis (status='cliente') com o estado atual do acesso ao
+  // portal (has_access, portal_email, portal_is_active, projects vinculados).
+  listCompanyClients: (companyId) =>
+    api.get(`/platform/companies/${companyId}/clients`).then(r => r.data.clients),
+
+  // payload: { portalEmail, password, projectIds: string[] }
+  createClientPortalAccess: (companyId, clientId, payload) =>
+    api.post(`/platform/companies/${companyId}/clients/${clientId}/access`, payload).then(r => r.data.client),
+
+  // payload: { password?, isActive?, projectIds? } — todos opcionais,
+  // envie só o que deseja alterar.
+  updateClientPortalAccess: (companyId, clientId, payload) =>
+    api.patch(`/platform/companies/${companyId}/clients/${clientId}/access`, payload).then(r => r.data.client),
+
+  revokeClientPortalAccess: (companyId, clientId) =>
+    api.delete(`/platform/companies/${companyId}/clients/${clientId}/access`).then(r => r.data),
 }
 
 export default platformService

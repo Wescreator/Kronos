@@ -53,13 +53,13 @@ export const ROLE_STYLES = {
 // MÓDULOS VISÍVEIS POR PERFIL
 // ─────────────────────────────────────────────────────────────────
 
-const ALL_MODULES = ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals']
+const ALL_MODULES = ['dashboard', 'projects', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts']
 export const VISIBLE_MODULES = {
   developer: ALL_MODULES,
   owner:     ALL_MODULES,
   admin:     ALL_MODULES,
-  manager:   ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals'],
-  employee:  ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals'],
+  manager:   ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals', 'posts'],
+  employee:  ['projects',  'tasks',    'chat',  'team',      'agenda', 'proposals', 'posts'],
 }
 // ─────────────────────────────────────────────────────────────────
 
@@ -121,6 +121,21 @@ export const PERMISSIONS = {
     duplicate: [...ADMIN_ROLES, 'manager'],
     delete:    ADMIN_ROLES,
   },
+
+  // NOVO — módulo de Postagens (feed).
+  // "edit"/"delete"/"attach" aqui refletem a visão de ADMIN (vale para
+  // qualquer postagem da empresa). A regra "ou quem criou a postagem" não
+  // dá para expressar numa lista estática de roles — é checada no
+  // componente comparando post.created_by com o id do usuário logado,
+  // igual ao backend faz em post.service.js (canManagePost).
+  posts: {
+    view:    ALL_ROLES,
+    create:  ALL_ROLES,
+    comment: ALL_ROLES,
+    edit:    ADMIN_ROLES,
+    delete:  ADMIN_ROLES,
+    attach:  ADMIN_ROLES,
+  },
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -164,3 +179,19 @@ export const canSeeModule = (role, module) => {
  * @returns {boolean}
  */
 export const isGlobalScope = (scope) => scope === 'global'
+
+/**
+ * NOVO — verifica se um usuário pode gerenciar (editar/excluir/anexar em)
+ * uma postagem específica: admin da empresa OU quem criou a postagem.
+ * Espelha exatamente canManagePost() em post.service.js no backend —
+ * mantenha as duas em sincronia se a regra mudar.
+ *
+ * @param {{ created_by: string }} post
+ * @param {{ role: string, user_id: string }} user
+ * @returns {boolean}
+ */
+export const canManagePost = (post, user) => {
+  if (!post || !user) return false
+  if (ADMIN_ROLES.includes(user.role)) return true
+  return post.created_by === user.user_id
+}

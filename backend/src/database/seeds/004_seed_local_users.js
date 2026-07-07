@@ -16,9 +16,11 @@ const COMPANY_SLUG = 'kronos-dev'
 const COMPANY_NAME = 'Kronos Dev'
 
 const USERS = [
-  { name: 'Owner Dev',   email: 'owner@kronos.dev',   password: 'Kronos@123', role: 'owner'   },
-  { name: 'Admin Dev',   email: 'admin@kronos.dev',   password: 'Kronos@123', role: 'admin'   },
-  { name: 'Manager Dev', email: 'manager@kronos.dev', password: 'Kronos@123', role: 'manager' },
+  { name: 'Owner Dev',   email: 'owner@kronos.dev',   password: 'Kronos@123',     role: 'owner'   },
+  { name: 'Admin Dev',   email: 'admin@kronos.dev',   password: 'Kronos@123',     role: 'admin'   },
+  { name: 'Manager Dev', email: 'manager@kronos.dev', password: 'Kronos@123',     role: 'manager' },
+  { name: 'Developer',  email: 'dev@kronos.app',      password: 'Kronos@Dev2026', role: 'developer'},
+  { name: 'Client',     email: 'client@kronos.dev',   password: 'Kronos@123',     role: 'client'    },
 ]
 
 async function ensureCompany() {

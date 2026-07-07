@@ -73,6 +73,38 @@ const getCompanyHistory = asyncHandler(async (req, res) => {
   return R.success(res, { history })
 })
 
+// ═══════════════════════════════════════════════════════════════════════
+// NOVO — Clientes com acesso ao portal de postagens
+// ═══════════════════════════════════════════════════════════════════════
+
+const listCompanyProjects = asyncHandler(async (req, res) => {
+  const projects = await platformService.listCompanyProjects(req.params.id)
+  return R.success(res, { projects })
+})
+
+const listCompanyClients = asyncHandler(async (req, res) => {
+  const clients = await platformService.listCompanyClients(req.params.id)
+  return R.success(res, { clients })
+})
+
+const createClientPortalAccess = asyncHandler(async (req, res) => {
+  const client = await platformService.createClientPortalAccess(req.params.id, req.params.clientId, {
+    ...req.body,
+    grantedBy: req.user.user_id,
+  })
+  return R.created(res, { client })
+})
+
+const updateClientPortalAccess = asyncHandler(async (req, res) => {
+  const client = await platformService.updateClientPortalAccess(req.params.id, req.params.clientId, req.body)
+  return R.success(res, { client })
+})
+
+const revokeClientPortalAccess = asyncHandler(async (req, res) => {
+  const result = await platformService.revokeClientPortalAccess(req.params.id, req.params.clientId)
+  return R.success(res, result)
+})
+
 module.exports = {
   listCompanies,
   createCompany,
@@ -84,4 +116,9 @@ module.exports = {
   updateCompanyUser,
   deleteCompanyUser,
   getCompanyHistory,
+  listCompanyProjects,
+  listCompanyClients,
+  createClientPortalAccess,
+  updateClientPortalAccess,
+  revokeClientPortalAccess,
 }

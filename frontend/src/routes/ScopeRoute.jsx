@@ -7,10 +7,13 @@ import useAuthStore from '../store/authStore'
  * Protege rotas por escopo de usuário.
  *
  * scope="global"  → apenas developer / support
- * scope="company" → qualquer usuário autenticado com empresa
+ * scope="company" → usuário interno com empresa
+ * scope="client"  → cliente do portal (acesso restrito ao feed de
+ *                    postagens do(s) projeto(s) vinculado(s))
  *
  * Uso:
  *   <Route path="/admin" element={<ScopeRoute scope="global"><AdminLayout /></ScopeRoute>} />
+ *   <Route path="/portal" element={<ScopeRoute scope="client"><ClientPortalLayout /></ScopeRoute>} />
  */
 export default function ScopeRoute({ children, scope }) {
   const { user, isAuthenticated } = useAuthStore()
@@ -19,14 +22,32 @@ export default function ScopeRoute({ children, scope }) {
     return <Navigate to="/login" replace />
   }
 
-  if (scope === 'global' && user.scope !== 'global') {
-    // Usuário de empresa tentando acessar painel global
-    return <Navigate to="/app/dashboard" replace />
+  // Para onde mandar quem não pertence a este escopo, de acordo com o
+  // escopo real do usuário logado — evita loops de redirect entre as
+  // três árvores de rota (/admin, /app, /portal).
+  const homeForScope = () => {
+    if (user.scope === 'global') return '/admin'
+    if (user.scope === 'client') return '/portal/posts'
+    return '/app/dashboard'
   }
 
-  if (scope === 'company' && user.scope === 'global' && !user._impersonating) {
+  if (scope === 'global' && user.scope !== 'global') {
+    return <Navigate to={homeForScope()} replace />
+  }
+
+  if (scope === 'company') {
     // Developer sem impersonação ativa tentando acessar área de empresa
-    return <Navigate to="/admin" replace />
+    if (user.scope === 'global' && !user._impersonating) {
+      return <Navigate to="/admin" replace />
+    }
+    // Cliente do portal nunca acessa a área interna da empresa
+    if (user.scope === 'client') {
+      return <Navigate to="/portal/posts" replace />
+    }
+  }
+
+  if (scope === 'client' && user.scope !== 'client') {
+    return <Navigate to={homeForScope()} replace />
   }
 
   return children

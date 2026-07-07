@@ -15,7 +15,14 @@ const { getTenant } = require('./tenantContext')
  *
  * IMPORTANTE: a extensao atua apenas em metodos de modelo do Prisma
  * (prisma.task.findMany, etc). Consultas via $queryRaw NAO passam pela
- * extensao e devem continuar incluindo `company_id` explicitamente.
+ * extensao e devem continuar incluindo `company_id` explicitamente. O
+ * mesmo vale para o pool `pg` cru usado nos repositories de Posts e
+ * Clientes (post.repository.js, client.repository.js) - eles nunca
+ * passam pelo Prisma, entao nao ha necessidade (nem efeito) de listar
+ * post_attachments/post_comments/comment_attachments/posts/clients_leads
+ * aqui só por causa desses fluxos; ClientLead/ClientProjectAccess estão
+ * listados abaixo especificamente porque platform.service.js os acessa
+ * via Prisma Client (nao via pool cru).
  *
  * Observacao sobre findUnique/update/delete (por id unico): o Prisma
  * nao permite adicionar company_id ao `where` de operacoes "unique".
@@ -56,6 +63,10 @@ const TENANT_MODELS = new Set([
   'proposal_scope_items',
   'proposal_payment_terms',
   'proposal_sequences',
+  // NOVO — módulo de Clientes/Portal, acessado via Prisma em
+  // platform.service.js (createClientPortalAccess, listCompanyClients etc).
+  'ClientLead',
+  'ClientProjectAccess',
 ])
 
 const WHERE_OPS = new Set([
@@ -78,7 +89,8 @@ const prisma = base.$extends({
 
         // Sem contexto de empresa em modelo tenant: bloqueia para
         // evitar vazamento cross-tenant acidental. O escopo global
-        // (developer) deve impersonar uma empresa para acessar.
+        // (developer) deve impersonar uma empresa (ou, nas rotas do
+        // Admin, ter o contexto ativado via router.param) para acessar.
         if (!companyId) {
           throw new Prisma.PrismaClientKnownRequestError(
             `Operacao em "${model}" sem contexto de empresa (company_id ausente).`,

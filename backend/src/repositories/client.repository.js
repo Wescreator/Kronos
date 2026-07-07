@@ -189,4 +189,40 @@ const remove = async (id, companyId) => {
   }
 }
 
-module.exports = { findAll, findById, create, update, remove, UPDATABLE_FIELDS }
+// ── NOVO: autenticação do portal do cliente ──────────────────────────────
+// portal_email é único GLOBALMENTE (igual users.email), não por empresa —
+// mesmo padrão do login de usuário interno, permitindo login sem informar
+// a empresa/slug. Só retorna clientes com portal_is_active = true.
+const findByPortalEmail = async (portalEmail) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT * FROM clients_leads WHERE portal_email = $1 AND portal_is_active = true`,
+      [portalEmail]
+    )
+    return rows[0] || null
+  } catch (error) {
+    throw translateDbError(error)
+  }
+}
+
+const updatePortalLastLogin = async (id) => {
+  try {
+    await pool.query(
+      `UPDATE clients_leads SET portal_last_login_at = NOW() WHERE id = $1`,
+      [id]
+    )
+  } catch (error) {
+    throw translateDbError(error)
+  }
+}
+
+module.exports = {
+  findAll,
+  findById,
+  create,
+  update,
+  remove,
+  UPDATABLE_FIELDS,
+  findByPortalEmail,
+  updatePortalLastLogin,
+}

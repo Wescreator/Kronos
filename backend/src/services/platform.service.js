@@ -275,6 +275,164 @@ const deleteCompanyUser = async (companyId, userId) => {
   }
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// NOVO — Clientes com acesso ao portal de postagens
+// ═══════════════════════════════════════════════════════════════════════
+
+// Lista projetos da empresa — usado para popular o seletor de projetos no
+// modal de acesso do cliente (multi-select em ClientAccessModal.jsx).
+const listCompanyProjects = async (companyId) => {
+  const projects = await prisma.project.findMany({
+    where: { companyId },
+    orderBy: { title: 'asc' },
+    select: { id: true, title: true, status: true },
+  })
+  return projects
+}
+
+const toClientAccessDTO = (client, accessRows = []) => ({
+  id:                    client.id,
+  name:                  client.name,
+  email:                 client.email,
+  status:                client.status,
+  portal_email:          client.portalEmail,
+  portal_is_active:      client.portalIsActive,
+  portal_last_login_at:  client.portalLastLoginAt,
+  has_access:            !!client.portalEmail,
+  projects:              accessRows.map(a => ({ id: a.projectId, title: a.projects?.title || null })),
+})
+
+// Lista clientes elegíveis (status='cliente') de uma empresa, já com o
+// estado do acesso ao portal e os projetos vinculados.
+const listCompanyClients = async (companyId) => {
+  const clients = await prisma.clientLead.findMany({
+    where: { companyId, status: 'cliente' },
+    orderBy: { name: 'asc' },
+  })
+
+  const accessRows = await prisma.clientProjectAccess.findMany({
+    where: { companyId },
+    include: { projects: { select: { id: true, title: true } } },
+  })
+
+  const accessByClient = accessRows.reduce((acc, row) => {
+    acc[row.clientLeadId] = acc[row.clientLeadId] || []
+    acc[row.clientLeadId].push(row)
+    return acc
+  }, {})
+
+  return clients.map(c => toClientAccessDTO(c, accessByClient[c.id] || []))
+}
+
+const createClientPortalAccess = async (companyId, clientId, { portalEmail, password, projectIds, grantedBy }) => {
+  const client = await prisma.clientLead.findFirst({ where: { id: clientId, companyId } })
+  if (!client) throw { status: 404, message: 'Cliente nao encontrado nesta empresa.' }
+
+  if (client.status !== 'cliente') {
+    throw {
+      status: 400,
+      message: 'Somente registros com status "cliente" podem receber acesso ao portal. Atualize o status na página de Clientes antes de continuar.',
+    }
+  }
+  if (!portalEmail || !portalEmail.trim()) {
+    throw { status: 400, message: 'Informe o e-mail de acesso ao portal.' }
+  }
+  if (!password || password.length < 8) {
+    throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+  }
+  if (!Array.isArray(projectIds) || projectIds.length === 0) {
+    throw { status: 400, message: 'Selecione ao menos um projeto para vincular o acesso.' }
+  }
+
+  const normalizedEmail = portalEmail.toLowerCase().trim()
+  const passwordHash = await bcrypt.hash(password, 12)
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.clientLead.update({
+        where: { id: clientId },
+        data: {
+          portalEmail:        normalizedEmail,
+          portalPasswordHash: passwordHash,
+          portalIsActive:     true,
+        },
+      })
+
+      // Substitui o vínculo de projetos pelo conjunto enviado no modal.
+      await tx.clientProjectAccess.deleteMany({ where: { clientLeadId: clientId, companyId } })
+      await tx.clientProjectAccess.createMany({
+        data: projectIds.map(pid => ({
+          clientLeadId: clientId,
+          projectId:    pid,
+          companyId,
+          grantedBy:    grantedBy || null,
+        })),
+        skipDuplicates: true,
+      })
+    })
+  } catch (err) {
+    if (err.code === 'P2002') {
+      throw { status: 409, message: 'Este e-mail de acesso já está em uso por outro cliente.' }
+    }
+    throw err
+  }
+
+  const list = await listCompanyClients(companyId)
+  return list.find(c => c.id === clientId)
+}
+
+const updateClientPortalAccess = async (companyId, clientId, { password, isActive, projectIds }) => {
+  const client = await prisma.clientLead.findFirst({ where: { id: clientId, companyId } })
+  if (!client) throw { status: 404, message: 'Cliente nao encontrado nesta empresa.' }
+  if (!client.portalEmail) {
+    throw { status: 400, message: 'Este cliente ainda não possui acesso ao portal. Crie o acesso primeiro.' }
+  }
+
+  const data = {}
+  if (password) {
+    if (password.length < 8) throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+    data.portalPasswordHash = await bcrypt.hash(password, 12)
+  }
+  if (isActive !== undefined) data.portalIsActive = !!isActive
+
+  await prisma.$transaction(async (tx) => {
+    if (Object.keys(data).length) {
+      await tx.clientLead.update({ where: { id: clientId }, data })
+    }
+    if (Array.isArray(projectIds)) {
+      await tx.clientProjectAccess.deleteMany({ where: { clientLeadId: clientId, companyId } })
+      if (projectIds.length) {
+        await tx.clientProjectAccess.createMany({
+          data: projectIds.map(pid => ({ clientLeadId: clientId, projectId: pid, companyId })),
+          skipDuplicates: true,
+        })
+      }
+    }
+  })
+
+  const list = await listCompanyClients(companyId)
+  return list.find(c => c.id === clientId)
+}
+
+// Revoga o acesso sem apagar o histórico de posts/comentários já feitos
+// pelo cliente (post_comments.client_lead_id continua íntegro). Zera o
+// portal_email para liberar reuso futuro do endereço por outro cliente.
+const revokeClientPortalAccess = async (companyId, clientId) => {
+  const client = await prisma.clientLead.findFirst({ where: { id: clientId, companyId } })
+  if (!client) throw { status: 404, message: 'Cliente nao encontrado nesta empresa.' }
+
+  await prisma.clientLead.update({
+    where: { id: clientId },
+    data: {
+      portalEmail:        null,
+      portalPasswordHash: null,
+      portalIsActive:     false,
+    },
+  })
+
+  return { revoked: true }
+}
+
 module.exports = {
   listCompanies,
   createCompany,
@@ -286,4 +444,9 @@ module.exports = {
   updateCompanyUser,
   deleteCompanyUser,
   getCompanyHistory,
+  listCompanyProjects,
+  listCompanyClients,
+  createClientPortalAccess,
+  updateClientPortalAccess,
+  revokeClientPortalAccess,
 }

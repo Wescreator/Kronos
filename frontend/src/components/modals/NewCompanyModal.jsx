@@ -57,32 +57,32 @@ export default function NewCompanyModal({ open, onClose, onCreated }) {
         <form onSubmit={handleSubmit} className="px-7 py-6 flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="label">Nome da empresa *</label>
+              <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome da Empresa</label>
               <input className="input" placeholder="Razão social" value={form.name}
                 onChange={e => set('name', e.target.value)} required />
             </div>
             <div>
-              <label className="label">Nome fantasia</label>
+              <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome Fantasia</label>
               <input className="input" value={form.trade_name}
                 onChange={e => set('trade_name', e.target.value)} />
             </div>
             <div>
-              <label className="label">Documento (CNPJ/CPF)</label>
+              <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Documento (CNPJ/CPF)</label>
               <input className="input" value={form.document}
                 onChange={e => set('document', e.target.value)} />
             </div>
             <div>
-              <label className="label">E-mail</label>
+              <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>E-mail</label>
               <input className="input" type="email" value={form.email}
                 onChange={e => set('email', e.target.value)} />
             </div>
             <div>
-              <label className="label">Telefone</label>
+              <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Telefone</label>
               <input className="input" value={form.phone}
                 onChange={e => set('phone', e.target.value)} />
             </div>
             <div className="sm:col-span-2">
-              <label className="label">Plano</label>
+              <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Plano</label>
               <select className="input" value={form.plan} onChange={e => set('plan', e.target.value)}>
                 {PLAN_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>

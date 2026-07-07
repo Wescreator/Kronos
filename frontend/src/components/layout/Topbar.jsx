@@ -1,4 +1,4 @@
-import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2} from 'lucide-react'
+import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { to: '/app/clients',   icon: Users,              label: 'Clientes'  }, // ── NOVO MÓDULO ADICIONADO AQUI ──
   { to: '/app/team',      icon: Users,              label: 'Equipe'    },
   { to: '/app/financial', icon: DollarSign,         label: 'Financeiro'},
+  { to: '/app/posts',     icon: Newspaper,          label: 'Posts'     },
   { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos'  },
   { to: '/app/proposals', icon: FileText,           label: 'Propostas' },
   { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas'   }  

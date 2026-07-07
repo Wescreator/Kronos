@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, Trash2, Plus, Building2, Users, Clock,
   CreditCard, Settings, LayoutGrid, ShieldCheck, ImagePlus, Upload,
+  UserCheck, KeyRound,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import platformService from '../../services/platform.service'
@@ -10,6 +11,7 @@ import platformService from '../../services/platform.service'
 import Spinner    from '../../components/ui/Spinner'
 import EmptyState from '../../components/ui/EmptyState'
 import UserModal  from '../../components/modals/UserModal'
+import ClientAccessModal from '../../components/modals/ClientAccessModal'
 
 const ROLE_LABELS = {
   owner:    'Owner',
@@ -29,6 +31,7 @@ const TABS = [
   { value: 'resumo',     label: 'Resumo',         icon: Building2   },
   { value: 'kpis',       label: 'KPIs',           icon: LayoutGrid  },
   { value: 'usuarios',   label: 'Usuários',       icon: Users       },
+  { value: 'clientes',   label: 'Clientes',       icon: UserCheck   },
   { value: 'historico',  label: 'Histórico',      icon: Clock       },
   { value: 'financeiro', label: 'Financeiro',     icon: CreditCard  },
   { value: 'config',     label: 'Configurações',  icon: Settings    },
@@ -45,6 +48,7 @@ export default function CompanyDetailPage() {
 
   const [company,  setCompany]  = useState(null)
   const [users,    setUsers]    = useState([])
+  const [clients,  setClients]  = useState([])   // NOVO
   const [stats,    setStats]    = useState(null)   // soft-fail — ver platform.service.js
   const [history,  setHistory]  = useState([])     // soft-fail — ver platform.service.js
   const [loading,  setLoading]  = useState(true)
@@ -57,6 +61,9 @@ export default function CompanyDetailPage() {
 
   const [showUserModal, setShowUserModal] = useState(false)
   const [editingUser,   setEditingUser]   = useState(null)
+
+  const [showClientAccessModal, setShowClientAccessModal] = useState(false) // NOVO
+  const [editingClientAccess,   setEditingClientAccess]   = useState(null)  // NOVO
 
   const load = async () => {
     setLoading(true)
@@ -89,6 +96,16 @@ export default function CompanyDetailPage() {
     }
   }
 
+  // NOVO — clientes elegíveis (status='cliente') com estado de acesso ao portal
+  const loadClients = async () => {
+    try {
+      const list = await platformService.listCompanyClients(id)
+      setClients(list)
+    } catch {
+      toast.error('Falha ao carregar clientes')
+    }
+  }
+
 
  // 1. Corrija o loadHistory para usar o platformService corretamente
   const loadHistory = async () => {
@@ -105,6 +122,7 @@ export default function CompanyDetailPage() {
   useEffect(() => { 
     load(); 
     loadUsers(); 
+    loadClients();  // NOVO
     // loadStats(); // <--- Se você não tem essa função, remova a chamada
     loadHistory(); 
   }, [id])
@@ -142,6 +160,10 @@ export default function CompanyDetailPage() {
   const openNewUser  = () => { setEditingUser(null); setShowUserModal(true) }
   const openEditUser = (u) => { setEditingUser(u); setShowUserModal(true) }
   const handleUserSaved = () => { setShowUserModal(false); setEditingUser(null); loadUsers() }
+
+  /* ── Clientes (portal) ───────────────────────────────────────────────── NOVO */
+  const openClientAccess = (client) => { setEditingClientAccess(client); setShowClientAccessModal(true) }
+  const handleClientAccessSaved = () => { setShowClientAccessModal(false); setEditingClientAccess(null); loadClients() }
 
   /* ── Configurações: logo + responsável técnico ──────────────────────── */
   const handleCompanyUpdated = (updated) => {
@@ -220,6 +242,10 @@ export default function CompanyDetailPage() {
         <UsersTab users={users} onAdd={openNewUser} onEdit={openEditUser} />
       )}
 
+      {activeTab === 'clientes' && (
+        <ClientsTab clients={clients} onManageAccess={openClientAccess} />
+      )}
+
       {activeTab === 'historico' && <HistoryTab history={history} />}
 
       {activeTab === 'financeiro' && <FinancialTab company={company} stats={stats} />}
@@ -234,6 +260,14 @@ export default function CompanyDetailPage() {
         user={editingUser}
         onClose={() => { setShowUserModal(false); setEditingUser(null) }}
         onSuccess={handleUserSaved}
+      />
+
+      <ClientAccessModal
+        open={showClientAccessModal}
+        companyId={id}
+        client={editingClientAccess}
+        onClose={() => { setShowClientAccessModal(false); setEditingClientAccess(null) }}
+        onSuccess={handleClientAccessSaved}
       />
     </div>
   )
@@ -452,6 +486,79 @@ function UsersTab({ users, onAdd, onEdit }) {
   )
 }
 
+/* ── NOVO — Clientes com acesso ao portal de postagens ─────────────────── */
+function ClientsTab({ clients, onManageAccess }) {
+  if (clients.length === 0) {
+    return (
+      <EmptyState
+        icon={UserCheck}
+        title="Nenhum cliente elegível"
+        description={'Apenas registros com status "cliente" (na página de Clientes/Leads da empresa) aparecem aqui. Atualize o status de um lead para "cliente" para poder criar o acesso ao portal.'}
+      />
+    )
+  }
+
+  return (
+    <div className="card overflow-hidden">
+      <table className="w-full">
+        <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+          <tr>
+            <th className="table-header" style={{ color: 'var(--text-secondary)' }}>Cliente</th>
+            <th className="table-header hidden sm:table-cell" style={{ color: 'var(--text-secondary)' }}>Projetos vinculados</th>
+            <th className="table-header" style={{ color: 'var(--text-secondary)' }}>Acesso ao portal</th>
+            <th className="table-header hidden md:table-cell" style={{ color: 'var(--text-secondary)' }}>Último acesso</th>
+            <th className="table-header" style={{ color: 'var(--text-secondary)', textAlign: 'right' }}>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {clients.map((c, i) => (
+            <tr key={c.id} style={{ borderBottom: i < clients.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+              <td className="table-cell">
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{c.name}</p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{c.portal_email || c.email || '—'}</p>
+              </td>
+              <td className="table-cell hidden sm:table-cell">
+                {c.projects?.length ? (
+                  <div className="flex flex-wrap gap-1">
+                    {c.projects.map(p => (
+                      <span key={p.id} className="badge" style={{ background: 'var(--bg-sidebar)', color: 'var(--text-primary)' }}>
+                        {p.title}
+                      </span>
+                    ))}
+                  </div>
+                ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+              </td>
+              <td className="table-cell">
+                {!c.has_access ? (
+                  <span className="badge" style={{ background: 'rgba(107,114,128,0.10)', color: '#6B7280' }}>
+                    Sem acesso
+                  </span>
+                ) : (
+                  <span className="badge" style={c.portal_is_active
+                    ? { background: 'rgba(22,163,74,0.10)', color: '#16A34A' }
+                    : { background: 'rgba(220,38,38,0.10)', color: '#DC2626' }}>
+                    {c.portal_is_active ? 'Ativo' : 'Desativado'}
+                  </span>
+                )}
+              </td>
+              <td className="table-cell hidden md:table-cell">
+                <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  {c.portal_last_login_at ? new Date(c.portal_last_login_at).toLocaleString('pt-BR') : '—'}
+                </span>
+              </td>
+              <td className="table-cell" style={{ textAlign: 'right' }}>
+                <button onClick={() => onManageAccess(c)} className="btn-secondary btn-sm">
+                  <KeyRound size={12} /> {c.has_access ? 'Gerenciar acesso' : 'Criar acesso'}
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 function HistoryTab({ history }) {
   if (history.length === 0) {
     return (
@@ -620,7 +727,7 @@ function SettingsTab({ company, companyId, onUpdated }) {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome do Responsável</label>
+           <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome do Responsável</label>
             <input
               className="input"
               value={responsibleName}

@@ -63,6 +63,9 @@ app.use('/api/platform',    require('./routes/platform.routes'))
 app.use('/api/clients',     require('./routes/client.routes'))
 app.use('/api/posts',       require('./routes/post.routes'))
 
+// NOVO — autenticação do portal do cliente (rotas públicas, sem authenticate)
+app.use('/api/client-portal/auth', require('./routes/client-portal-auth.routes'))
+
 // ── Error handler global ──────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error('[ERROR]', err.stack || err.message)
