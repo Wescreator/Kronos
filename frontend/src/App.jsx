@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './routes/ProtectedRoute'
 import ScopeRoute    from './routes/ScopeRoute'
+import PermissionRoute from './routes/PermissionRoute'
 import AppLayout     from './components/layout/AppLayout'
 import Spinner       from './components/ui/Spinner'
 import useAuthStore  from './store/authStore'
@@ -127,16 +128,16 @@ export default function App() {
           }
         >
           <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard"           element={<DashboardPage />} />
+          <Route path="dashboard" element={<PermissionRoute module="dashboard"><DashboardPage /></PermissionRoute>} />
           <Route path="projects"            element={<ProjectsPage />} />
           <Route path="projects/:id"        element={<ProjectDetailPage />} />
           <Route path="clients"             element={<ClientPage />} />
           <Route path="tasks"               element={<TasksPage />} />
           <Route path="tasks/:id"           element={<TaskDetailPage />} />
-          <Route path="financial"           element={<FinancialPage />} />
-          <Route path="financial/expenses"  element={<ExpensesPage />} />
-          <Route path="financial/revenues"  element={<RevenuesPage />} />
-          <Route path="financial/dre"       element={<DREPage />} />
+          <Route path="financial"           element={<PermissionRoute module="financial"><FinancialPage /></PermissionRoute>} />
+          <Route path="financial/expenses"  element={<PermissionRoute module="financial"><ExpensesPage /></PermissionRoute>} />
+          <Route path="financial/revenues"  element={<PermissionRoute module="financial"><RevenuesPage /></PermissionRoute>} />
+          <Route path="financial/dre"       element={<PermissionRoute module="financial"><DREPage /></PermissionRoute>} />
           <Route path="chat"                element={<ChatPage />} />
           <Route path="chat/:roomId"        element={<ChatPage />} />
           <Route path="team"                element={<TeamPage />} />

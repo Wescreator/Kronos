@@ -6,24 +6,34 @@ import useSocketStore from '../../store/socketStore'
 import Avatar from '../ui/Avatar'
 import {getNotifications, markRead, markAllRead, deleteNotification,} from '../../services/notifications.service'
 import { formatDateTime } from '../../utils/format'
+import { canSeeModule } from '../../utils/permissions'
 
 // ─── Links extraídos diretamente do Sidebar original ──────────────
+// Cada link agora carrega seu "module" (chave de VISIBLE_MODULES em
+// utils/permissions.js) — usado para filtrar o que aparece conforme o
+// role do usuário logado, mantendo topbar e rota (PermissionRoute)
+// sempre em sincronia, já que os dois consultam a mesma fonte.
 const NAV_LINKS = [
-  { to: '/app/dashboard', icon: LayoutDashboard,    label: 'Dashboard' },
-  { to: '/app/agenda',    icon: Calendar,           label: 'Agenda'    },
-  { to: '/app/chat',      icon: MessageSquare,      label: 'Chat'      },
-  { to: '/app/clients',   icon: Users,              label: 'Clientes'  }, // ── NOVO MÓDULO ADICIONADO AQUI ──
-  { to: '/app/team',      icon: Users,              label: 'Equipe'    },
-  { to: '/app/financial', icon: DollarSign,         label: 'Financeiro'},
-  { to: '/app/posts',     icon: Newspaper,          label: 'Posts'     },
-  { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos'  },
-  { to: '/app/proposals', icon: FileText,           label: 'Propostas' },
-  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas'   }  
+  { to: '/app/dashboard', icon: LayoutDashboard,    label: 'Dashboard',  module: 'dashboard' },
+  { to: '/app/agenda',    icon: Calendar,           label: 'Agenda',     module: 'agenda'    },
+  { to: '/app/chat',      icon: MessageSquare,      label: 'Chat',       module: 'chat'      },
+  { to: '/app/clients',   icon: Users,              label: 'Clientes',  module: 'clients'   }, // ── NOVO MÓDULO ADICIONADO AQUI ──
+  { to: '/app/team',      icon: Users,              label: 'Equipe',     module: 'team'      },
+  { to: '/app/financial', icon: DollarSign,         label: 'Financeiro', module: 'financial' },
+  { to: '/app/posts',     icon: Newspaper,          label: 'Posts',      module: 'posts'     },
+  { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos',   module: 'projects'  },
+  { to: '/app/proposals', icon: FileText,           label: 'Propostas',  module: 'proposals' },
+  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas',    module: 'tasks'     }  
 ] 
 
 export default function Topbar() {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+
+  // Filtra uma única vez por render — reutilizado nos três blocos de
+  // navegação abaixo (desktop, tablet e mobile), assim os três ficam
+  // sempre idênticos sem repetir a lógica de permissão em cada um.
+  const visibleLinks = NAV_LINKS.filter(({ module }) => canSeeModule(user?.role, module))
 
   // ─── Estados (idênticos ao original + showMobileMenu) ────────────
   const [notifs,          setNotifs]         = useState([])
@@ -140,7 +150,7 @@ export default function Topbar() {
 
         {/* ── NAVEGAÇÃO DESKTOP (lg+) ───────────────────────────────*/}
         <nav className="hidden lg:flex items-center gap-0.5">
-          {NAV_LINKS.map(({ to, icon: Icon, label }) => (
+          {visibleLinks.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -163,7 +173,7 @@ export default function Topbar() {
 
         {/* ── NAVEGAÇÃO TABLET (md → lg) ────────────────────────────*/}
         <nav className="hidden md:flex lg:hidden items-center gap-0.5">
-          {NAV_LINKS.map(({ to, icon: Icon, label }) => (
+          {visibleLinks.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -446,7 +456,7 @@ export default function Topbar() {
         >
           {/* Links de navegação mobile */}
           <nav className="px-3 py-3">
-            {NAV_LINKS.map(({ to, icon: Icon, label }) => (
+            {visibleLinks.map(({ to, icon: Icon, label }) => (
               <NavLink
                 key={to}
                 to={to}
