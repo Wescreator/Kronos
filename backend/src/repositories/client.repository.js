@@ -84,7 +84,7 @@ const findAll = async (companyId, { status, search }) => {
        FROM clients_leads p
        LEFT JOIN projects proj ON proj.id = p.project_id
        WHERE ${conditions.join(' AND ')}
-       ORDER BY p.created_at DESC`,
+       ORDER BY p.name ASC`,
       params
     )
     return rows
