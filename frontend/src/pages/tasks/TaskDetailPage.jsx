@@ -66,9 +66,9 @@ export default function TaskDetailPage() {
         <button
           onClick={() => navigate('/app/tasks')}
           className="flex items-center gap-2 text-sm transition-colors"
-          style={{ color: 'var(--text-muted)' }}
+          style={{ color: 'var(--bg-card)' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--bg-card)'}
         >
           <ArrowLeft size={15} /> Voltar para Tarefas
         </button>
