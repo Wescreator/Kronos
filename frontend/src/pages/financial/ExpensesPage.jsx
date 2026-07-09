@@ -366,7 +366,7 @@ export default function ExpensesPage() {
           </table>
 
           {expenses.length === 0 && !loading && (
-            <div className="py-16 text-center" style={{ color: 'var(--text-muted)' }}>
+            <div className="py-16 text-center" style={{ color: 'var(--text-primary)' }}>
               <TrendingDown size={32} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Nenhuma despesa em {monthNamesLong[selectedMonth - 1]}</p>
             </div>

@@ -12,11 +12,13 @@ export default function EmptyState({ icon: Icon, title, description, action }) {
           <Icon size={32} style={{ color: 'rgba(124,92,252,0.6)' }} />
         </div>
       )}
-      <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
+      {/* Título com a nova cor */}
+      <h3 className="text-base font-semibold mb-2" style={{ color: '#374151' }}>
         {title}
       </h3>
+      {/* Descrição com a nova cor */}
       {description && (
-        <p className="text-sm mb-6" style={{ color: 'var(--text-muted)', maxWidth: 280 }}>
+        <p className="text-sm mb-6" style={{ color: '#374151', maxWidth: 280 }}>
           {description}
         </p>
       )}

@@ -1,7 +1,9 @@
-const router      = require('express').Router()
-const ctrl        = require('../controllers/project.controller')
-const stageCtrl   = require('../controllers/stage.controller')
-const fileCtrl    = require('../controllers/project-file.controller')
+const router              = require('express').Router()
+const ctrl                 = require('../controllers/project.controller')
+const stageCtrl            = require('../controllers/stage.controller')
+const fileCtrl             = require('../controllers/project-file.controller')
+const phaseCommentCtrl     = require('../controllers/phase-comment.controller')
+const phaseAttachmentCtrl  = require('../controllers/phase-attachment.controller')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const validate    = require('../middlewares/validate.middleware')
@@ -27,10 +29,28 @@ router.get('/:id/files',              fileCtrl.listFiles)
 router.post('/:id/files', uploadDriveFile.single('file'), fileCtrl.uploadFile)
 router.delete('/:id/files/:fileId', authorize('owner', 'admin'), fileCtrl.deleteFile)
 
-// Etapas e fases
-router.get('/:id/stages',                             stageCtrl.getStages)
+// Etapas — CRUD completo. IMPORTANTE: a rota de reorder precisa vir ANTES
+// de '/:id/stages/:stageId', senão o Express casaria "reorder" como se
+// fosse um stageId (primeira rota compatível ganha).
+router.get('/:id/stages',              stageCtrl.getStages)
+router.patch('/:id/stages/reorder',    stageCtrl.reorderStages)
+router.post('/:id/stages',             stageCtrl.createStage)
+router.patch('/:id/stages/:stageId',   stageCtrl.updateStage)
+router.delete('/:id/stages/:stageId',  stageCtrl.deleteStage)
+
+// Fases — mesmo cuidado com a ordem da rota de reorder.
+router.patch('/:id/stages/:stageId/phases/reorder',   stageCtrl.reorderPhases)
 router.post('/:id/stages/:stageId/phases',            stageCtrl.addPhase)
 router.patch('/:id/stages/:stageId/phases/:phaseId',  stageCtrl.updatePhase)
 router.delete('/:id/stages/:stageId/phases/:phaseId', stageCtrl.deletePhase)
+
+// Comentários de fase (histórico — autor, data e hora)
+router.post('/:id/stages/:stageId/phases/:phaseId/comments',              phaseCommentCtrl.addComment)
+router.patch('/:id/stages/:stageId/phases/:phaseId/comments/:commentId',  phaseCommentCtrl.updateComment)
+router.delete('/:id/stages/:stageId/phases/:phaseId/comments/:commentId', phaseCommentCtrl.deleteComment)
+
+// Anexos de fase (mesma arquitetura R2 usada nos arquivos do projeto)
+router.post('/:id/stages/:stageId/phases/:phaseId/attachments', uploadDriveFile.single('file'), phaseAttachmentCtrl.uploadAttachment)
+router.delete('/:id/stages/:stageId/phases/:phaseId/attachments/:attachmentId', phaseAttachmentCtrl.deleteAttachment)
 
 module.exports = router

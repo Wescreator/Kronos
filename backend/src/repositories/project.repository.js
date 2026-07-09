@@ -124,8 +124,6 @@ const update = async (id, companyId, fields) => {
   return rows[0]
 }
 
-// Atualiza apenas a capa do projeto. Faltava neste repository — era a
-// causa do erro ao trocar a capa (uploadCover chamava um método inexistente).
 const updateCover = async (id, companyId, coverUrl) => {
   const { rows } = await pool.query(
     `
@@ -139,7 +137,7 @@ const updateCover = async (id, companyId, coverUrl) => {
 
   return rows[0]
 }
-// Adicionar membro ao projeto
+
 const addMember = async (projectId, userId, role) => {
   const { rows } = await pool.query(
     `
@@ -152,8 +150,6 @@ const addMember = async (projectId, userId, role) => {
   return rows[0]
 }
 
-
-// No seu repositories/project.repository.js
 const removeMember = async (projectId, userId) => {
   const { rowCount } = await pool.query(
     `DELETE FROM project_members 
@@ -163,7 +159,6 @@ const removeMember = async (projectId, userId) => {
   return rowCount > 0
 }
 
-// Adicionar histórico de status
 const addStatusHistory = async (projectId, companyId, fromStatus, toStatus, changedBy, note) => {
   const { rows } = await pool.query(
     `
@@ -192,8 +187,17 @@ const findMembers = async (projectId) => {
   return rows
 }
 
-// Conta registros que impedem a exclusão do projeto (FKs sem CASCADE:
-// tasks, expenses, revenues, clients_leads).
+// NOVO — verifica se um usuário está vinculado ao projeto (project_members).
+// Usado pelo utils/authz.js para liberar criar/editar/anexar/comentar/
+// reordenar etapas e fases a qualquer membro do projeto.
+const isMember = async (projectId, userId) => {
+  const { rows } = await pool.query(
+    `SELECT 1 FROM project_members WHERE project_id = $1 AND user_id = $2 LIMIT 1`,
+    [projectId, userId]
+  )
+  return rows.length > 0
+}
+
 const countDependents = async (id) => {
   const { rows } = await pool.query(
     `
@@ -222,4 +226,4 @@ const remove = async (id, companyId) => {
   return rowCount > 0
 }
 
-module.exports = {findAll, findById, create, update, updateCover, findStatusHistory, findMembers, addMember, removeMember, addStatusHistory, countDependents, remove}
+module.exports = {findAll, findById, create, update, updateCover, findStatusHistory, findMembers, addMember, removeMember, addStatusHistory, isMember, countDependents, remove}

@@ -1,12 +1,11 @@
 const projectRepo = require('../repositories/project.repository')
-const stageRepo   = require('../repositories/stage.repository')
 const companyRepo = require('../repositories/company.repository')
 const notificationService = require('./notification.service')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 function buildProjectPayload(data, userId, companyId) {
   return {
-    companyId,   // sempre vem de req.tenant.id — nunca do body
+    companyId,
     title:        data.title?.trim(),
     client:       data.client?.trim(),
     description:  data.description,
@@ -40,7 +39,8 @@ const create = async (data, userId, companyId) => {
 
   await projectRepo.addMember(project.id, userId, 'manager')
   await projectRepo.addStatusHistory(project.id, companyId, null, 'in_progress', userId, 'Projeto criado')
-  await stageRepo.createDefaultStages(project.id, companyId)
+  // Etapas não são mais criadas automaticamente — o usuário cria
+  // manualmente na Project DetailPage (aba Etapas).
 
   return project
 }
@@ -81,7 +81,6 @@ const addMember = async (projectId, userId, companyId) => {
   const project = await projectRepo.findById(projectId, companyId)
   if (!project) throw { status: 404, message: 'Projeto não encontrado' }
 
-  // O usuario adicionado precisa pertencer a mesma empresa
   const link = await companyRepo.findCompanyUser(companyId, userId)
   if (!link) throw { status: 400, message: 'Usuário não pertence a esta empresa' }
 
@@ -105,8 +104,6 @@ const removeMember = async (projectId, userId, companyId) => {
   return await projectRepo.findMembers(projectId);
 };
 
-// Exclui o projeto. Bloqueia se houver tarefas, despesas, receitas ou
-// leads/clientes vinculados (essas FKs não têm ON DELETE CASCADE).
 const remove = async (id, companyId) => {
   const project = await projectRepo.findById(id, companyId)
   if (!project) throw { status: 404, message: 'Projeto não encontrado' }

@@ -70,7 +70,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
     try {
       const { data } = await createProject({ ...form, budget: parseFloat(form.budget) || 0 })
       if (cover) await uploadCover(data.project.id, cover)
-      toast.success('Projeto criado! As 5 etapas padrão foram adicionadas automaticamente.')
+      toast.success('Projeto criado! Acesse a aba Etapas para criar as etapas do projeto.')
       setForm({ title:'', client:'', description:'', budget:'', start_date:'', expected_date:'' })
       setCover(null)
       onSuccess()

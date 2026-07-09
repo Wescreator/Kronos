@@ -14,10 +14,35 @@ export const addMember         = (id, userId)=> api.post(`/projects/${id}/member
 export const removeMember      = (id, userId)=> api.delete(`/projects/${id}/members/${userId}`)
 export const deleteProjectFile = (projectId, fileId) => api.delete(`/projects/${projectId}/files/${fileId}`)
 
-// Etapas e fases
-export const getStages    = (projectId)                    => api.get(`/projects/${projectId}/stages`)
-export const addPhase     = (projectId, stageId, data)     => api.post(`/projects/${projectId}/stages/${stageId}/phases`, data)
-export const updatePhase  = (projectId, stageId, phaseId, data) =>
+// Etapas
+export const getStages     = (projectId)                => api.get(`/projects/${projectId}/stages`)
+export const createStage   = (projectId, data)          => api.post(`/projects/${projectId}/stages`, data)
+export const updateStage   = (projectId, stageId, data) => api.patch(`/projects/${projectId}/stages/${stageId}`, data)
+export const deleteStage   = (projectId, stageId)       => api.delete(`/projects/${projectId}/stages/${stageId}`)
+export const reorderStages = (projectId, orderedIds)    =>
+  api.patch(`/projects/${projectId}/stages/reorder`, { ordered_ids: orderedIds })
+
+// Fases
+export const addPhase      = (projectId, stageId, data) => api.post(`/projects/${projectId}/stages/${stageId}/phases`, data)
+export const updatePhase   = (projectId, stageId, phaseId, data) =>
   api.patch(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}`, data)
-export const deletePhase  = (projectId, stageId, phaseId)  =>
+export const deletePhase   = (projectId, stageId, phaseId)  =>
   api.delete(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}`)
+export const reorderPhases = (projectId, stageId, orderedIds) =>
+  api.patch(`/projects/${projectId}/stages/${stageId}/phases/reorder`, { ordered_ids: orderedIds })
+
+// Comentários da fase (histórico)
+export const addPhaseComment    = (projectId, stageId, phaseId, content) =>
+  api.post(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}/comments`, { content })
+export const updatePhaseComment = (projectId, stageId, phaseId, commentId, content) =>
+  api.patch(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}/comments/${commentId}`, { content })
+export const deletePhaseComment = (projectId, stageId, phaseId, commentId) =>
+  api.delete(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}/comments/${commentId}`)
+
+// Anexos da fase
+export const uploadPhaseAttachment = (projectId, stageId, phaseId, file) => {
+  const fd = new FormData(); fd.append('file', file)
+  return api.post(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}/attachments`, fd)
+}
+export const deletePhaseAttachment = (projectId, stageId, phaseId, attachmentId) =>
+  api.delete(`/projects/${projectId}/stages/${stageId}/phases/${phaseId}/attachments/${attachmentId}`)

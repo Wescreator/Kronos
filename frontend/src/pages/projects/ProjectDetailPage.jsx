@@ -1,15 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate }      from 'react-router-dom'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import {
   ArrowLeft, Edit, Upload, Users, Clock,
   DollarSign, CheckSquare, UserPlus, UserMinus,
   Paperclip, File, Save, ChevronDown, ChevronRight,
-  Plus, Trash2, Check
+  Plus, Trash2, Check, GripVertical, MessageSquare
 } from 'lucide-react'
 import {
   getProject, updateProject, uploadCover,
   addMember, removeMember, getProjectHistory,
-  getStages, addPhase, updatePhase, deletePhase
+  getStages, createStage, updateStage, deleteStage, reorderStages,
+  addPhase, updatePhase, deletePhase, reorderPhases,
+  addPhaseComment, updatePhaseComment, deletePhaseComment,
+  uploadPhaseAttachment, deletePhaseAttachment,
 } from '../../services/projects.service'
 import { getUsers }        from '../../services/team.service'
 import Spinner              from '../../components/ui/Spinner'
@@ -21,6 +25,7 @@ import { toast }           from 'react-hot-toast'
 import api                 from '../../services/api'
 import useAuthStore        from '../../store/authStore'
 import { can }             from '../../utils/permissions'
+import { canManageItem, hasFullAccess } from '../../utils/projectItemPermissions'
 
 const TABS = [
   { label: 'Etapas',     icon: CheckSquare },
@@ -29,24 +34,150 @@ const TABS = [
   { label: 'Timeline',   icon: Clock       },
 ]
 
+// ── Comentário individual (histórico da fase) ─────────────────────
+function PhaseCommentItem({ comment, projectId, stageId, phaseId, onUpdate, user }) {
+  const [editing, setEditing] = useState(false)
+  const [text,    setText]    = useState(comment.content)
+  const [saving,  setSaving]  = useState(false)
+
+  const canManage = canManageItem(comment.user_id, user)
+
+  const handleSave = async () => {
+    if (!text.trim()) return toast.error('Comentário não pode ser vazio')
+    setSaving(true)
+    try {
+      await updatePhaseComment(projectId, stageId, phaseId, comment.id, text.trim())
+      setEditing(false)
+      onUpdate()
+    } catch { toast.error('Erro ao editar comentário') }
+    finally { setSaving(false) }
+  }
+
+  const handleDelete = async () => {
+    try {
+      await deletePhaseComment(projectId, stageId, phaseId, comment.id)
+      onUpdate()
+      toast.success('Comentário removido')
+    } catch { toast.error('Erro ao remover comentário') }
+  }
+
+  return (
+    <div className="p-2.5 rounded-lg" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+      <div className="flex items-center justify-between mb-1 gap-2">
+        <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+          {comment.author_name}
+        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            {formatDate(comment.created_at)}
+          </p>
+          {canManage && !editing && (
+            <div className="flex gap-1.5">
+              <button onClick={() => setEditing(true)} style={{ color: 'var(--text-muted)' }}>
+                <Edit size={11} />
+              </button>
+              <button onClick={handleDelete} style={{ color: 'var(--text-muted)' }}>
+                <Trash2 size={11} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+      {editing ? (
+        <div className="space-y-1.5">
+          <textarea
+            className="input text-xs py-1.5 resize-none"
+            rows={2}
+            value={text}
+            onChange={e => setText(e.target.value)}
+          />
+          <div className="flex gap-2">
+            <button onClick={handleSave} disabled={saving} className="btn-primary text-[11px] py-1 px-2">
+              {saving ? 'Salvando...' : 'Salvar'}
+            </button>
+            <button
+              onClick={() => { setEditing(false); setText(comment.content) }}
+              className="btn-secondary text-[11px] py-1 px-2"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{comment.content}</p>
+      )}
+    </div>
+  )
+}
+
+// ── Anexo individual da fase ───────────────────────────────────────
+function PhaseAttachmentItem({ attachment, projectId, stageId, phaseId, onUpdate, user }) {
+  const canManage = canManageItem(attachment.uploaded_by, user)
+
+  const handleDelete = async () => {
+    try {
+      await deletePhaseAttachment(projectId, stageId, phaseId, attachment.id)
+      onUpdate()
+      toast.success('Anexo removido')
+    } catch { toast.error('Erro ao remover anexo') }
+  }
+
+  return (
+    <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+      <File size={13} style={{ color: '#374151' }} />
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+          {attachment.file_name}
+        </p>
+        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          {attachment.uploaded_by_name} · {formatDate(attachment.created_at)}
+        </p>
+      </div>
+      {attachment.url && (
+        <a
+          href={attachment.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[11px] px-2 py-0.5 rounded font-semibold shrink-0"
+          style={{ background: 'rgba(55,65,81,0.08)', color: '#374151' }}
+        >
+          Abrir
+        </a>
+      )}
+      {canManage && (
+        <button onClick={handleDelete} className="shrink-0" style={{ color: 'var(--text-muted)' }}>
+          <Trash2 size={12} />
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ── Componente de fase individual ─────────────────────────────────
-function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
-  const [editing,  setEditing]  = useState(false)
-  const [form,     setForm]     = useState({ phase_name: phase.phase_name, comment: phase.comment || '' })
-  const [saving,   setSaving]   = useState(false)
+function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canManageProjectItems, user }) {
+  const [editing,      setEditing]      = useState(false)
+  const [name,         setName]         = useState(phase.phase_name)
+  const [saving,       setSaving]       = useState(false)
+  const [newComment,   setNewComment]   = useState('')
+  const [addingComment,setAddingComment]= useState(false)
+  const [uploading,    setUploading]    = useState(false)
+  const fileRef = useRef()
+
+  const canDeletePhase = canManageItem(phase.created_by, user)
 
   const handleToggle = async () => {
-    if (!canEdit) return
+    if (!canManageProjectItems) return
     try {
       await updatePhase(projectId, stageId, phase.id, { is_completed: !phase.is_completed })
       onUpdate()
     } catch { toast.error('Erro ao atualizar fase') }
   }
 
-  const handleSave = async () => {
+  const handleSaveName = async () => {
+    if (!name.trim()) return toast.error('Informe o nome da fase')
     setSaving(true)
     try {
-      await updatePhase(projectId, stageId, phase.id, form)
+      await updatePhase(projectId, stageId, phase.id, { phase_name: name.trim() })
       setEditing(false)
       onUpdate()
       toast.success('Fase atualizada')
@@ -54,65 +185,93 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
     finally { setSaving(false) }
   }
 
-  return (
-    <div
-      className="rounded-xl p-3 transition-all duration-150"
-      style={{ background: '#FAFAFA', border: '1px solid #E5E7EB' }}
-    >
-      <div className="flex items-start gap-3">
-        {/* Checkbox */}
-        <button
-          onClick={handleToggle}
-          disabled={!canEdit}
-          className="mt-0.5 shrink-0 h-5 w-5 rounded-md flex items-center justify-center transition-all duration-150"
-          style={{
-            background: phase.is_completed ? '#374151' : '#FFFFFF',
-            border: `1px solid ${phase.is_completed ? '#374151' : '#D1D5DB'}`,
-            cursor: canEdit ? 'pointer' : 'default'
-          }}
-        >
-          {phase.is_completed && <Check size={12} className="text-white" />}
-        </button>
+  const handleAddComment = async (e) => {
+    e.preventDefault()
+    if (!newComment.trim()) return
+    setAddingComment(true)
+    try {
+      await addPhaseComment(projectId, stageId, phase.id, newComment.trim())
+      setNewComment('')
+      onUpdate()
+    } catch { toast.error('Erro ao adicionar comentário') }
+    finally { setAddingComment(false) }
+  }
 
-        <div className="flex-1 min-w-0">
-          {editing ? (
-            <div className="space-y-2">
-              <input
-                className="input text-sm py-1.5"
-                value={form.phase_name}
-                onChange={e => setForm({ ...form, phase_name: e.target.value })}
-                placeholder="Nome da fase"
-              />
-              <textarea
-                className="input text-sm py-1.5 resize-none"
-                rows={2}
-                value={form.comment}
-                onChange={e => setForm({ ...form, comment: e.target.value })}
-                placeholder="Comentário (opcional)"
-              />
-              <div className="flex gap-2">
-                <button onClick={handleSave} disabled={saving} className="btn-primary text-xs py-1 px-3">
-                  {saving ? 'Salvando...' : 'Salvar'}
-                </button>
-                <button onClick={() => setEditing(false)} className="btn-secondary text-xs py-1 px-3">
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <p
-                className="text-sm font-medium"
-                style={{
-                  color: phase.is_completed ? 'var(--text-muted)' : 'var(--text-primary)',
-                  textDecoration: phase.is_completed ? 'line-through' : 'none'
-                }}
-              >
-                {phase.phase_name}
-              </p>
-              {phase.comment && (
-                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                  {phase.comment}
+  const handleUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    setUploading(true)
+    try {
+      await uploadPhaseAttachment(projectId, stageId, phase.id, file)
+      onUpdate()
+      toast.success('Arquivo anexado')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao anexar arquivo')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  return (
+    <Draggable draggableId={phase.id} index={index} isDragDisabled={!canManageProjectItems}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          className="rounded-xl p-3 transition-all duration-150"
+          style={{ ...provided.draggableProps.style, background: '#FAFAFA', border: '1px solid #E5E7EB' }}
+        >
+          <div className="flex items-start gap-3">
+            {canManageProjectItems && (
+              <span {...provided.dragHandleProps} className="mt-1 shrink-0 cursor-grab" style={{ color: '#D1D5DB' }}>
+                <GripVertical size={14} />
+              </span>
+            )}
+
+            <button
+              onClick={handleToggle}
+              disabled={!canManageProjectItems}
+              className="mt-0.5 shrink-0 h-5 w-5 rounded-md flex items-center justify-center transition-all duration-150"
+              style={{
+                background: phase.is_completed ? '#374151' : '#FFFFFF',
+                border: `1px solid ${phase.is_completed ? '#374151' : '#D1D5DB'}`,
+                cursor: canManageProjectItems ? 'pointer' : 'default'
+              }}
+            >
+              {phase.is_completed && <Check size={12} className="text-white" />}
+            </button>
+
+            <div className="flex-1 min-w-0">
+              {editing ? (
+                <div className="space-y-2">
+                  <input
+                    className="input text-sm py-1.5"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="Nome da fase"
+                  />
+                  <div className="flex gap-2">
+                    <button onClick={handleSaveName} disabled={saving} className="btn-primary text-xs py-1 px-3">
+                      {saving ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button
+                      onClick={() => { setEditing(false); setName(phase.phase_name) }}
+                      className="btn-secondary text-xs py-1 px-3"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p
+                  className="text-sm font-medium"
+                  style={{
+                    color: phase.is_completed ? 'var(--text-muted)' : 'var(--text-primary)',
+                    textDecoration: phase.is_completed ? 'line-through' : 'none'
+                  }}
+                >
+                  {phase.phase_name}
                 </p>
               )}
               {phase.is_completed && phase.completed_by_name && (
@@ -120,55 +279,116 @@ function PhaseItem({ phase, projectId, stageId, onUpdate, onDelete, canEdit }) {
                   ✓ Concluído por {phase.completed_by_name}
                 </p>
               )}
-            </>
-          )}
-        </div>
+            </div>
 
-        {canEdit && !editing && (
-          <div className="flex gap-1 shrink-0">
-            <button
-              onClick={() => setEditing(true)}
-              className="p-1.5 rounded-lg transition-all duration-150"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#E5E7EB'; e.currentTarget.style.color = '#374151' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
-            >
-              <Edit size={13} />
-            </button>
-            <button
-              onClick={() => onDelete(phase.id)}
-              className="p-1.5 rounded-lg transition-all duration-150"
-              style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
-            >
-              <Trash2 size={13} />
-            </button>
+            {canManageProjectItems && !editing && (
+              <div className="flex gap-1 shrink-0">
+                <button
+                  onClick={() => setEditing(true)}
+                  className="p-1.5 rounded-lg transition-all duration-150"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  <Edit size={13} />
+                </button>
+                {canDeletePhase && (
+                  <button
+                    onClick={() => onDelete(phase.id)}
+                    className="p-1.5 rounded-lg transition-all duration-150"
+                    style={{ color: 'var(--text-muted)' }}
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+
+          {/* Comentários (histórico: autor, data e hora) */}
+          <div className="mt-3 pl-8 space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+              <MessageSquare size={11} /> Comentários ({phase.comments?.length || 0})
+            </p>
+            {phase.comments?.map(c => (
+              <PhaseCommentItem
+                key={c.id} comment={c} projectId={projectId} stageId={stageId}
+                phaseId={phase.id} onUpdate={onUpdate} user={user}
+              />
+            ))}
+            {canManageProjectItems && (
+              <form onSubmit={handleAddComment} className="flex gap-2">
+                <input
+                  className="input text-xs py-1.5 flex-1"
+                  placeholder="Adicionar comentário..."
+                  value={newComment}
+                  onChange={e => setNewComment(e.target.value)}
+                />
+                <button type="submit" disabled={addingComment} className="btn-secondary text-xs py-1 px-2.5">
+                  {addingComment ? '...' : 'Enviar'}
+                </button>
+              </form>
+            )}
+          </div>
+
+          {/* Anexos */}
+          <div className="mt-3 pl-8 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                <Paperclip size={11} /> Arquivos ({phase.attachments?.length || 0})
+              </p>
+              {canManageProjectItems && (
+                <label className="text-[11px] font-semibold cursor-pointer flex items-center gap-1" style={{ color: '#374151' }}>
+                  <Upload size={11} /> {uploading ? 'Enviando...' : 'Anexar'}
+                  <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
+                </label>
+              )}
+            </div>
+            {phase.attachments?.map(a => (
+              <PhaseAttachmentItem
+                key={a.id} attachment={a} projectId={projectId} stageId={stageId}
+                phaseId={phase.id} onUpdate={onUpdate} user={user}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </Draggable>
   )
 }
 
 // ── Componente de etapa ───────────────────────────────────────────
-function StageItem({ stage, projectId, onUpdate, canEdit }) {
-  const [expanded,    setExpanded]    = useState(false)
-  const [showAddForm, setShowAddForm] = useState(false)
-  const [newPhase,    setNewPhase]    = useState({ phase_name: '', comment: '' })
-  const [adding,      setAdding]      = useState(false)
-  const [deletingId,  setDeletingId]  = useState(null)
+function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManageProjectItems, user }) {
+  const [expanded,     setExpanded]     = useState(false)
+  const [editingName,  setEditingName]  = useState(false)
+  const [stageName,    setStageName]    = useState(stage.stage_name)
+  const [savingName,   setSavingName]   = useState(false)
+  const [showAddForm,  setShowAddForm]  = useState(false)
+  const [newPhaseName, setNewPhaseName] = useState('')
+  const [adding,       setAdding]       = useState(false)
+  const [deletingPhaseId, setDeletingPhaseId] = useState(null)
 
   const completedCount = stage.phases?.filter(p => p.is_completed).length || 0
   const totalCount     = stage.phases?.length || 0
+  const canDeleteStage  = canManageItem(stage.created_by, user)
+
+  const handleSaveName = async () => {
+    if (!stageName.trim()) return toast.error('Informe o nome da etapa')
+    setSavingName(true)
+    try {
+      await updateStage(projectId, stage.id, { stage_name: stageName.trim() })
+      setEditingName(false)
+      onUpdate()
+      toast.success('Etapa atualizada')
+    } catch { toast.error('Erro ao salvar etapa') }
+    finally { setSavingName(false) }
+  }
 
   const handleAddPhase = async (e) => {
     e.preventDefault()
-    if (!newPhase.phase_name.trim()) return toast.error('Informe o nome da fase')
+    if (!newPhaseName.trim()) return toast.error('Informe o nome da fase')
     setAdding(true)
     try {
-      await addPhase(projectId, stage.id, newPhase)
-      setNewPhase({ phase_name: '', comment: '' })
+      await addPhase(projectId, stage.id, { phase_name: newPhaseName.trim() })
+      setNewPhaseName('')
       setShowAddForm(false)
       onUpdate()
       toast.success('Fase adicionada')
@@ -179,121 +399,153 @@ function StageItem({ stage, projectId, onUpdate, canEdit }) {
   const handleDeletePhase = async (phaseId) => {
     try {
       await deletePhase(projectId, stage.id, phaseId)
-      setDeletingId(null)
+      setDeletingPhaseId(null)
       onUpdate()
       toast.success('Fase removida')
     } catch { toast.error('Erro ao remover fase') }
   }
 
   return (
-    <div
-      className="rounded-2xl overflow-hidden"
-      style={{ border: '1px solid #E5E7EB' }}
-    >
-      {/* Header da etapa */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-5 py-4 transition-all duration-150"
-        style={{ background: '#FAFAFA' }}
-        onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-        onMouseLeave={e => e.currentTarget.style.background = '#FAFAFA'}
-      >
-        <div className="flex items-center gap-3">
-          {expanded
-            ? <ChevronDown size={16} style={{ color: '#6B7280' }} />
-            : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
-          }
-          <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-            {stage.stage_order}. {stage.stage_name}
-          </span>
-        </div>
-        <div className="flex items-center gap-3">
-          {totalCount > 0 && (
-            <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-              style={{
-                background: completedCount === totalCount ? 'rgba(22,163,74,0.10)' : '#F3F4F6',
-                color:      completedCount === totalCount ? '#16A34A' : 'var(--text-muted)'
-              }}>
-              {completedCount}/{totalCount}
-            </span>
-          )}
-        </div>
-      </button>
+    <Draggable draggableId={stage.id} index={index} isDragDisabled={!canManageProjectItems}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          className="rounded-2xl overflow-hidden"
+          style={{ ...provided.draggableProps.style, border: '1px solid #E5E7EB' }}
+        >
+          <div className="w-full flex items-center justify-between px-5 py-4" style={{ background: '#FAFAFA' }}>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              {canManageProjectItems && (
+                <span {...provided.dragHandleProps} className="cursor-grab shrink-0" style={{ color: '#D1D5DB' }}>
+                  <GripVertical size={15} />
+                </span>
+              )}
+              <button onClick={() => setExpanded(!expanded)} className="shrink-0">
+                {expanded
+                  ? <ChevronDown size={16} style={{ color: '#6B7280' }} />
+                  : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
+                }
+              </button>
 
-      {/* Fases */}
-      {expanded && (
-        <div className="px-5 py-4 space-y-2.5"
-          style={{ background: '#FFFFFF' }}>
+              {editingName ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input className="input text-sm py-1 flex-1" value={stageName} onChange={e => setStageName(e.target.value)} />
+                  <button onClick={handleSaveName} disabled={savingName} className="btn-primary text-xs py-1 px-2">
+                    {savingName ? '...' : 'Salvar'}
+                  </button>
+                  <button
+                    onClick={() => { setEditingName(false); setStageName(stage.stage_name) }}
+                    className="btn-secondary text-xs py-1 px-2"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <span className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                  {stage.stage_order}. {stage.stage_name}
+                </span>
+              )}
+            </div>
 
-          {stage.phases?.length === 0 && (
-            <p className="text-xs text-center py-3" style={{ color: 'var(--text-muted)' }}>
-              Nenhuma fase adicionada
-            </p>
-          )}
-
-          {stage.phases?.map(phase => (
-            <PhaseItem
-              key={phase.id}
-              phase={phase}
-              projectId={projectId}
-              stageId={stage.id}
-              onUpdate={onUpdate}
-              onDelete={(id) => setDeletingId(id)}
-              canEdit={canEdit}
-            />
-          ))}
-
-          {/* Formulário de nova fase */}
-          {showAddForm && canEdit ? (
-            <form onSubmit={handleAddPhase}
-              className="p-3 rounded-xl space-y-2"
-              style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}>
-              <input
-                className="input text-sm py-1.5"
-                placeholder="Nome da fase *"
-                value={newPhase.phase_name}
-                onChange={e => setNewPhase({ ...newPhase, phase_name: e.target.value })}
-                required
-              />
-              <textarea
-                className="input text-sm py-1.5 resize-none"
-                rows={2}
-                placeholder="Comentário (opcional)"
-                value={newPhase.comment}
-                onChange={e => setNewPhase({ ...newPhase, comment: e.target.value })}
-              />
-              <div className="flex gap-2">
-                <button type="submit" disabled={adding} className="btn-primary text-xs py-1.5 px-3">
-                  {adding ? 'Adicionando...' : 'Adicionar'}
+            <div className="flex items-center gap-3 shrink-0">
+              {totalCount > 0 && (
+                <span
+                  className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                  style={{
+                    background: completedCount === totalCount ? 'rgba(22,163,74,0.10)' : '#F3F4F6',
+                    color:      completedCount === totalCount ? '#16A34A' : 'var(--text-muted)'
+                  }}
+                >
+                  {completedCount}/{totalCount}
+                </span>
+              )}
+              {canManageProjectItems && !editingName && (
+                <button onClick={() => setEditingName(true)} className="p-1 rounded-lg" style={{ color: 'var(--text-muted)' }}>
+                  <Edit size={13} />
                 </button>
-                <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary text-xs py-1.5 px-3">
-                  Cancelar
+              )}
+              {canDeleteStage && (
+                <button onClick={() => onDeleteStage(stage.id)} className="p-1 rounded-lg" style={{ color: 'var(--text-muted)' }}>
+                  <Trash2 size={13} />
                 </button>
-              </div>
-            </form>
-          ) : canEdit && (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
-              style={{ color: 'var(--text-muted)', border: '1px dashed #D1D5DB' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#374151'; e.currentTarget.style.borderColor = 'rgba(55,65,81,0.30)' }}
-              onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = '#D1D5DB' }}
-            >
-              <Plus size={13} /> Adicionar fase
-            </button>
+              )}
+            </div>
+          </div>
+
+          {expanded && (
+            <div className="px-5 py-4 space-y-2.5" style={{ background: '#FFFFFF' }}>
+              <Droppable droppableId={`phases-${stage.id}`} type="PHASE">
+                {(dropProvided) => (
+                  <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-2.5">
+                    {stage.phases?.length === 0 && (
+                      <p className="text-xs text-center py-3" style={{ color: 'var(--text-muted)' }}>
+                        Nenhuma fase adicionada
+                      </p>
+                    )}
+                    {stage.phases?.map((phase, i) => (
+                      <PhaseItem
+                        key={phase.id}
+                        phase={phase}
+                        index={i}
+                        projectId={projectId}
+                        stageId={stage.id}
+                        onUpdate={onUpdate}
+                        onDelete={setDeletingPhaseId}
+                        canManageProjectItems={canManageProjectItems}
+                        user={user}
+                      />
+                    ))}
+                    {dropProvided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+
+              {showAddForm && canManageProjectItems ? (
+                <form
+                  onSubmit={handleAddPhase}
+                  className="p-3 rounded-xl space-y-2"
+                  style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}
+                >
+                  <input
+                    className="input text-sm py-1.5"
+                    placeholder="Nome da fase *"
+                    value={newPhaseName}
+                    onChange={e => setNewPhaseName(e.target.value)}
+                    required
+                  />
+                  <div className="flex gap-2">
+                    <button type="submit" disabled={adding} className="btn-primary text-xs py-1.5 px-3">
+                      {adding ? 'Adicionando...' : 'Adicionar'}
+                    </button>
+                    <button type="button" onClick={() => setShowAddForm(false)} className="btn-secondary text-xs py-1.5 px-3">
+                      Cancelar
+                    </button>
+                  </div>
+                </form>
+              ) : canManageProjectItems && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
+                  style={{ color: 'var(--text-muted)', border: '1px dashed #D1D5DB' }}
+                >
+                  <Plus size={13} /> Adicionar fase
+                </button>
+              )}
+            </div>
           )}
+
+          <ConfirmDialog
+            open={!!deletingPhaseId}
+            onClose={() => setDeletingPhaseId(null)}
+            onConfirm={() => handleDeletePhase(deletingPhaseId)}
+            title="Remover fase"
+            message="Deseja remover esta fase, seus comentários e arquivos anexados? Esta ação não pode ser desfeita."
+            danger
+          />
         </div>
       )}
-
-      <ConfirmDialog
-        open={!!deletingId}
-        onClose={() => setDeletingId(null)}
-        onConfirm={() => handleDeletePhase(deletingId)}
-        title="Remover fase"
-        message="Deseja remover esta fase? Esta ação não pode ser desfeita."
-        danger
-      />
-    </div>
+    </Draggable>
   )
 }
 
@@ -319,6 +571,10 @@ export default function ProjectDetailPage() {
   const [files,         setFiles]        = useState([])
   const [uploading,     setUploading]    = useState(false)
   const [deletingFileId,setDeletingFileId] = useState(null)
+  const [showAddStageForm, setShowAddStageForm] = useState(false)
+  const [newStageName,     setNewStageName]     = useState('')
+  const [addingStage,      setAddingStage]      = useState(false)
+  const [deletingStageId,  setDeletingStageId]  = useState(null)
   const fileRef = useRef()
 
   const load = async () => {
@@ -388,9 +644,9 @@ export default function ProjectDetailPage() {
     catch { toast.error('Erro ao adicionar membro') }
   }
 
-  const handleRemoveMember = async (userId) => {  
-  try { await removeMember(id, userId); toast.success('Membro removido'); setRemovingId(null); load() }
-  catch (err) {toast.error('Erro ao remover membro')}
+  const handleRemoveMember = async (userId) => {
+    try { await removeMember(id, userId); toast.success('Membro removido'); setRemovingId(null); load() }
+    catch (err) { toast.error('Erro ao remover membro') }
   }
 
   const handleFileUpload = async (e) => {
@@ -400,7 +656,7 @@ export default function ProjectDetailPage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      await api.post(`/projects/${id}/files`, fd)   // endpoint correto
+      await api.post(`/projects/${id}/files`, fd)
       toast.success('Arquivo enviado!')
       loadFiles()
     } catch (err) {
@@ -422,9 +678,81 @@ export default function ProjectDetailPage() {
     }
   }
 
+  const handleCreateStage = async (e) => {
+    e.preventDefault()
+    if (!newStageName.trim()) return toast.error('Informe o nome da etapa')
+    setAddingStage(true)
+    try {
+      await createStage(id, { stage_name: newStageName.trim() })
+      setNewStageName('')
+      setShowAddStageForm(false)
+      reloadStages()
+      toast.success('Etapa criada')
+    } catch { toast.error('Erro ao criar etapa') }
+    finally { setAddingStage(false) }
+  }
+
+  const handleDeleteStage = async () => {
+    try {
+      await deleteStage(id, deletingStageId)
+      setDeletingStageId(null)
+      reloadStages()
+      toast.success('Etapa removida')
+    } catch { toast.error('Erro ao remover etapa') }
+  }
+
+  // Reordenação via drag-and-drop — otimista, com fallback para
+  // recarregar do servidor em caso de erro na API.
+  const handleDragEnd = async (result) => {
+    const { source, destination, type } = result
+    if (!destination) return
+    if (source.droppableId === destination.droppableId && source.index === destination.index) return
+
+    if (type === 'STAGE') {
+      const reordered = Array.from(stages)
+      const [moved] = reordered.splice(source.index, 1)
+      reordered.splice(destination.index, 0, moved)
+      setStages(reordered)
+      try {
+        await reorderStages(id, reordered.map(s => s.id))
+      } catch {
+        toast.error('Erro ao reordenar etapas')
+        reloadStages()
+      }
+      return
+    }
+
+    if (type === 'PHASE') {
+      if (source.droppableId !== destination.droppableId) return // sem mover fase entre etapas
+      const stageId = source.droppableId.replace('phases-', '')
+      const stageIndex = stages.findIndex(s => s.id === stageId)
+      if (stageIndex === -1) return
+
+      const stage = stages[stageIndex]
+      const reorderedPhases = Array.from(stage.phases || [])
+      const [moved] = reorderedPhases.splice(source.index, 1)
+      reorderedPhases.splice(destination.index, 0, moved)
+
+      const newStages = [...stages]
+      newStages[stageIndex] = { ...stage, phases: reorderedPhases }
+      setStages(newStages)
+
+      try {
+        await reorderPhases(id, stageId, reorderedPhases.map(p => p.id))
+      } catch {
+        toast.error('Erro ao reordenar fases')
+        reloadStages()
+      }
+    }
+  }
+
   const nonMembers = allUsers.filter(u => !(project?.members || []).some(m => m.user_id === u.id))
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
   if (!project) return null
+
+  const isProjectMember       = (project.members || []).some(m => m.user_id === user?.user_id)
+  const canManageProjectItems = hasFullAccess(role) || isProjectMember
+
   return (
     <div className="max-w-5xl mx-auto fade-in">
       <button onClick={() => navigate('/app/projects')}
@@ -552,18 +880,65 @@ export default function ProjectDetailPage() {
               <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{project.description}</p>
             </div>
           )}
-          {stages.length === 0
-            ? <div className="flex justify-center py-10"><Spinner /></div>
-            : stages.map(stage => (
-                <StageItem
-                  key={stage.id}
-                  stage={stage}
-                  projectId={id}
-                  onUpdate={reloadStages}
-                  canEdit={canEdit}
+
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="stages" type="STAGE">
+              {(dropProvided) => (
+                <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-3">
+                  {stages.map((stage, i) => (
+                    <StageItem
+                      key={stage.id}
+                      stage={stage}
+                      index={i}
+                      projectId={id}
+                      onUpdate={reloadStages}
+                      onDeleteStage={setDeletingStageId}
+                      canManageProjectItems={canManageProjectItems}
+                      user={user}
+                    />
+                  ))}
+                  {dropProvided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+
+          {stages.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 rounded-2xl" style={{ border: '1px dashed #D1D5DB' }}>
+              <CheckSquare size={26} style={{ color: '#D1D5DB', marginBottom: 8 }} />
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nenhuma etapa criada ainda</p>
+            </div>
+          )}
+
+          {canManageProjectItems && (
+            showAddStageForm ? (
+              <form onSubmit={handleCreateStage} className="p-4 rounded-2xl space-y-2" style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}>
+                <input
+                  className="input text-sm"
+                  placeholder="Nome da etapa *"
+                  value={newStageName}
+                  onChange={e => setNewStageName(e.target.value)}
+                  required
                 />
-              ))
-          }
+                <div className="flex gap-2">
+                  <button type="submit" disabled={addingStage} className="btn-primary text-xs py-1.5 px-3">
+                    {addingStage ? 'Criando...' : 'Criar etapa'}
+                  </button>
+                  <button type="button" onClick={() => setShowAddStageForm(false)} className="btn-secondary text-xs py-1.5 px-3">
+                    Cancelar
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                onClick={() => setShowAddStageForm(true)}
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-150"
+                style={{ color: '#374151', border: '1px dashed #D1D5DB' }}
+              >
+                <Plus size={15} /> Criar nova etapa
+              </button>
+            )
+          )}
         </div>
       )}
 
@@ -678,7 +1053,6 @@ export default function ProjectDetailPage() {
                     </p>
                   </div>
 
-                  {/* era f.file_url */}
                   {f.drive_url && (
                     <a
                       href={f.drive_url}
@@ -756,6 +1130,14 @@ export default function ProjectDetailPage() {
         onConfirm={handleDeleteFile}
         title="Excluir arquivo"
         message="Deseja excluir este arquivo? Esta ação não pode ser desfeita."
+        danger
+      />
+
+      <ConfirmDialog
+        open={!!deletingStageId} onClose={() => setDeletingStageId(null)}
+        onConfirm={handleDeleteStage}
+        title="Remover etapa"
+        message="Deseja remover esta etapa e todas as suas fases, comentários e arquivos anexados? Esta ação não pode ser desfeita."
         danger
       />
     </div>

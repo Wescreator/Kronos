@@ -230,7 +230,7 @@ export default function RevenuesPage() {
             </tbody>
           </table>
           {revenues.length === 0 && (
-            <div className="py-16 text-center" style={{ color: 'var(--text-muted)' }}>
+            <div className="py-16 text-center" style={{ color: 'var(--text-primary)' }}>
               <TrendingUp size={32} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Nenhuma receita em {monthNamesLong[selectedMonth - 1]}</p>
             </div>
