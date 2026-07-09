@@ -5,18 +5,19 @@ export default function EmptyState({ icon: Icon, title, description, action }) {
         <div
           className="p-5 rounded-3xl mb-5"
           style={{
-            background: 'rgba(124,92,252,0.08)',
-            border: '1px solid rgba(124,92,252,0.15)',
+            background: '#9CA3AF', // Cor de fundo do círculo (cinza médio)
+            border: '1px solid #D1D5DB', // Borda acinzentada
           }}
         >
-          <Icon size={32} style={{ color: 'rgba(124,92,252,0.6)' }} />
+          {/* Ícone definido como branco */}
+          <Icon size={32} style={{ color: '#ffffff' }} />
         </div>
       )}
-      {/* Título com a nova cor */}
+      
       <h3 className="text-base font-semibold mb-2" style={{ color: '#374151' }}>
         {title}
       </h3>
-      {/* Descrição com a nova cor */}
+      
       {description && (
         <p className="text-sm mb-6" style={{ color: '#374151', maxWidth: 280 }}>
           {description}
