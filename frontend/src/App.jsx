@@ -35,6 +35,11 @@ import ClientPortalLoginPage from './pages/portal/ClientPortalLoginPage'
 import ClientPortalLayout    from './components/layout/ClientPortalLayout'
 import ClientPortalPostsPage from './pages/portal/ClientPortalPostsPage'
 
+// NOVO — Módulo de Orçamentos Dinâmicos
+import BudgetsPage       from './pages/budgets/BudgetsPage'
+import BudgetDetailPage  from './pages/budgets/BudgetDetailPage'
+import BudgetConfigPage  from './pages/budgets/BudgetConfigPage'
+
 
 /**
  * Restaura o `user` (nome, role, scope, company_id) a partir do token salvo
@@ -146,6 +151,13 @@ export default function App() {
           <Route path="proposals"           element={<ProposalsPage />} />
           <Route path="proposals/:id"       element={<ProposalDetailPage />} />
           <Route path="posts"               element={<PostsPage />} />
+
+          {/* NOVO — Módulo de Orçamentos Dinâmicos.
+              "config" precisa vir ANTES de ":id" para não ser casado
+              como se fosse o parâmetro dinâmico. */}
+          <Route path="budgets"              element={<BudgetsPage />} />
+          <Route path="budgets/config"       element={<BudgetConfigPage />} />
+          <Route path="budgets/:id"          element={<BudgetDetailPage />} />
         </Route>
 
         {/* ── Rotas do portal do cliente — escopo Client ─────────── */}

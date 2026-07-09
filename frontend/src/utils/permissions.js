@@ -53,13 +53,13 @@ export const ROLE_STYLES = {
 // MÓDULOS VISÍVEIS POR PERFIL
 // ─────────────────────────────────────────────────────────────────
 
-const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts']
+const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets']
 export const VISIBLE_MODULES = {
   developer: ALL_MODULES,
   owner:     ALL_MODULES,
   admin:     ALL_MODULES,
-  manager:   ['projects', 'clients', 'tasks',    'chat',  'team',      'agenda', 'proposals', 'posts'],
-  employee:  ['projects', 'clients', 'tasks',    'chat',  'team',      'agenda', 'proposals', 'posts'],
+  manager:   ['projects', 'clients', 'tasks', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets'],
+  employee:  ['projects', 'clients', 'tasks', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets'],
 }
 // ─────────────────────────────────────────────────────────────────
 
@@ -149,6 +149,17 @@ export const PERMISSIONS = {
     delete:  ADMIN_ROLES,
     attach:  ADMIN_ROLES,
   },
+  budgets: {
+  view:         ALL_ROLES,
+  create:       [...ADMIN_ROLES, 'manager'],
+  edit:         [...ADMIN_ROLES, 'manager'],
+  finalize:     [...ADMIN_ROLES, 'manager'],
+  recalculate:  [...ADMIN_ROLES, 'manager'],
+  delete:       ADMIN_ROLES,
+  // Configuração de Títulos/Níveis/Taxas — estrutural, só admin+ (espelha
+  // authorize('admin') no backend em budgetConfig.routes.js)
+  manageConfig: ADMIN_ROLES,
+},
 }
 
 // ─────────────────────────────────────────────────────────────────

@@ -58,6 +58,10 @@ model User {
   phase_attachments                                 phase_attachments[]
   companies                                         Company?               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_company")
 
+  // NOVO — Módulo de Orçamentos Dinâmicos
+  budgets                                           Budget[]
+  budget_snapshots                                  BudgetSnapshot[]
+
   @@index([companyId], map: "idx_users_company")
   @@index([email], map: "idx_users_email")
   @@index([isActive], map: "idx_users_is_active")
@@ -112,6 +116,15 @@ model Company {
   // NOVO
   phase_comments         phase_comments[]
   phase_attachments      phase_attachments[]
+
+  // NOVO — Módulo de Orçamentos Dinâmicos
+  budget_configs         BudgetConfig[]
+  budget_titles          BudgetTitle[]
+  budget_levels          BudgetLevel[]
+  budget_rates           BudgetRate[]
+  budgets                Budget[]
+  budget_items           BudgetItem[]
+  budget_snapshots       BudgetSnapshot[]
 
   @@map("companies")
 }
@@ -434,6 +447,9 @@ model ClientLead {
   users                 User?                 @relation(fields: [userId], references: [id], onUpdate: NoAction)
   client_project_access ClientProjectAccess[]
   post_comments         PostComment[]
+
+  // NOVO — Módulo de Orçamentos Dinâmicos
+  budgets               Budget[]
 
   @@unique([companyId, email], map: "clients_leads_company_email_key")
   @@index([companyId], map: "idx_clients_leads_company")
@@ -820,6 +836,146 @@ model task_comments {
   @@index([company_id], map: "idx_task_comments_company")
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// NOVO — Módulo de Orçamentos Dinâmicos (Budget)
+// ═══════════════════════════════════════════════════════════════════════
+
+model BudgetConfig {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String   @unique @map("company_id") @db.Uuid
+  name      String   @default("Configuração de Orçamentos") @db.VarChar(150)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  companies     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_configs_company")
+  budget_titles BudgetTitle[]
+
+  @@map("budget_configs")
+}
+
+model BudgetTitle {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  budgetConfigId String   @map("budget_config_id") @db.Uuid
+  companyId      String   @map("company_id") @db.Uuid
+  label          String   @db.VarChar(150)
+  sortOrder      Int      @default(0) @map("sort_order") @db.SmallInt
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  budget_configs BudgetConfig  @relation(fields: [budgetConfigId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_titles_company")
+  budget_levels  BudgetLevel[]
+
+  @@index([budgetConfigId], map: "idx_budget_titles_config")
+  @@index([companyId], map: "idx_budget_titles_company")
+  @@map("budget_titles")
+}
+
+model BudgetLevel {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  budgetTitleId String   @map("budget_title_id") @db.Uuid
+  companyId     String   @map("company_id") @db.Uuid
+  label         String   @db.VarChar(150)
+  sortOrder     Int      @default(0) @map("sort_order") @db.SmallInt
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  budget_titles BudgetTitle  @relation(fields: [budgetTitleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_levels_company")
+  budget_rates  BudgetRate[]
+  budget_items  BudgetItem[]
+
+  @@index([budgetTitleId], map: "idx_budget_levels_title")
+  @@index([companyId], map: "idx_budget_levels_company")
+  @@map("budget_levels")
+}
+
+model BudgetRate {
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  budgetLevelId String           @map("budget_level_id") @db.Uuid
+  companyId     String           @map("company_id") @db.Uuid
+  rateType      budget_rate_type @default(per_area) @map("rate_type")
+  value         Decimal          @db.Decimal(14, 4)
+  isCurrent     Boolean          @default(true) @map("is_current")
+  effectiveFrom DateTime         @default(now()) @map("effective_from") @db.Timestamptz(6)
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  budget_levels BudgetLevel @relation(fields: [budgetLevelId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_rates_company")
+
+  @@index([budgetLevelId, isCurrent], map: "idx_budget_rates_level_current")
+  @@index([companyId], map: "idx_budget_rates_company")
+  @@map("budget_rates")
+}
+
+model Budget {
+  id             Int           @id @default(autoincrement())
+  budgetNumber   String        @map("budget_number") @db.VarChar(20)
+  title          String
+  clientId       String?       @map("client_id") @db.Uuid
+  clientName     String?       @map("client_name")
+  projectArea    Decimal       @default(0) @map("project_area") @db.Decimal(14, 4)
+  fixedFeesTotal Decimal       @default(0) @map("fixed_fees_total") @db.Decimal(14, 2)
+  finalNotes     String?       @map("final_notes")
+  status         budget_status @default(draft)
+  createdBy      String        @map("created_by") @db.Uuid
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  companyId      String        @map("company_id") @db.Uuid
+
+  companies        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budgets_company")
+  users            User             @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  clients_leads    ClientLead?      @relation(fields: [clientId], references: [id], onUpdate: NoAction)
+  budget_items     BudgetItem[]
+  budget_snapshots BudgetSnapshot[]
+
+  @@unique([companyId, budgetNumber], name: "unique_company_budget")
+  @@index([companyId], map: "idx_budgets_company")
+  @@index([status], map: "idx_budgets_status")
+  @@map("budgets")
+}
+
+model BudgetItem {
+  id                Int               @id @default(autoincrement())
+  budgetId          Int               @map("budget_id")
+  companyId         String            @map("company_id") @db.Uuid
+  customLabel       String            @map("custom_label")
+  budgetLevelId     String?           @map("budget_level_id") @db.Uuid
+  areaUsed          Decimal?          @map("area_used") @db.Decimal(14, 4)
+  rateSnapshotValue Decimal?          @map("rate_snapshot_value") @db.Decimal(14, 4)
+  rateType          budget_rate_type? @map("rate_type")
+  lineTotal         Decimal           @default(0) @map("line_total") @db.Decimal(14, 2)
+  orderIndex        Int               @default(0) @map("order_index")
+
+  budgets       Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_items_company")
+  budget_levels BudgetLevel? @relation(fields: [budgetLevelId], references: [id], onUpdate: NoAction)
+
+  @@index([budgetId], map: "idx_budget_items_budget")
+  @@index([companyId], map: "idx_budget_items_company")
+  @@map("budget_items")
+}
+
+model BudgetSnapshot {
+  id          Int      @id @default(autoincrement())
+  budgetId    Int      @map("budget_id")
+  companyId   String   @map("company_id") @db.Uuid
+  version     Int      @default(1)
+  payload     Json
+  totalAmount Decimal  @map("total_amount") @db.Decimal(14, 2)
+  createdBy   String   @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  budgets   Budget  @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_snapshots_company")
+  users     User    @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+
+  @@unique([budgetId, version])
+  @@index([budgetId], map: "idx_budget_snapshots_budget")
+  @@index([companyId], map: "idx_budget_snapshots_company")
+  @@map("budget_snapshots")
+}
+
 enum calendar_event_status {
   scheduled
   confirmed
@@ -887,4 +1043,15 @@ enum task_status {
   review
   completed
   cancelled
+}
+
+// NOVO — enums do módulo de Orçamentos
+enum budget_rate_type {
+  per_area
+  fixed
+}
+
+enum budget_status {
+  draft
+  finalized
 }

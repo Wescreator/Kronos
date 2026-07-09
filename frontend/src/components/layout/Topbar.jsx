@@ -1,4 +1,4 @@
-import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper} from 'lucide-react'
+import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper, Calculator} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
@@ -7,6 +7,8 @@ import Avatar from '../ui/Avatar'
 import {getNotifications, markRead, markAllRead, deleteNotification,} from '../../services/notifications.service'
 import { formatDateTime } from '../../utils/format'
 import { canSeeModule } from '../../utils/permissions'
+
+
 
 // ─── Links extraídos diretamente do Sidebar original ──────────────
 // Cada link agora carrega seu "module" (chave de VISIBLE_MODULES em
@@ -17,13 +19,14 @@ const NAV_LINKS = [
   { to: '/app/dashboard', icon: LayoutDashboard,    label: 'Dashboard',  module: 'dashboard' },
   { to: '/app/agenda',    icon: Calendar,           label: 'Agenda',     module: 'agenda'    },
   { to: '/app/chat',      icon: MessageSquare,      label: 'Chat',       module: 'chat'      },
-  { to: '/app/clients',   icon: Users,              label: 'Clientes',  module: 'clients'   }, // ── NOVO MÓDULO ADICIONADO AQUI ──
+  { to: '/app/clients',   icon: Users,              label: 'Clientes',   module: 'clients'   }, // ── NOVO MÓDULO ADICIONADO AQUI ──
   { to: '/app/team',      icon: Users,              label: 'Equipe',     module: 'team'      },
   { to: '/app/financial', icon: DollarSign,         label: 'Financeiro', module: 'financial' },
+  { to: '/app/budgets',   icon: Calculator,         label: 'Orçamentos', module: 'budgets'   },
   { to: '/app/posts',     icon: Newspaper,          label: 'Posts',      module: 'posts'     },
   { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos',   module: 'projects'  },
   { to: '/app/proposals', icon: FileText,           label: 'Propostas',  module: 'proposals' },
-  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas',    module: 'tasks'     }  
+  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas',    module: 'tasks'     }
 ] 
 
 export default function Topbar() {
