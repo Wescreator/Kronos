@@ -13,6 +13,23 @@ import Spinner from '../../components/ui/Spinner'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
 
+// Componente visual unificado para garantir que o estilo do ícone seja respeitado
+const StatusIcon = ({ icon: Icon, label }) => (
+  <div className="flex flex-col items-center justify-center h-full pb-10 px-6 text-center">
+    <div
+      className="p-4 rounded-3xl mb-4"
+      style={{
+        backgroundColor: '#9CA3AF',
+        border: '1px solid #D1D5DB',
+        opacity: '1'
+      }}
+    >
+      <Icon size={24} style={{ color: '#ffffff', opacity: '1' }} />
+    </div>
+    <p className="text-xs" style={{ color: '#374151', opacity: '1' }}>{label}</p>
+  </div>
+)
+
 const deleteRoom = (id) => api.delete(`/chat/rooms/${id}`)
 
 function formatMessageTime(dateStr) {
@@ -210,18 +227,34 @@ function TypingIndicator({ names }) {
   )
 }
 
+// Substitua a função EmptyConversation atual por esta:
 function EmptyConversation({ onNewChat }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-8" style={{ position: 'relative' }}>
+      {/* Background decorativo */}
       <div style={{ position: 'absolute', width: 300, height: 300, borderRadius: '50%', background: 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ width: 72, height: 72, borderRadius: 24, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justify: 'center', marginBottom: 20 }}>
-        <MessageSquare size={30} style={{ color: '#ffffff' }} />
+      
+      {/* Container Centralizado */}
+      <div style={{ zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div
+          className="p-4 rounded-3xl mb-4"
+          style={{
+            backgroundColor: '#9CA3AF',
+            border: '1px solid #D1D5DB',
+          }}
+        >
+          <MessageSquare size={30} style={{ color: '#ffffff' }} />
+        </div>
+        
+        <h3 className="text-base font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Suas mensagens</h3>
+        <p className="text-sm mb-7" style={{ color: 'var(--text-secondary)', maxWidth: 220, lineHeight: 1.6 }}>
+          Envie mensagens privadas ou crie grupos com a sua equipe.
+        </p>
+        
+        <button onClick={onNewChat} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
+          <Plus size={14} /> Nova conversa
+        </button>
       </div>
-      <h3 className="text-base font-bold mb-2" style={{ color: '#ffffff' }}>Suas mensagens</h3>
-      <p className="text-sm mb-7" style={{ color: 'rgba(255,255,255,0.5)', maxWidth: 220, lineHeight: 1.6 }}>Envie mensagens privadas ou crie grupos com a sua equipe.</p>
-      <button onClick={onNewChat} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13 }}>
-        <Plus size={14} /> Nova conversa
-      </button>
     </div>
   )
 }
@@ -257,9 +290,6 @@ export default function ChatPage() {
 
   useEffect(() => { activeRoomRef.current = activeRoom }, [activeRoom])
 
-  // Usa a conexão WebSocket compartilhada (useSocketStore) em vez de abrir
-  // uma própria — evita duas conexões simultâneas do mesmo usuário
-  // (Topbar + Chat), que se sobrescreveriam no backend.
   useEffect(() => {
     useSocketStore.getState().ensureConnected()
 
@@ -341,7 +371,7 @@ export default function ChatPage() {
       }
       const sorted = [...all].sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0))
       setRooms(sorted)
-    } catch { /* erro silenciado */ }
+    } catch { }
     finally { setLoadingRooms(false) }
   }, [role, user?.id])
 
@@ -352,10 +382,6 @@ export default function ChatPage() {
       .catch(() => toast.error('Erro ao carregar lista de membros'))
   }, [loadRooms])
 
-  // Deep-link vindo de notificação: /app/chat/:roomId. Abre a sala assim
-  // que a lista carregar. Se não encontrar (ex: sala de grupo da qual o
-  // usuário não é o criador, filtrada para role='member'), avisa em vez
-  // de falhar silenciosamente.
   useEffect(() => {
     if (!roomId || loadingRooms) return
     if (activeRoom?.id === roomId) return
@@ -493,10 +519,7 @@ export default function ChatPage() {
         .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
       `}</style>
 
-      {/* BACKGROUND TOTALMENTE TRANSPARENTE AQUI */}
       <div className="fade-in flex overflow-hidden w-full h-full" style={{ height: 'calc(100vh - 5rem)', background: 'transparent', position: 'relative' }}>
-        
-        {/* Sidebar Esquerda Transparente */}
         <div className={`flex flex-col shrink-0 transition-all duration-200 ${showSidebar ? 'w-[280px]' : 'w-0 md:w-[280px]'} md:w-[280px] overflow-hidden`} style={{ borderRight: '1px solid rgba(255,255,255,0.1)', background: 'transparent', position: 'relative', zIndex: 1 }}>
           <div className="px-3 shrink-0" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: 20, paddingBottom: 14 }}>
             <div className="flex items-center justify-between px-1" style={{ marginBottom: 12 }}>
@@ -515,10 +538,7 @@ export default function ChatPage() {
             {loadingRooms ? (
               <div className="flex justify-center py-10"><Spinner /></div>
             ) : filteredRooms.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full pb-10 px-6 text-center">
-                <MessageSquare size={24} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 8 }} />
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>Nenhuma conversa encontrada</p>
-              </div>
+              <StatusIcon icon={MessageSquare} label="Nenhuma conversa encontrada" />
             ) : (
               <div className="px-1">
                 {privateRooms.length > 0 && (
@@ -553,7 +573,6 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Lado Direito do Chat Transparente */}
         <div className="flex-1 flex flex-col min-w-0" style={{ position: 'relative', zIndex: 1, background: 'transparent' }}>
           {!activeRoom ? (
             <EmptyConversation onNewChat={() => setShowNew(true)} />
@@ -615,7 +634,6 @@ export default function ChatPage() {
                 </div>
               </div>
 
-              {/* Caixa de Texto Inferior Transparente */}
               <div className="shrink-0 relative" style={{ borderTop: '1px solid rgba(255,255,255,0.1)', background: 'transparent', padding: '12px 20px 16px' }}>
                 <div style={{ position: 'relative' }}>
                   {showEmoji && (
@@ -623,7 +641,6 @@ export default function ChatPage() {
                       <EmojiPicker onEmojiClick={handleEmojiClick} theme="dark" width={300} height={360} searchPlaceholder="Pesquisar emoji..." previewConfig={{ showPreview: false }} skinTonesDisabled />
                     </div>
                   )}
-
                   <div className="flex items-end gap-2">
                     <button type="button" onClick={() => setShowEmoji(v => !v)} className="p-2 rounded-xl transition-all duration-150 shrink-0 mb-0.5 text-white hover:bg-white/5">
                       <Smile size={18} />
