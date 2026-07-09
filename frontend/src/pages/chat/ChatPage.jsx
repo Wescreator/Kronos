@@ -82,7 +82,7 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
       <button
         onClick={onClick}
         className={`w-full text-left px-3 md:px-4 py-3 flex gap-3 border-b border-[#f0f2f5] transition ${
-          active ? 'bg-[#d9fdd3]' : 'bg-white hover:bg-[#f5f6f6]'
+          active ? 'bg-[#e3e5e8]' : 'bg-white hover:bg-[#f5f6f6]'
         }`}
       >
         <div className="shrink-0">
