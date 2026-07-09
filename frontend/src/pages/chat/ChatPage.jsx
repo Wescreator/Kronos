@@ -252,7 +252,7 @@ function EmptyConversation({ onNewChat }) {
 
       <button
         onClick={onNewChat}
-        className="h-11 px-5 rounded-lg bg-[#00a884] text-white text-sm font-medium hover:brightness-95 transition"
+        className="h-11 px-5 rounded-lg bg-[#374151] text-white text-sm font-medium hover:brightness-95 transition"
       >
         Nova conversa
       </button>
