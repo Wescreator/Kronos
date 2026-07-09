@@ -5,7 +5,8 @@ const { authenticate, authorize, BYPASS_ROLES } = require('../middlewares/auth.m
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 const R        = require('../utils/response')
-const { uploadImage } = require('../config/multer')
+const { uploadImageMemory } = require('../config/multer')
+const fileService = require('../services/file.service')
 
 router.use(authenticate, tenantMiddleware)
 
@@ -42,6 +43,20 @@ async function canToggleStatus(req) {
   const link = await companyRepo.findCompanyUser(req.tenant.id, targetId)
   if (!link) return false
   return link.role !== 'admin'
+}
+
+/**
+ * Extrai o object_key do R2 a partir de uma avatar_url pública.
+ * Retorna null se a URL não pertencer ao bucket configurado (ex: URL
+ * externa antiga, ou já malformada) — nesses casos apenas limpamos o
+ * campo no banco, sem tentar apagar nada no R2.
+ */
+function extractObjectKeyFromUrl(avatarUrl) {
+  const publicUrl = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '')
+  if (!avatarUrl || !publicUrl || !avatarUrl.startsWith(`${publicUrl}/`)) {
+    return null
+  }
+  return avatarUrl.slice(publicUrl.length + 1)
 }
 
 /**
@@ -143,8 +158,12 @@ router.patch('/:id', async (req, res) => {
 /**
  * Upload de avatar
  * Próprio usuário, Dev Global ou admin
+ *
+ * Usa uploadImageMemory (buffer em memória) + fileService.upload, o mesmo
+ * padrão já usado para logo de empresa e capa de projeto — o arquivo fica
+ * persistido no Cloudflare R2, sobrevivendo a deploys/restarts do Render.
  */
-router.post('/:id/avatar', uploadImage.single('avatar'), async (req, res) => {
+router.post('/:id/avatar', uploadImageMemory.single('avatar'), async (req, res) => {
   try {
     if (!(await canAccessTarget(req))) {
       return R.forbidden(res, 'Acesso negado')
@@ -154,11 +173,61 @@ router.post('/:id/avatar', uploadImage.single('avatar'), async (req, res) => {
       return R.badRequest(res, 'Nenhuma imagem enviada')
     }
 
-    const url = `/uploads/images/${req.file.filename}`
+    const { url } = await fileService.upload({
+      buffer: req.file.buffer,
+      originalFilename: req.file.originalname,
+      mimeType: req.file.mimetype,
+      folder: 'avatars',
+    })
 
     const user = await userRepo.update(req.params.id, {
       avatar_url: url
     })
+
+    return R.success(res, { user })
+  } catch (err) {
+    return R.error(res, err.message)
+  }
+})
+
+/**
+ * NOVO — Remover avatar
+ * Próprio usuário, Dev Global ou admin
+ *
+ * Apaga o objeto correspondente no R2 (se a URL salva pertencer ao bucket
+ * configurado) e limpa avatar_url no banco, revertendo a exibição para o
+ * círculo de iniciais (comportamento já existente em Avatar.jsx quando
+ * src é null/undefined).
+ *
+ * Se o objeto não puder ser identificado ou já não existir mais no R2
+ * (ex: URL malformada, arquivo removido manualmente), a exclusão no banco
+ * segue em frente do mesmo jeito — o objetivo principal é garantir que
+ * nenhuma avatar_url quebrada continue sendo exibida para os outros
+ * usuários.
+ */
+router.delete('/:id/avatar', async (req, res) => {
+  try {
+    if (!(await canAccessTarget(req))) {
+      return R.forbidden(res, 'Acesso negado')
+    }
+
+    const existing = await userRepo.findById(req.params.id)
+    if (!existing) {
+      return R.notFound(res)
+    }
+
+    const objectKey = extractObjectKeyFromUrl(existing.avatar_url)
+    if (objectKey) {
+      try {
+        await fileService.remove(objectKey)
+      } catch (err) {
+        // Não bloqueia a remoção do campo no banco por falha ao apagar no
+        // R2 (ex: objeto já não existe mais) — só loga para investigação.
+        console.error('[user.routes] Falha ao remover avatar do R2:', err.message)
+      }
+    }
+
+    const user = await userRepo.update(req.params.id, { avatar_url: null })
 
     return R.success(res, { user })
   } catch (err) {

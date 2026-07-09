@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Mail, Phone, Upload, Calendar, Clock, Shield, ToggleLeft, ToggleRight } from 'lucide-react'
-import { getUser, updateUser, uploadAvatar } from '../../services/team.service'
+import { ArrowLeft, Mail, Phone, Upload, X, Calendar, Clock, Shield, ToggleLeft, ToggleRight } from 'lucide-react'
+import { getUser, updateUser, uploadAvatar, removeAvatar } from '../../services/team.service'
 import Avatar from '../../components/ui/Avatar'
 import Spinner from '../../components/ui/Spinner'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -34,6 +34,9 @@ export default function TeamMemberPage() {
   const [form,          setForm]          = useState({})
   const [confirmStatus, setConfirmStatus] = useState(false) // confirm toggle status
   const [savingStatus,  setSavingStatus]  = useState(false)
+  // NOVO — estado de loading isolado para a remoção do avatar, evita
+  // cliques duplicados enquanto a requisição está em andamento.
+  const [removingAvatar, setRemovingAvatar] = useState(false)
 
   const load = async () => {
     setLoading(true)
@@ -77,6 +80,24 @@ export default function TeamMemberPage() {
       setUser(data.user)
       toast.success('Foto atualizada!')
     } catch { toast.error('Erro ao enviar foto') }
+  }
+
+  // NOVO — remove o avatar atual, revertendo para o círculo de iniciais.
+  // stopPropagation evita que o clique "vaze" para o <label> de upload,
+  // que fica sobreposto no mesmo canto do avatar.
+  const handleRemoveAvatar = async (e) => {
+    e.stopPropagation()
+    if (removingAvatar) return
+    setRemovingAvatar(true)
+    try {
+      const { data } = await removeAvatar(id)
+      setUser(data.user)
+      toast.success('Foto removida')
+    } catch {
+      toast.error('Erro ao remover foto')
+    } finally {
+      setRemovingAvatar(false)
+    }
   }
 
   const handleToggleStatus = async () => {
@@ -135,6 +156,28 @@ export default function TeamMemberPage() {
               <Upload size={16} className="text-white" />
               <input type="file" accept="image/*" className="hidden" onChange={handleAvatar} />
             </label>
+
+            {/* NOVO — botão de remover avatar. Só aparece quando existe
+                uma foto (user.avatar_url), sobreposto no canto superior
+                direito do círculo. stopPropagation no handler evita
+                disparar o <label> de upload por baixo. */}
+            {user.avatar_url && (
+              <button
+                type="button"
+                onClick={handleRemoveAvatar}
+                disabled={removingAvatar}
+                title="Remover foto"
+                className="absolute -top-1 -right-1 h-6 w-6 rounded-full flex items-center justify-center transition-opacity"
+                style={{
+                  background: '#DC2626',
+                  border: '2px solid #0D152B',
+                  opacity: removingAvatar ? 0.6 : 1,
+                  cursor: removingAvatar ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <X size={12} className="text-white" />
+              </button>
+            )}
 
             {/* Indicador de status sobre avatar */}
             <div

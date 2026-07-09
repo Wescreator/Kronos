@@ -7,3 +7,5 @@ export const uploadAvatar = (id, file) => {
   const fd = new FormData(); fd.append('avatar', file)
   return api.post(`/users/${id}/avatar`, fd)
 }
+
+export const removeAvatar = (id) => api.delete(`/users/${id}/avatar`)
