@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import {
   MessageCircle, Paperclip, Trash2, Pencil, X, Send,
   FileText, Download, MoreHorizontal, Check
@@ -27,7 +28,12 @@ function AttachmentGrid({ attachments }) {
           style={{ border: '1px solid var(--border-subtle)', background: '#F9FAFB' }}
         >
           {isImage(att.mime_type) ? (
-            <img src={att.url} alt={att.file_name} style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+            <img 
+              src={att.url} 
+              alt={att.file_name} 
+              className="w-full h-auto block" 
+              style={{ maxHeight: '500px', objectFit: 'contain', backgroundColor: '#f3f4f6' }} 
+            />
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 p-4" style={{ height: 100 }}>
               <FileText size={22} style={{ color: 'var(--text-muted)' }} />
@@ -103,7 +109,19 @@ export default function PostCard({
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(post.content || '')
   const [saving, setSaving] = useState(false)
+  
   const [menuOpen, setMenuOpen] = useState(false)
+  const triggerRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (triggerRef.current && !triggerRef.current.contains(e.target)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
 
   const canManage = canManagePost(post, currentUser)
 
@@ -148,8 +166,7 @@ export default function PostCard({
   }
 
   return (
-    <div className="card p-5 mb-4">
-      {/* Header */}
+    <div className="card p-5 mb-4 relative flex flex-col min-h-min">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <Avatar name={post.created_by_name} src={post.avatar_url} size="md" />
@@ -169,14 +186,19 @@ export default function PostCard({
         </div>
 
         {canManage && (
-          <div className="relative shrink-0">
+          <div className="relative shrink-0" ref={triggerRef}>
             <button onClick={() => setMenuOpen(v => !v)} className="p-1.5 rounded-lg" style={{ color: 'var(--text-muted)' }}>
               <MoreHorizontal size={17} />
             </button>
-            {menuOpen && (
+            
+            {menuOpen && createPortal(
               <div
-                className="absolute right-0 top-full mt-1 py-1 rounded-xl overflow-hidden z-10"
-                style={{ background: '#fff', border: '1px solid var(--border-subtle)', boxShadow: 'var(--shadow-medium)', minWidth: 160 }}
+                className="fixed z-[9999] py-1 rounded-xl bg-white border border-[var(--border-subtle)] shadow-xl"
+                style={{
+                  top: triggerRef.current.getBoundingClientRect().bottom + window.scrollY + 5,
+                  left: triggerRef.current.getBoundingClientRect().right - 160,
+                  minWidth: 160
+                }}
               >
                 <button
                   onClick={() => { setEditing(true); setMenuOpen(false) }}
@@ -196,13 +218,13 @@ export default function PostCard({
                 >
                   <Trash2 size={13} /> Excluir
                 </button>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
         )}
       </div>
 
-      {/* Conteúdo */}
       {editing ? (
         <div className="mt-3">
           <textarea
@@ -230,7 +252,6 @@ export default function PostCard({
 
       <AttachmentGrid attachments={post.attachments} />
 
-      {/* Ações */}
       <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
         <button
           onClick={() => setShowComments(v => !v)}
@@ -242,12 +263,14 @@ export default function PostCard({
         </button>
       </div>
 
-      {/* Comentários */}
       {showComments && (
         <div className="mt-4 pt-4 flex flex-col gap-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          {(post.comments || []).map(c => (
-            <CommentItem key={c.id} comment={c} currentUser={currentUser} onDelete={(cid) => onDeleteComment(post.id, cid)} />
-          ))}
+          {/* Container de comentários com rolagem limitada */}
+          <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto pr-1">
+            {(post.comments || []).map(c => (
+              <CommentItem key={c.id} comment={c} currentUser={currentUser} onDelete={(cid) => onDeleteComment(post.id, cid)} />
+            ))}
+          </div>
 
           <form onSubmit={handleSendComment} className="flex flex-col gap-2 mt-1">
             <div className="flex gap-2">
