@@ -35,6 +35,9 @@ const getTenantId = (req, res) => {
   return req.tenant.id
 }
 
+// ALTERADO — agora lê page/limit de req.query e repassa ao service. A
+// resposta muda de um array cru para { data, pagination }, então o
+// ClientsPage.jsx precisa ler res.data.data em vez de res.data direto.
 const getAll = async (req, res) => {
   try {
     const companyId = getTenantId(req, res)
@@ -43,10 +46,12 @@ const getAll = async (req, res) => {
     const filters = {
       status: req.query.status,
       search: req.query.search,
+      page:   req.query.page,
+      limit:  req.query.limit,
     }
 
-    const clients = await clientService.getAllClients(companyId, filters)
-    return res.status(200).json(clients)
+    const result = await clientService.getAllClients(companyId, filters)
+    return res.status(200).json(result)
   } catch (error) {
     return handleError(res, error, 500)
   }

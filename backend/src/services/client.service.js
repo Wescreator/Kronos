@@ -17,6 +17,14 @@ const VALID_FINANCEIRO = ['adimplente', 'inadimplente']
 // name VARCHAR(255), email VARCHAR(255), phone VARCHAR(50).
 const FIELD_LIMITS = { name: 255, email: 255, phone: 50 }
 
+// NOVO — limites de paginação, espelhando exatamente o clamp aplicado em
+// client.repository.js (findAll). Mantidos em sincronia de propósito: o
+// service usa esses mesmos valores para montar `pagination.limit`/`page`
+// na resposta, então se um dia o clamp do repository mudar, atualize aqui também.
+const DEFAULT_PAGE  = 1
+const DEFAULT_LIMIT = 20
+const MAX_LIMIT     = 100
+
 const notFoundError = (message) => {
   const error = new Error(message)
   error.statusCode = 404
@@ -119,8 +127,37 @@ const validateFinanceiro = (value) => {
   return value
 }
 
-const getAllClients = async (companyId, filters) => {
-  return await clientRepo.findAll(companyId, filters)
+// NOVO — sanitiza page/limit no service também (mesmo clamp do repository).
+// Fazer isso nas duas camadas é intencional: o repository precisa se
+// proteger mesmo se um dia ganhar outro caller; o service precisa desses
+// valores "limpos" para montar o objeto `pagination` da resposta.
+const sanitizePagination = (page, limit) => {
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || DEFAULT_LIMIT, 1), MAX_LIMIT)
+  const safePage  = Math.max(parseInt(page, 10) || DEFAULT_PAGE, 1)
+  return { page: safePage, limit: safeLimit }
+}
+
+// ALTERADO — agora aceita page/limit em filters e retorna um envelope
+// { data, pagination } em vez do array cru. Isso é uma mudança de
+// contrato: quem consome getAllClients (client.controller.js) e quem
+// consome a resposta HTTP (ClientsPage.jsx) precisam estar cientes do
+// novo formato.
+const getAllClients = async (companyId, filters = {}) => {
+  const { page, limit } = sanitizePagination(filters.page, filters.limit)
+
+  const { clients, total } = await clientRepo.findAll(companyId, {
+    status: filters.status,
+    search: filters.search,
+    page,
+    limit,
+  })
+
+  const totalPages = Math.max(Math.ceil(total / limit), 1)
+
+  return {
+    data: clients,
+    pagination: { page, limit, total, totalPages },
+  }
 }
 
 const getClientById = async (id, companyId) => {

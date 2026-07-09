@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import {Plus, Search, Building2, Mail, Phone, FolderKanban, Pencil, Trash2, CheckCircle2, XCircle,} from 'lucide-react'
+import {Plus, Search, Building2, Mail, Phone, FolderKanban, Pencil, Trash2, CheckCircle2, XCircle, ChevronLeft, ChevronRight,} from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
 import useAuthStore from '../../store/authStore'
@@ -44,6 +44,10 @@ const SITUACAO_FILTERS = [
   { value: 'proposta_aprovada',    label: 'Proposta Aprovada'    },
   { value: 'contrato_assinado',    label: 'Contrato Assinado'    },
 ]
+
+// NOVO — tamanho de página fixo no front. Mantido em sincronia de
+// propósito com DEFAULT_LIMIT em client.service.js (backend).
+const PAGE_SIZE = 20
 
 /* ── Badge genérico ─────────────────────────────────────────────── */
 function MapBadge({ map, value }) {
@@ -95,6 +99,12 @@ export default function ClientsPage() {
   const [editingClient,  setEditingClient]  = useState(null)
   const [deletingId,     setDeletingId]     = useState(null)
 
+  // NOVO — estado de paginação. `pagination` guarda os metadados que o
+  // backend devolve (page/limit/total/totalPages); `page` é a página que
+  // o usuário está pedindo (controla o efeito de busca).
+  const [page,       setPage]       = useState(1)
+  const [pagination, setPagination] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 })
+
   const load = async () => {
     setLoading(true)
     try {
@@ -103,9 +113,20 @@ export default function ClientsPage() {
           search:   search         || undefined,
           status:   statusFilter   || undefined,
           situacao: situacaoFilter || undefined,
+          page,
+          limit: PAGE_SIZE,
         },
       })
-      setClients(Array.isArray(data) ? data : (data?.data || []))
+      // ALTERADO — o backend agora responde { data, pagination } em vez de
+      // um array cru. Mantido um fallback defensivo (Array.isArray) para o
+      // caso improvável de a API antiga ainda estar em cache/CDN.
+      if (Array.isArray(data)) {
+        setClients(data)
+        setPagination({ page: 1, limit: PAGE_SIZE, total: data.length, totalPages: 1 })
+      } else {
+        setClients(data?.data || [])
+        setPagination(data?.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 1 })
+      }
     } catch {
       toast.error('Erro ao carregar clientes')
     } finally {
@@ -113,7 +134,11 @@ export default function ClientsPage() {
     }
   }
 
-  useEffect(() => { load() }, [search, statusFilter, situacaoFilter])
+  // NOVO — sempre que um filtro muda, volta pra página 1. Evita cair numa
+  // página vazia (ex: estava na página 3 e o novo filtro só tem 1 página).
+  useEffect(() => { setPage(1) }, [search, statusFilter, situacaoFilter])
+
+  useEffect(() => { load() }, [search, statusFilter, situacaoFilter, page])
 
   const openNew   = ()  => { setEditingClient(null); setShowModal(true) }
   const openEdit  = (c) => { setEditingClient(c);    setShowModal(true) }
@@ -131,8 +156,13 @@ export default function ClientsPage() {
     }
   }
 
+  // ALTERADO — os cards de estatísticas agora refletem apenas os clientes
+  // da PÁGINA ATUAL (o backend não manda mais a lista inteira). Isso é uma
+  // mudança de comportamento sutil: antes os números eram do total geral,
+  // agora são só da página visível. Se quiser stats do total geral, isso
+  // precisaria de um endpoint agregado à parte — sinalizo para você decidir.
   const statsCards = [
-    { label: 'Total',               value: clients.length,                                                 color: 'var(--text-primary)' },
+    { label: 'Total',               value: pagination.total,                                               color: 'var(--text-primary)' },
     { label: 'Leads',               value: clients.filter(c => c.status === 'lead').length,               color: '#374151'             },
     { label: 'Clientes',            value: clients.filter(c => c.status === 'cliente').length,            color: '#0284C7'             },
     { label: 'Contratos Assinados', value: clients.filter(c => c.situacao === 'contrato_assinado').length,color: '#16A34A'             },
@@ -147,6 +177,7 @@ export default function ClientsPage() {
         .crm-filter-btn { transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s; }
         .crm-filter-btn:hover { transform: translateY(-1px); }
         .crm-search:focus-within { border-color: rgba(55,65,81,0.40) !important; box-shadow: 0 0 0 3px rgba(55,65,81,0.08); }
+        .crm-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
       `}</style>
 
       <PageHeader
@@ -261,130 +292,158 @@ export default function ClientsPage() {
           />
         </div>
       ) : (
-        <div className="card overflow-hidden">
-          <table className="w-full">
-            <thead style={{ borderBottom: '1px solid #E5E7EB' }}>
-              <tr>
-                <th className="table-header">Nome</th>
-                <th className="table-header hidden sm:table-cell">Telefone</th>
-                <th className="table-header hidden md:table-cell">E-mail</th>
-                <th className="table-header hidden lg:table-cell">Projeto</th>
-                <th className="table-header">Status</th>
-                <th className="table-header hidden md:table-cell">Situação</th>
-                <th className="table-header hidden lg:table-cell">Financeiro</th>
-                <th className="table-header" style={{ textAlign: 'right' }}>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {clients.map((c, i) => (
-                <tr key={c.id} className="client-row"
-                  style={{ borderBottom: i < clients.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+        <>
+          <div className="card overflow-hidden">
+            <table className="w-full">
+              <thead style={{ borderBottom: '1px solid #E5E7EB' }}>
+                <tr>
+                  <th className="table-header">Nome</th>
+                  <th className="table-header hidden sm:table-cell">Telefone</th>
+                  <th className="table-header hidden md:table-cell">E-mail</th>
+                  <th className="table-header hidden lg:table-cell">Projeto</th>
+                  <th className="table-header">Status</th>
+                  <th className="table-header hidden md:table-cell">Situação</th>
+                  <th className="table-header hidden lg:table-cell">Financeiro</th>
+                  <th className="table-header" style={{ textAlign: 'right' }}>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clients.map((c, i) => (
+                  <tr key={c.id} className="client-row"
+                    style={{ borderBottom: i < clients.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
 
-                  {/* Nome */}
-                  <td className="table-cell">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Initials name={c.name} />
-                      <span className="text-sm font-semibold" style={{ color: '#374151' }}>{c.name}</span>
-                    </div>
-                  </td>
+                    {/* Nome */}
+                    <td className="table-cell">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <Initials name={c.name} />
+                        <span className="text-sm font-semibold" style={{ color: '#374151' }}>{c.name}</span>
+                      </div>
+                    </td>
 
-                  {/* Telefone */}
-                  <td className="table-cell hidden sm:table-cell">
-                    {c.phone
-                      ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Phone size={12} style={{ color: '#9CA3AF' }} />
-                          <span className="text-sm" style={{ color: '#6B7280' }}>{c.phone}</span>
-                        </div>
-                      : <span style={{ color: '#9CA3AF' }}>—</span>
-                    }
-                  </td>
+                    {/* Telefone */}
+                    <td className="table-cell hidden sm:table-cell">
+                      {c.phone
+                        ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Phone size={12} style={{ color: '#9CA3AF' }} />
+                            <span className="text-sm" style={{ color: '#6B7280' }}>{c.phone}</span>
+                          </div>
+                        : <span style={{ color: '#9CA3AF' }}>—</span>
+                      }
+                    </td>
 
-                  {/* Email */}
-                  <td className="table-cell hidden md:table-cell">
-                    {c.email
-                      ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <Mail size={12} style={{ color: '#9CA3AF' }} />
-                          <span className="text-sm" style={{ color: '#6B7280' }}>{c.email}</span>
-                        </div>
-                      : <span style={{ color: '#9CA3AF' }}>—</span>
-                    }
-                  </td>
+                    {/* Email */}
+                    <td className="table-cell hidden md:table-cell">
+                      {c.email
+                        ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Mail size={12} style={{ color: '#9CA3AF' }} />
+                            <span className="text-sm" style={{ color: '#6B7280' }}>{c.email}</span>
+                          </div>
+                        : <span style={{ color: '#9CA3AF' }}>—</span>
+                      }
+                    </td>
 
-                  {/* Projeto */}
-                  <td className="table-cell hidden lg:table-cell">
-                    {c.project_title
-                      ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <FolderKanban size={12} style={{ color: '#16A34A', flexShrink: 0 }} />
-                          <Link
-                            to={c.project_id ? `/app/projects/${c.project_id}` : '#'}
-                            style={{
-                              fontSize: 13, fontWeight: 500, color: '#16A34A',
-                              textDecoration: 'none', maxWidth: 160,
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                            onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
-                          >
-                            {c.project_title}
-                          </Link>
-                        </div>
-                      : <span style={{ color: '#9CA3AF' }}>—</span>
-                    }
-                  </td>
+                    {/* Projeto */}
+                    <td className="table-cell hidden lg:table-cell">
+                      {c.project_title
+                        ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <FolderKanban size={12} style={{ color: '#16A34A', flexShrink: 0 }} />
+                            <Link
+                              to={c.project_id ? `/app/projects/${c.project_id}` : '#'}
+                              style={{
+                                fontSize: 13, fontWeight: 500, color: '#16A34A',
+                                textDecoration: 'none', maxWidth: 160,
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                              onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                            >
+                              {c.project_title}
+                            </Link>
+                          </div>
+                        : <span style={{ color: '#9CA3AF' }}>—</span>
+                      }
+                    </td>
 
-                  {/* Status */}
-                  <td className="table-cell">
-                    <MapBadge map={STATUS_MAP} value={c.status} />
-                  </td>
+                    {/* Status */}
+                    <td className="table-cell">
+                      <MapBadge map={STATUS_MAP} value={c.status} />
+                    </td>
 
-                  {/* Situação */}
-                  <td className="table-cell hidden md:table-cell">
-                    <MapBadge map={SITUACAO_MAP} value={c.situacao} />
-                  </td>
+                    {/* Situação */}
+                    <td className="table-cell hidden md:table-cell">
+                      <MapBadge map={SITUACAO_MAP} value={c.situacao} />
+                    </td>
 
-                  {/* Financeiro */}
-                  <td className="table-cell hidden lg:table-cell">
-                    <MapBadge map={FINANCEIRO_MAP} value={c.financeiro} />
-                  </td>
+                    {/* Financeiro */}
+                    <td className="table-cell hidden lg:table-cell">
+                      <MapBadge map={FINANCEIRO_MAP} value={c.financeiro} />
+                    </td>
 
-                  {/* Ações */}
-                  <td className="table-cell" style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
-                      <button onClick={() => openEdit(c)}
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 5,
-                          padding: '6px 12px', borderRadius: 9, cursor: 'pointer',
-                          background: '#F3F4F6', border: '1px solid #E5E7EB',
-                          fontSize: 12, fontWeight: 600, color: '#6B7280',
-                          transition: 'background 0.15s, color 0.15s',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#E5E7EB'; e.currentTarget.style.color = '#374151' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.color = '#6B7280' }}
-                      >
-                        <Pencil size={12} /> Editar
-                      </button>
-                      {canDelete && (
-                        <button onClick={() => askDelete(c.id)}
+                    {/* Ações */}
+                    <td className="table-cell" style={{ textAlign: 'right' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
+                        <button onClick={() => openEdit(c)}
                           style={{
                             display: 'flex', alignItems: 'center', gap: 5,
                             padding: '6px 12px', borderRadius: 9, cursor: 'pointer',
-                            background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)',
-                            fontSize: 12, fontWeight: 600, color: '#DC2626',
-                            transition: 'background 0.15s',
+                            background: '#F3F4F6', border: '1px solid #E5E7EB',
+                            fontSize: 12, fontWeight: 600, color: '#6B7280',
+                            transition: 'background 0.15s, color 0.15s',
                           }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(220,38,38,0.12)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(220,38,38,0.06)'}
+                          onMouseEnter={e => { e.currentTarget.style.background = '#E5E7EB'; e.currentTarget.style.color = '#374151' }}
+                          onMouseLeave={e => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.color = '#6B7280' }}
                         >
-                          <Trash2 size={12} /> Excluir
+                          <Pencil size={12} /> Editar
                         </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                        {canDelete && (
+                          <button onClick={() => askDelete(c.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 5,
+                              padding: '6px 12px', borderRadius: 9, cursor: 'pointer',
+                              background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.15)',
+                              fontSize: 12, fontWeight: 600, color: '#DC2626',
+                              transition: 'background 0.15s',
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(220,38,38,0.12)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'rgba(220,38,38,0.06)'}
+                          >
+                            <Trash2 size={12} /> Excluir
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* NOVO — controles de paginação. Só aparece quando há mais de
+              uma página, para não poluir a tela em bases pequenas. */}
+          {pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between mt-5">
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Página {pagination.page} de {pagination.totalPages} • {pagination.total} {pagination.total === 1 ? 'cliente' : 'clientes'}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(p => Math.max(p - 1, 1))}
+                  disabled={pagination.page <= 1}
+                  className="crm-page-btn btn-secondary btn-sm"
+                >
+                  <ChevronLeft size={13} /> Anterior
+                </button>
+                <button
+                  onClick={() => setPage(p => Math.min(p + 1, pagination.totalPages))}
+                  disabled={pagination.page >= pagination.totalPages}
+                  className="crm-page-btn btn-secondary btn-sm"
+                >
+                  Próxima <ChevronRight size={13} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <NewClientModal

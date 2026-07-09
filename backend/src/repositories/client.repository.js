@@ -63,8 +63,14 @@ const translateDbError = (error) => {
   return fallback
 }
 
-// Buscar todos os clientes/leads do escritório (Multitenant)
-const findAll = async (companyId, { status, search }) => {
+// Buscar todos os clientes/leads do escritório (Multitenant), paginado.
+//
+// NOVO — paginação server-side: usa COUNT(*) OVER() para trazer o total de
+// registros (respeitando os filtros de status/search, mas ignorando
+// LIMIT/OFFSET) na MESMA query, evitando um segundo round-trip ao banco
+// só para contar. Retorna { clients, total } em vez do array cru — quem
+// chama (client.service.js) monta os metadados de paginação a partir daí.
+const findAll = async (companyId, { status, search, page = 1, limit = 20 }) => {
   const conditions = ['p.company_id = $1']
   const params = [companyId]
 
@@ -78,16 +84,36 @@ const findAll = async (companyId, { status, search }) => {
     conditions.push(`(p.name ILIKE $${params.length} OR p.email ILIKE $${params.length})`)
   }
 
+  // Sanitiza page/limit aqui também (defesa em profundidade, mesmo padrão
+  // dos enums acima) — nunca confia em valores crus vindos de req.query.
+  // limit é limitado a 100 para evitar que alguém peça a tabela inteira
+  // via ?limit=999999.
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 20, 1), 100)
+  const safePage  = Math.max(parseInt(page, 10) || 1, 1)
+  const offset    = (safePage - 1) * safeLimit
+
+  params.push(safeLimit)
+  const limitParamIndex = params.length
+  params.push(offset)
+  const offsetParamIndex = params.length
+
   try {
     const { rows } = await pool.query(
-      `SELECT p.*, proj.title as project_title
+      `SELECT p.*, proj.title as project_title, COUNT(*) OVER() AS total_count
        FROM clients_leads p
        LEFT JOIN projects proj ON proj.id = p.project_id
        WHERE ${conditions.join(' AND ')}
-       ORDER BY p.name ASC`,
+       ORDER BY p.name ASC
+       LIMIT $${limitParamIndex} OFFSET $${offsetParamIndex}`,
       params
     )
-    return rows
+
+    const total = rows[0] ? parseInt(rows[0].total_count, 10) : 0
+    // Remove total_count de cada linha — é um metadado da query, não uma
+    // coluna real de clients_leads, e não deveria vazar pro payload de cada item.
+    const clients = rows.map(({ total_count, ...rest }) => rest)
+
+    return { clients, total }
   } catch (error) {
     throw translateDbError(error)
   }
