@@ -11,16 +11,16 @@ router.use(authenticate, tenantMiddleware)
 router.get('/', ctrl.getStructure)
 
 // Títulos — apenas admin mexe na estrutura de precificação
-router.post('/titles', authorize('admin'), ctrl.createTitle)
-router.put('/titles/:id', authorize('admin'), ctrl.updateTitle)
-router.delete('/titles/:id', authorize('admin'), ctrl.removeTitle)
+router.post('/titles', authorize('owner', 'admin'), ctrl.createTitle)
+router.put('/titles/:id', authorize('owner', 'admin'), ctrl.updateTitle)
+router.delete('/titles/:id', authorize('owner', 'admin'), ctrl.removeTitle)
 
 // Níveis
-router.post('/levels', authorize('admin'), ctrl.createLevel)
-router.put('/levels/:id', authorize('admin'), ctrl.updateLevel)
-router.delete('/levels/:id', authorize('admin'), ctrl.removeLevel)
+router.post('/levels', authorize('owner', 'admin'), ctrl.createLevel)
+router.put('/levels/:id', authorize('owner', 'admin'), ctrl.updateLevel)
+router.delete('/levels/:id', authorize('owner', 'admin'), ctrl.removeLevel)
 
 // Taxa vigente (cria nova versão, nunca sobrescreve)
-router.put('/levels/:id/rate', authorize('admin'), ctrl.setLevelRate)
+router.put('/levels/:id/rate', authorize('owner', 'admin'), ctrl.setLevelRate)
 
 module.exports = router

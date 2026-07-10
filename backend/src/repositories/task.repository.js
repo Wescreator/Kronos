@@ -111,19 +111,30 @@ const remove = async (id, companyId) => {
   return rows[0]
 }
 
+// DELETE + INSERTs numa transação: uma falha no meio não pode deixar a
+// tarefa sem nenhum responsável (estado parcial).
 const setAssignees = async (taskId, userIds, companyId) => {
-  await pool.query(
-    'DELETE FROM task_assignments WHERE task_id = $1',
-    [taskId]
-  )
-
-  for (const uid of userIds) {
-    await pool.query(
-      `INSERT INTO task_assignments (task_id, user_id, company_id)
-       VALUES ($1, $2, $3)
-       ON CONFLICT DO NOTHING`,
-      [taskId, uid, companyId]
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query(
+      'DELETE FROM task_assignments WHERE task_id = $1',
+      [taskId]
     )
+    for (const uid of userIds) {
+      await client.query(
+        `INSERT INTO task_assignments (task_id, user_id, company_id)
+         VALUES ($1, $2, $3)
+         ON CONFLICT DO NOTHING`,
+        [taskId, uid, companyId]
+      )
+    }
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
   }
 }
 

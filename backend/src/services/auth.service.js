@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs')
+const AppError = require('../utils/AppError')
 const crypto = require('crypto')
 const jwt = require('jsonwebtoken')
 
@@ -41,7 +42,7 @@ async function buildAuthPayload(user) {
     null
 
   if (!companyId) {
-    throw { status: 403, message: 'Usuário sem empresa vinculada.' }
+    throw new AppError(403, 'Usuário sem empresa vinculada.')
   }
 
   return {
@@ -55,10 +56,10 @@ async function buildAuthPayload(user) {
 const login = async (email, password) => {
   const user = await userRepo.findByEmail(email.toLowerCase().trim())
 
-  if (!user) throw { status: 401, message: 'Credenciais inválidas' }
+  if (!user) throw new AppError(401, 'Credenciais inválidas')
 
   const valid = await bcrypt.compare(password, user.password_hash)
-  if (!valid) throw { status: 401, message: 'Credenciais inválidas' }
+  if (!valid) throw new AppError(401, 'Credenciais inválidas')
 
   await userRepo.updateLastLogin(user.id)
 
@@ -101,7 +102,7 @@ const register = async (data) => {
 
   const email = data.email.toLowerCase().trim()
   const exists = await userRepo.findByEmail(email)
-  if (exists) throw { status: 409, message: 'E-mail já cadastrado' }
+  if (exists) throw new AppError(409, 'E-mail já cadastrado')
 
   const passwordHash = await bcrypt.hash(data.password, 12)
 
@@ -109,7 +110,9 @@ const register = async (data) => {
     name: data.name,
     email,
     passwordHash,
-    role: 'member',
+    // 'employee' é o papel base atual da empresa — 'member' era da matriz
+    // antiga de roles e não existe mais em authorize()/permissions.js.
+    role: 'employee',
     position: data.position,
     phone: data.phone,
     admittedAt: data.admitted_at,
@@ -123,7 +126,7 @@ const refreshToken = async (token) => {
     const decoded = jwt.verify(token, jwtConfig.refreshSecret)
     const user = await userRepo.findById(decoded.user_id)
 
-    if (!user) throw { status: 401, message: 'Usuário não encontrado' }
+    if (!user) throw new AppError(401, 'Usuário não encontrado')
 
     const payload = await buildAuthPayload(user)
     const accessToken = jwt.sign(payload, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn })
@@ -131,7 +134,7 @@ const refreshToken = async (token) => {
     return { accessToken }
   } catch (err) {
     if (err.status) throw err
-    throw { status: 401, message: 'Refresh token inválido ou expirado' }
+    throw new AppError(401, 'Refresh token inválido ou expirado')
   }
 }
 
@@ -163,19 +166,19 @@ const forgotPassword = async (email) => {
 
 const resetPassword = async (token, newPassword) => {
   if (!token || typeof token !== 'string' || token.length !== 64) {
-    throw { status: 400, message: 'Token inválido.' }
+    throw new AppError(400, 'Token inválido.')
   }
 
   const user = await userRepo.findByResetToken(token)
-  if (!user) throw { status: 400, message: 'Token inválido ou expirado.' }
+  if (!user) throw new AppError(400, 'Token inválido ou expirado.')
 
   if (new Date() > new Date(user.reset_token_expires_at)) {
     await userRepo.clearResetToken(user.id)
-    throw { status: 400, message: 'Token expirado. Solicite uma nova recuperação de senha.' }
+    throw new AppError(400, 'Token expirado. Solicite uma nova recuperação de senha.')
   }
 
   if (!newPassword || newPassword.length < 8) {
-    throw { status: 400, message: 'A nova senha deve ter no mínimo 8 caracteres.' }
+    throw new AppError(400, 'A nova senha deve ter no mínimo 8 caracteres.')
   }
 
   const passwordHash = await bcrypt.hash(newPassword, 12)

@@ -1,7 +1,9 @@
 const chatRepo = require('../repositories/chat.repository')
+const AppError = require('../utils/AppError')
 const companyRepo = require('../repositories/company.repository')
 const userRepo = require('../repositories/user.repository')
 const notificationService = require('./notification.service')
+const { broadcastToRoom } = require('../config/websocket')
 
 const getRooms = async (userId) => {
   return chatRepo.findRoomsByUser(userId)
@@ -24,26 +26,26 @@ const createRoom = async ({ name, type = 'private', members = [] }, createdBy, c
 
 const deleteRoom = async (roomId, userId, userRole) => {
   const room = await chatRepo.findRoomByIdAndMember(roomId, userId)
-  if (!room) throw { status: 404, message: 'Sala não encontrada ou acesso negado' }
+  if (!room) throw new AppError(404, 'Sala não encontrada ou acesso negado')
   if (room.created_by !== userId && userRole !== 'admin') {
-    throw { status: 403, message: 'Apenas o criador pode excluir esta conversa' }
+    throw new AppError(403, 'Apenas o criador pode excluir esta conversa')
   }
   await chatRepo.deleteRoom(roomId)
 }
 
 const getMessages = async (roomId, userId, limit, offset) => {
   const room = await chatRepo.findRoomByIdAndMember(roomId, userId)
-  if (!room) throw { status: 403, message: 'Sala não encontrada ou acesso negado' }
+  if (!room) throw new AppError(403, 'Sala não encontrada ou acesso negado')
   return chatRepo.findMessages(roomId, limit, offset)
 }
 
 const createMessage = async ({ roomId, userId, content }) => {
   const room = await chatRepo.findRoomByIdAndMember(roomId, userId)
-  if (!room) throw { status: 403, message: 'Sala não encontrada ou acesso negado' }
+  if (!room) throw new AppError(403, 'Sala não encontrada ou acesso negado')
   const message = await chatRepo.createMessage({ roomId, userId, content, companyId: room.company_id })
   const allMemberIds  = await chatRepo.findRoomMemberIds(roomId)
   const otherMemberIds = allMemberIds.filter(id => id !== userId)
-  global.broadcastToRoom(otherMemberIds, { type: 'new_message', roomId, message })
+  broadcastToRoom(otherMemberIds, { type: 'new_message', roomId, message })
 
   // Uma notificação por usuário, sempre criada (sem dedupe — cada mensagem
   // é um evento novo, diferente do caso de vencidos no cron financeiro).

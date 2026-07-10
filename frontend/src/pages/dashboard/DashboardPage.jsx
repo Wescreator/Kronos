@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import {
   DollarSign, FolderKanban, AlertCircle,
-  TrendingUp, CheckSquare, Clock, ArrowRight, Zap
+  TrendingUp, Clock, ArrowRight, Zap
 } from 'lucide-react'
 import StatCard      from '../../components/ui/StatCard'
 import Spinner       from '../../components/ui/Spinner'
@@ -20,6 +20,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Legend
 } from 'recharts'
+import useAuthStore  from '../../store/authStore'
+import { can }       from '../../utils/permissions'
+import TeamDashboard from './TeamDashboard'
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -58,7 +61,20 @@ const glassRowHoverLeave = (e) => {
   e.currentTarget.style.borderColor = '#E5E7EB'
 }
 
+/**
+ * Decide qual dashboard renderizar pelo perfil:
+ *   - admin/developer → visão executiva (com KPIs e fluxo de caixa)
+ *   - owner/manager/employee → TeamDashboard (operacional, SEM dados
+ *     financeiros — o backend também nega /api/financial/* a eles)
+ */
 export default function DashboardPage() {
+  const { user } = useAuthStore()
+  const isFinanceViewer = can(user?.role, 'dashboard', 'viewFinancial')
+  if (!isFinanceViewer) return <TeamDashboard />
+  return <ExecutiveDashboard />
+}
+
+function ExecutiveDashboard() {
   const [financial, setFinancial] = useState(null)
   const [projects,  setProjects]  = useState([])
   const [tasks,     setTasks]     = useState([])

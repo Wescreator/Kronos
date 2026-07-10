@@ -25,10 +25,13 @@ const existsForEntity = async ({ companyId, userId, type, link }) => {
 // Remove a(s) notificação(ões) de vencido quando o item é resolvido
 // (despesa paga / parcela recebida). Afeta todos os usuários que a
 // receberam, pois a resolução é um estado global do item, não do usuário.
-const removeForEntity = async (type, link) => {
+// Escopado por company_id como todo DELETE multi-tenant — o link contém
+// um UUID e colisão entre empresas é improvável, mas nenhuma query de
+// escrita deve ficar sem o filtro de tenant.
+const removeForEntity = async (companyId, type, link) => {
   await pool.query(
-    `DELETE FROM notifications WHERE type = $1 AND link = $2`,
-    [type, link]
+    `DELETE FROM notifications WHERE company_id = $1 AND type = $2 AND link = $3`,
+    [companyId, type, link]
   )
 }
 

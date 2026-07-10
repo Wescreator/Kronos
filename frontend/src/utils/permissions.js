@@ -53,22 +53,33 @@ export const ROLE_STYLES = {
 // MÓDULOS VISÍVEIS POR PERFIL
 // ─────────────────────────────────────────────────────────────────
 
+// O módulo Financeiro é EXCLUSIVO do administrador (decisão de produto):
+// nem o owner acessa a FinancialPage ou os dados financeiros. Os demais
+// perfis (incluindo owner) veem o dashboard personalizado sem finanças
+// (TeamDashboard) — por isso 'dashboard' agora é visível a todos.
+// Espelha authorize('admin') em financial.routes.js no backend.
 const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets']
+const MODULES_SEM_FINANCEIRO = ALL_MODULES.filter(m => m !== 'financial')
 export const VISIBLE_MODULES = {
   developer: ALL_MODULES,
-  owner:     ALL_MODULES,
+  owner:     MODULES_SEM_FINANCEIRO,
   admin:     ALL_MODULES,
-  manager:   ['projects', 'clients', 'tasks', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets'],
-  employee:  ['projects', 'clients', 'tasks', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets'],
+  manager:   MODULES_SEM_FINANCEIRO,
+  employee:  MODULES_SEM_FINANCEIRO,
 }
 // ─────────────────────────────────────────────────────────────────
 
-const ADMIN_ROLES = ['developer', 'owner', 'admin']
-const ALL_ROLES   = ['developer', 'owner', 'admin', 'manager', 'employee']
+const ADMIN_ROLES   = ['developer', 'owner', 'admin']
+const ALL_ROLES     = ['developer', 'owner', 'admin', 'manager', 'employee']
+// Financeiro: apenas administrador (developer tem bypass em can()).
+const FINANCE_ROLES = ['developer', 'admin']
 
 export const PERMISSIONS = {
   dashboard: {
-    view: ADMIN_ROLES,
+    view: ALL_ROLES,
+    // Quem enxerga os KPIs/gráficos financeiros do dashboard executivo;
+    // os demais perfis recebem o TeamDashboard (sem dados financeiros).
+    viewFinancial: FINANCE_ROLES,
   },
 
   projects: {
@@ -101,10 +112,10 @@ export const PERMISSIONS = {
   },
 
   financial: {
-    view:   ADMIN_ROLES,
-    create: ADMIN_ROLES,
-    edit:   ADMIN_ROLES,
-    delete: ADMIN_ROLES,
+    view:   FINANCE_ROLES,
+    create: FINANCE_ROLES,
+    edit:   FINANCE_ROLES,
+    delete: FINANCE_ROLES,
   },
 
   chat: {

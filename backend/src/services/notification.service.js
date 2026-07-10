@@ -1,11 +1,10 @@
 const repo = require('../repositories/notification.repository')
+const { sendToUser } = require('../config/websocket')
 
 // Empurra a notificação recém-criada pro usuário via WebSocket, se ele
 // estiver conectado (mesma conexão compartilhada usada pelo chat).
 const pushRealtime = (userId, notification) => {
-  if (global.sendToUser) {
-    global.sendToUser(userId, { type: 'new_notification', notification })
-  }
+  sendToUser(userId, { type: 'new_notification', notification })
 }
 
 // Cria sempre. Usar para eventos únicos: nova mensagem de chat, atribuição
@@ -29,7 +28,7 @@ const notifyIfNew = async ({ companyId, userId, type, title, body, link }) => {
 }
 
 // Remove a notificação de vencido quando o item é resolvido.
-const resolveEntity = (type, link) => repo.removeForEntity(type, link)
+const resolveEntity = (companyId, type, link) => repo.removeForEntity(companyId, type, link)
 
 const getForUser  = (userId) => repo.findByUser(userId)
 const markRead    = (id, userId) => repo.markRead(id, userId)

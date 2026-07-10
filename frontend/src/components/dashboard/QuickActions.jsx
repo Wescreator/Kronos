@@ -21,8 +21,7 @@ import { getProjects }      from '../../services/projects.service'
 /* ── Mesmos estilos de glassmorphism usados na Dashboard ── */
 const tileStyle = {
   background: '#3a3a3a00', // Fundo cinza neutro
-  border: '2px solid rgba(255,255,255,0.07)', // Borda sutil
-  border: '2px solid rgba(63, 63, 63, 0.07)',
+  border: '2px solid rgba(63, 63, 63, 0.07)', // Borda sutil
   borderTop: '2px solid rgba(63, 63, 63, 0.07)',
 }
 
@@ -92,7 +91,9 @@ export default function QuickActions({ onActionSuccess }) {
     {
       key: 'event', label: 'Novo Evento', icon: CalendarPlus,
       iconBg: 'rgba(56,189,248,0.10)', iconColor: '#38BDF8',
-      visible: can(role, 'calendar', 'create'),
+      // 'agenda' é a chave em PERMISSIONS — 'calendar' não existe lá e
+      // fazia o atalho nunca aparecer (exceto pro developer, que tem bypass).
+      visible: can(role, 'agenda', 'create'),
     },
     {
       key: 'expense', label: 'Nova Despesa', icon: TrendingDown,

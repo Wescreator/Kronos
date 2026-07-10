@@ -7,6 +7,21 @@ import { create } from 'zustand'
 const getStoredToken = (key) =>
   localStorage.getItem(key) || sessionStorage.getItem(key)
 
+/* Rehidratação do usuário do PORTAL após F5: o fluxo interno recupera o
+ * usuário via GET /auth/me (useAuth.js), mas esse endpoint não existe
+ * para o escopo 'client' — sem isso, um F5 no portal derrubava o cliente
+ * para a tela de login mesmo com tokens válidos. Guardamos o objeto de
+ * usuário do portal no mesmo storage dos tokens e o restauramos aqui.
+ * Usuários internos continuam vindo do /auth/me (dados sempre frescos). */
+const getStoredPortalUser = () => {
+  if (getStoredToken('authScope') !== 'client') return null
+  try {
+    return JSON.parse(getStoredToken('portalUser')) || null
+  } catch {
+    return null
+  }
+}
+
 /* ─── Normalização do usuário ─────────────────────────────────────
  * Compatível com formato antigo (id, role) e novo multi-tenant
  * (user_id, scope, company_id, role).
@@ -20,7 +35,7 @@ const normalizeUser = (user) => ({
 })
 
 const useAuthStore = create((set) => ({
-  user:            null,
+  user:            getStoredPortalUser(),
   accessToken:     getStoredToken('accessToken')  || null,
   refreshToken:    getStoredToken('refreshToken') || null,
   isAuthenticated: !!getStoredToken('accessToken'),
@@ -38,6 +53,13 @@ const useAuthStore = create((set) => ({
     const storage = remember ? localStorage : sessionStorage
     storage.setItem('accessToken',  accessToken)
     storage.setItem('refreshToken', refreshToken)
+
+    // O interceptor do axios (services/api.js) usa o escopo para escolher
+    // o endpoint de refresh e a tela de login corretos (interno x portal).
+    storage.setItem('authScope', user?.scope || 'company')
+    if (user?.scope === 'client') {
+      storage.setItem('portalUser', JSON.stringify(user))
+    }
 
     set({
       user:            normalizeUser(user),
