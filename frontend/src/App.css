@@ -16,7 +16,7 @@
   --color-danger:   #DC2626;
   --color-info:     #0284C7;
   --color-warning:  #D97706;
-  --text-primary:   #000000;
+  --text-primary:   #1F2937;
   --text-secondary: #6B7280;
   --text-muted:     #9CA3AF;
   --border-subtle:  #E5E7EB;
@@ -421,7 +421,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 .month-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-bottom: 1px solid var(--text-primary);
+  border-bottom: 1px solid #111827;
   margin-top: 0.75rem;
 }
 
@@ -430,7 +430,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   padding: 0.5rem 0;
   font-size: 11px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #111827;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -438,22 +438,28 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 .month-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-left: 1px solid var(--text-primary);
-  border-top: 1px solid var(--text-primary);
+  border-left: 1px solid #111827;
+  border-top: 1px solid #111827;
 }
 
 .month-cell {
-  border-right: 1px solid var(--text-primary);
-  border-bottom: 1px solid var(--text-primary);
+  border-right: 1px solid #111827;
+  border-bottom: 1px solid #111827;
   padding: 0.4rem 0.5rem;
   min-height: 110px;
   cursor: pointer;
-  transition: background 0.15s;
+  background: #FFFFFF;
+  transition: background 0.15s, box-shadow 0.15s;
   overflow: hidden;
 }
 .month-cell:hover { background: #F9FAFB; }
-.month-cell--outside { opacity: 0.45; }
-.month-cell--today { background: #F3F4F6; }
+.month-cell--outside { background: #FAFAFA; color: #9CA3AF; }
+.month-cell--outside .month-day-number { color: #9CA3AF; }
+/* Dia atual: fundo branco com borda suave (sem preenchimento escuro) */
+.month-cell--today {
+  background: #FFFFFF;
+  box-shadow: inset 0 0 0 2px rgba(55,65,81,0.55);
+}
 
 .month-day-number {
   display: inline-flex;
@@ -462,14 +468,13 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   width: 26px;
   height: 26px;
   font-size: 12px;
-  font-weight: 500;
-  color: var(--bg-card);
+  font-weight: 600;
+  color: #111827;
   border-radius: 50%;
 }
 .month-day-number--today {
-  background: #374151;
-  color: #fff;
-  font-weight: 700;
+  color: #111827;
+  font-weight: 800;
 }
 
 .month-events {
@@ -522,17 +527,22 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   overflow: hidden;
   margin-top: 0.75rem;
   min-height: 480px;
-  background: linear-gradient(180deg, #FFFFFF, #FAFAFA);
+  background: #FFFFFF;
 }
 
 .week-column {
   border-right: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: background 0.15s;
+  background: #FFFFFF;
+  transition: background 0.15s, box-shadow 0.15s;
 }
 .week-column:last-child { border-right: none; }
 .week-column:hover { background: #F9FAFB; }
-.week-column--today { background: #F3F4F6; }
+/* Dia atual: fundo branco com borda suave (sem preenchimento) */
+.week-column--today {
+  background: #FFFFFF;
+  box-shadow: inset 0 0 0 2px rgba(55,65,81,0.55);
+}
 
 .week-column-header {
   display: flex;
@@ -542,7 +552,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   border-bottom: 1px solid var(--border-subtle);
   gap: 3px;
 }
-.week-column-header--today { background: #F3F4F6; }
+.week-column-header--today { background: transparent; }
 
 .week-weekday {
   font-size: 10px;
@@ -554,8 +564,8 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 
 .week-day-number {
   font-size: 1rem;
-  font-weight: 500;
-  color: var(--text-secondary);
+  font-weight: 600;
+  color: #111827;
   width: 32px;
   height: 32px;
   display: flex;
@@ -564,9 +574,8 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   border-radius: 50%;
 }
 .week-day-number--today {
-  background: #374151;
-  color: #fff;
-  font-weight: 700;
+  color: #111827;
+  font-weight: 800;
 }
 
 .week-events {

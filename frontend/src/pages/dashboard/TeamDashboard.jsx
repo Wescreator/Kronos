@@ -94,6 +94,78 @@ export default function TeamDashboard() {
   return (
     <div className="space-y-7 fade-in">
 
+      {/* ── Estilos da borda luminosa nos KPIs (mesma técnica da DashboardPage) ── */}
+      <style>{`
+        @keyframes kronosBorderSpin {
+          from { transform: translate(-50%, -50%) rotate(0deg);   }
+          to   { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .kpi-glow-wrap {
+          position: relative;
+          border-radius: 20px;
+          overflow: hidden;
+          padding: 2.5px;
+          transition: box-shadow 0.35s ease;
+        }
+
+        .kpi-glow-wrap::before {
+          content: '';
+          position: absolute;
+          width: 100%;
+          aspect-ratio: 1 / 1;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(0deg);
+          opacity: 0;
+          transition: opacity 0.4s ease;
+          will-change: transform, opacity;
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        /* Card filho cobre o centro do disco — fundo opaco obrigatório. */
+        .kpi-glow-wrap > * {
+          position: relative;
+          z-index: 1;
+          background: #FFFFFF;
+          border-radius: 17.5px;
+        }
+
+        .kpi-glow-wrap:hover::before {
+          opacity: 1;
+          animation: kronosBorderSpin 4s linear infinite;
+        }
+
+        .kpi-glow-wrap.glow-violet::before {
+          background: conic-gradient(from 0deg, transparent 0%, #374151 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-violet:hover {
+          box-shadow: 0 0 18px rgba(55,65,81,.25);
+        }
+
+        .kpi-glow-wrap.glow-sky::before {
+          background: conic-gradient(from 0deg, transparent 0%, #0284C7 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-sky:hover {
+          box-shadow: 0 0 18px rgba(2,132,199,.25);
+        }
+
+        .kpi-glow-wrap.glow-amber::before {
+          background: conic-gradient(from 0deg, transparent 0%, #D97706 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-amber:hover {
+          box-shadow: 0 0 18px rgba(217,119,6,.25);
+        }
+
+        .kpi-glow-wrap.glow-rose::before {
+          background: conic-gradient(from 0deg, transparent 0%, #DC2626 14%, transparent 28%);
+        }
+        .kpi-glow-wrap.glow-rose:hover {
+          box-shadow: 0 0 18px rgba(220,38,38,.25);
+        }
+      `}</style>
+
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
@@ -115,12 +187,20 @@ export default function TeamDashboard() {
       {/* ── Navegações Rápidas (já filtra ações pelo role) ───────────── */}
       <QuickActions onActionSuccess={loadDashboard} />
 
-      {/* ── KPIs operacionais (sem dados financeiros) ─────────────────── */}
+      {/* ── KPIs operacionais (sem dados financeiros) — com borda luminosa ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard title="Projetos Ativos"     value={projects.length}                icon={FolderKanban} color="purple" subtitle="Em andamento agora" />
-        <StatCard title="Tarefas Abertas"     value={Number(taskStats.open || 0)}    icon={CheckSquare}  color="blue"   subtitle={`${Number(taskStats.total || 0)} no total`} />
-        <StatCard title="Em Andamento"        value={Number(taskStats.in_progress || 0)} icon={Loader}   color="yellow" subtitle="Sendo executadas" />
-        <StatCard title="Tarefas Atrasadas"   value={Number(taskStats.overdue || 0)} icon={AlertCircle}  color="red"    subtitle="Prazo vencido" />
+        <div className="kpi-glow-wrap glow-violet">
+          <StatCard title="Projetos Ativos"     value={projects.length}                icon={FolderKanban} color="purple" subtitle="Em andamento agora" />
+        </div>
+        <div className="kpi-glow-wrap glow-sky">
+          <StatCard title="Tarefas Abertas"     value={Number(taskStats.open || 0)}    icon={CheckSquare}  color="blue"   subtitle={`${Number(taskStats.total || 0)} no total`} />
+        </div>
+        <div className="kpi-glow-wrap glow-amber">
+          <StatCard title="Em Andamento"        value={Number(taskStats.in_progress || 0)} icon={Loader}   color="yellow" subtitle="Sendo executadas" />
+        </div>
+        <div className="kpi-glow-wrap glow-rose">
+          <StatCard title="Tarefas Atrasadas"   value={Number(taskStats.overdue || 0)} icon={AlertCircle}  color="red"    subtitle="Prazo vencido" />
+        </div>
       </div>
 
       {/* ── Projetos + Minhas tarefas ──────────────────────────────────── */}
