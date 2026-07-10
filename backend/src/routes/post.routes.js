@@ -1,15 +1,16 @@
 const express = require('express')
 const router = express.Router()
 const postController = require('../controllers/post.controller')
-const { authenticate } = require('../middlewares/auth.middleware')
+const { authenticateAllowClient } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const { uploadDriveFile } = require('../config/multer')
 
-// authenticate decodifica o JWT (aceita scope 'company' e 'client' — ambos
-// carregam company_id no payload). tenantMiddleware resolve req.tenant a
-// partir do company_id do token, funcionando igualmente para os dois
-// escopos (não depende de req.user.role).
-router.use(authenticate)
+// authenticateAllowClient decodifica o JWT aceitando scope 'company',
+// 'global' E 'client' — o portal do cliente compartilha estas rotas.
+// (O authenticate padrão recusa tokens do portal.) tenantMiddleware
+// resolve req.tenant a partir do company_id do token, funcionando
+// igualmente para os dois escopos (não depende de req.user.role).
+router.use(authenticateAllowClient)
 router.use(tenantMiddleware)
 
 // Permissões de "admin ou criador" (editar/excluir/anexar no post) e a

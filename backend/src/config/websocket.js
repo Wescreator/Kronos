@@ -3,9 +3,14 @@ const jwt = require('jsonwebtoken')
 const jwtConfig = require('./jwt')
 const pool = require('./database')
 
+// userId -> Set<ws>. Um usuário pode ter várias conexões simultâneas
+// (abas/dispositivos); a entrada só some quando a ÚLTIMA fecha. Antes o
+// mapa era userId -> ws único: a segunda aba sobrescrevia a primeira e o
+// close da aba antiga apagava a conexão nova — o usuário ficava "offline"
+// e parava de receber mensagens mesmo com uma aba aberta.
 const clients = new Map()
 
-module.exports = function initWebSocket(server) {
+function initWebSocket(server) {
   const wss = new WebSocketServer({ server, path: '/ws' })
 
   wss.on('connection', (ws, req) => {
@@ -14,20 +19,30 @@ module.exports = function initWebSocket(server) {
     try {
       const decoded = jwt.verify(token, jwtConfig.secret)
       ws.userId = decoded.user_id
-      clients.set(decoded.user_id, ws)
-      console.log(`WS conectado: ${decoded.user_id}`)
+      // Empresa do token: presença e broadcasts são isolados por tenant.
+      // Usuários globais (developer, sem company_id) ficam agrupados sob
+      // null e só enxergam uns aos outros.
+      ws.companyId = decoded.company_id || null
     } catch {
       ws.close(1008, 'Token inválido')
       return
     }
 
-    // Manda pro recém-conectado quem já está online agora, e avisa todo
-    // mundo que este usuário também acabou de ficar online. A presença
-    // é determinada pela conexão real do socket, não por uma mensagem
-    // que o client precisa lembrar de enviar (isso nunca era repassado
-    // antes — o handleMessage só tratava 'ping').
-    ws.send(JSON.stringify({ type: 'online_users', userIds: [...clients.keys()] }))
-    broadcastPresence(ws.userId, 'online')
+    let sockets = clients.get(ws.userId)
+    const firstConnection = !sockets
+    if (firstConnection) {
+      sockets = new Set()
+      clients.set(ws.userId, sockets)
+      console.log(`WS conectado: ${ws.userId}`)
+    }
+    sockets.add(ws)
+
+    // Manda pro recém-conectado quem DA EMPRESA DELE está online, e avisa
+    // só os colegas de empresa que ele entrou (apenas na primeira conexão
+    // — abas extras não repetem o aviso). A presença é determinada pela
+    // conexão real do socket, não por uma mensagem do client.
+    ws.send(JSON.stringify({ type: 'online_users', userIds: onlineUserIdsFor(ws.companyId) }))
+    if (firstConnection) broadcastPresence(ws.userId, ws.companyId, 'online')
 
     ws.on('message', (raw) => {
       let msg
@@ -40,23 +55,44 @@ module.exports = function initWebSocket(server) {
     })
 
     ws.on('close', () => {
-      clients.delete(ws.userId)
-      broadcastPresence(ws.userId, 'offline')
+      const set = clients.get(ws.userId)
+      if (!set) return
+      set.delete(ws)
+      // Só marca offline quando a última conexão do usuário fechar.
+      if (set.size === 0) {
+        clients.delete(ws.userId)
+        broadcastPresence(ws.userId, ws.companyId, 'offline')
+      }
     })
   })
 
-  global.wsClients = clients
-  global.wss = wss
+  return wss
 }
 
-// Avisa todos os conectados (exceto o próprio) que um usuário mudou de
-// status. Simples e adequado para o tamanho de equipe do Kronos — se a
-// base crescer muito, dá pra restringir a "contatos" (quem compartilha
-// sala) em vez de broadcast geral.
-function broadcastPresence(userId, status) {
-  for (const [otherId, client] of clients) {
-    if (otherId !== userId && client.readyState === 1) {
-      client.send(JSON.stringify({ type: 'presence', status, userId }))
+// Usuários online da mesma empresa (qualquer socket ativo conta).
+function onlineUserIdsFor(companyId) {
+  const ids = []
+  for (const [userId, sockets] of clients) {
+    for (const s of sockets) {
+      if (s.companyId === companyId) {
+        ids.push(userId)
+        break
+      }
+    }
+  }
+  return ids
+}
+
+// Avisa os conectados DA MESMA EMPRESA (exceto o próprio) que um usuário
+// mudou de status. Num SaaS multi-tenant, presença nunca cruza empresas.
+function broadcastPresence(userId, companyId, status) {
+  const payload = JSON.stringify({ type: 'presence', status, userId })
+  for (const [otherId, sockets] of clients) {
+    if (otherId === userId) continue
+    for (const s of sockets) {
+      if (s.companyId === companyId && s.readyState === 1) {
+        s.send(payload)
+      }
     }
   }
 }
@@ -70,11 +106,24 @@ async function handleMessage(ws, msg) {
   if (msg.type === 'typing' && msg.roomId) {
     try {
       const { rows } = await pool.query(
-        `SELECT user_id FROM chat_room_members WHERE room_id = $1 AND user_id != $2`,
-        [msg.roomId, ws.userId]
+        `SELECT user_id FROM chat_room_members WHERE room_id = $1`,
+        [msg.roomId]
       )
+      // Só membros da sala podem emitir typing — sem isso, qualquer
+      // autenticado poderia spammar salas alheias e sondar membership.
+      if (!rows.some((r) => r.user_id === ws.userId)) return
+
+      // Reconstrói o payload em vez de repassar o msg cru: o userId vem
+      // do socket autenticado (impede se passar por outro usuário) e
+      // campos extras injetados pelo client são descartados.
+      const payload = {
+        type: 'typing',
+        roomId: msg.roomId,
+        userId: ws.userId,
+        userName: msg.userName,
+      }
       for (const r of rows) {
-        global.sendToUser(r.user_id, msg)
+        if (r.user_id !== ws.userId) sendToUser(r.user_id, payload)
       }
     } catch (err) {
       console.error('[websocket] erro ao repassar typing:', err.message)
@@ -83,21 +132,30 @@ async function handleMessage(ws, msg) {
   }
 
   // 'presence' enviado pelo client é ignorado de propósito: a presença
-  // real agora é 100% derivada da conexão/desconexão do próprio socket
-  // (veja broadcastPresence acima), que é mais confiável.
+  // real é 100% derivada da conexão/desconexão do próprio socket.
 }
 
-// Utilitário para enviar mensagem a um usuário específico
-global.sendToUser = function(userId, payload) {
-  const client = clients.get(userId)
-  if (client && client.readyState === 1) {
-    client.send(JSON.stringify(payload))
+// Envia mensagem a um usuário específico (todas as abas). Seguro de
+// chamar antes de initWebSocket (o mapa apenas estará vazio) — por isso
+// os services podem importar direto, sem checar se o WS já subiu.
+function sendToUser(userId, payload) {
+  const sockets = clients.get(userId)
+  if (!sockets) return
+  const data = JSON.stringify(payload)
+  for (const s of sockets) {
+    if (s.readyState === 1) s.send(data)
   }
 }
 
-// Utilitário para broadcast a uma lista de usuários (sala de chat, etc.)
-global.broadcastToRoom = function(roomMemberIds, payload) {
+// Broadcast a uma lista de usuários (sala de chat, etc.)
+function broadcastToRoom(roomMemberIds, payload) {
   for (const userId of roomMemberIds) {
-    global.sendToUser(userId, payload)
+    sendToUser(userId, payload)
   }
 }
+
+// Antes essas funções viviam em global.sendToUser/global.broadcastToRoom —
+// exports explícitos deixam a dependência visível para quem importa.
+module.exports = initWebSocket
+module.exports.sendToUser = sendToUser
+module.exports.broadcastToRoom = broadcastToRoom

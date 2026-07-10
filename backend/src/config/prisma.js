@@ -24,10 +24,13 @@ const { getTenant } = require('./tenantContext')
  * listados abaixo especificamente porque platform.service.js os acessa
  * via Prisma Client (nao via pool cru).
  *
- * Observacao sobre findUnique/update/delete (por id unico): o Prisma
- * nao permite adicionar company_id ao `where` de operacoes "unique".
- * Por isso, em modelos tenant, use sempre findFirst / updateMany /
- * deleteMany (que aceitam filtros arbitrarios e sao escopados aqui).
+ * Observacao sobre findUnique/update/delete/upsert (por id unico): o
+ * Prisma nao permite adicionar company_id ao `where` de operacoes
+ * "unique", entao elas NAO sao escopaveis aqui. Em vez de deixa-las
+ * passar sem isolamento (vazamento silencioso), a extensao as BLOQUEIA
+ * com erro explicito. Em modelos tenant, use sempre findFirst /
+ * updateMany / deleteMany (que aceitam filtros arbitrarios e sao
+ * escopados automaticamente).
  */
 
 // Modelos que possuem a coluna company_id (escopo de empresa).
@@ -116,19 +119,15 @@ const prisma = base.$extends({
           return query(args)
         }
 
-        // upsert: escopa o where e garante company_id no create/update.
-        if (operation === 'upsert') {
-          args = {
-            ...args,
-            where: { ...(args.where || {}), companyId },
-            create: { companyId, ...args.create },
-          }
-          return query(args)
-        }
-
-        // findUnique/update/delete por id unico nao sao escopaveis com
-        // seguranca aqui - veja a observacao no topo do arquivo.
-        return query(args)
+        // findUnique/update/delete/upsert por id unico nao sao escopaveis
+        // com seguranca (o Prisma rejeita filtros extras no where unique).
+        // Bloqueia em vez de deixar passar sem isolamento — o erro em dev
+        // e melhor que um vazamento cross-tenant silencioso em producao.
+        throw new Prisma.PrismaClientKnownRequestError(
+          `Operacao "${operation}" em "${model}" nao e escopada por company_id. ` +
+          `Em modelos tenant use findFirst / updateMany / deleteMany.`,
+          { code: 'P2025', clientVersion: Prisma.prismaVersion?.client || 'unknown' }
+        )
       },
     },
   },

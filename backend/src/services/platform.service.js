@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs')
+const AppError = require('../utils/AppError')
 const prisma = require('../config/prisma')
 
 /**
@@ -56,7 +57,7 @@ const listCompanies = async () => {
 }
 
 const createCompany = async ({ name, slug, plan, trade_name, document, email, phone }) => {
-  if (!name || !name.trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
+  if (!name || !name.trim()) throw new AppError(400, 'Nome da empresa e obrigatorio.')
 
   const base = (slug && slug.trim() ? slugify(slug) : slugify(name)) || 'empresa'
   let finalSlug = base
@@ -82,7 +83,7 @@ const createCompany = async ({ name, slug, plan, trade_name, document, email, ph
     return { ...toCompanyDTO(company), users_count: 0 }
   } catch (err) {
     if (err.code === 'P2002') {
-      throw { status: 409, message: 'Ja existe uma empresa com este documento.' }
+      throw new AppError(409, 'Ja existe uma empresa com este documento.')
     }
     throw err
   }
@@ -92,7 +93,7 @@ const createCompany = async ({ name, slug, plan, trade_name, document, email, ph
 
 const getCompanyHistory = async (companyId) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
-  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+  if (!company) throw new AppError(404, 'Empresa nao encontrada.')
 
   const history = await prisma.activity_logs.findMany({
     where: { company_id: companyId },
@@ -134,20 +135,20 @@ const listCompanyUsers = async (companyId) => {
 }
 
 const createCompanyUser = async ({ companyId, name, email, password, role, position }) => {
-  if (!companyId) throw { status: 400, message: 'companyId e obrigatorio.' }
+  if (!companyId) throw new AppError(400, 'companyId e obrigatorio.')
   if (!name || !email || !password) {
-    throw { status: 400, message: 'Nome, e-mail e senha sao obrigatorios.' }
+    throw new AppError(400, 'Nome, e-mail e senha sao obrigatorios.')
   }
   if (password.length < 8) {
-    throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+    throw new AppError(400, 'A senha deve ter no minimo 8 caracteres.')
   }
 
   const company = await prisma.company.findUnique({ where: { id: companyId } })
-  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+  if (!company) throw new AppError(404, 'Empresa nao encontrada.')
 
   const normalizedEmail = email.toLowerCase().trim()
   const exists = await prisma.user.findUnique({ where: { email: normalizedEmail } })
-  if (exists) throw { status: 409, message: 'E-mail ja cadastrado.' }
+  if (exists) throw new AppError(409, 'E-mail ja cadastrado.')
 
   const companyRole = role || 'admin'
   const passwordHash = await bcrypt.hash(password, 12)
@@ -186,11 +187,11 @@ const setCompanyActive = async (companyId, isActive) => {
 
 const updateCompany = async (companyId, fields) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
-  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+  if (!company) throw new AppError(404, 'Empresa nao encontrada.')
 
   const data = {}
   if (fields.name !== undefined) {
-    if (!String(fields.name).trim()) throw { status: 400, message: 'Nome da empresa e obrigatorio.' }
+    if (!String(fields.name).trim()) throw new AppError(400, 'Nome da empresa e obrigatorio.')
     data.name = String(fields.name).trim()
   }
   if (fields.trade_name !== undefined) data.trade_name = fields.trade_name || null
@@ -210,7 +211,7 @@ const updateCompany = async (companyId, fields) => {
     return { ...toCompanyDTO(updated), users_count: count }
   } catch (err) {
     if (err.code === 'P2002') {
-      throw { status: 409, message: 'Ja existe uma empresa com este documento.' }
+      throw new AppError(409, 'Ja existe uma empresa com este documento.')
     }
     throw err
   }
@@ -220,7 +221,7 @@ const updateCompany = async (companyId, fields) => {
 
 const uploadCompanyLogo = async (companyId, logoUrl) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
-  if (!company) throw { status: 404, message: 'Empresa nao encontrada.' }
+  if (!company) throw new AppError(404, 'Empresa nao encontrada.')
 
   const updated = await prisma.company.update({
     where: { id: companyId },
@@ -232,7 +233,7 @@ const uploadCompanyLogo = async (companyId, logoUrl) => {
 
 const updateCompanyUser = async (companyId, userId, { name, position, role, isActive, password }) => {
   const link = await prisma.companyUser.findFirst({ where: { companyId, userId } })
-  if (!link) throw { status: 404, message: 'Usuario nao encontrado nesta empresa.' }
+  if (!link) throw new AppError(404, 'Usuario nao encontrado nesta empresa.')
 
   const userData = {}
   if (name     !== undefined) userData.name     = name.trim()
@@ -240,7 +241,7 @@ const updateCompanyUser = async (companyId, userId, { name, position, role, isAc
   if (role     !== undefined) userData.role     = role
   if (isActive !== undefined) userData.isActive = !!isActive
   if (password) {
-    if (password.length < 8) throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+    if (password.length < 8) throw new AppError(400, 'A senha deve ter no minimo 8 caracteres.')
     userData.passwordHash = await bcrypt.hash(password, 12)
   }
 
@@ -259,17 +260,14 @@ const updateCompanyUser = async (companyId, userId, { name, position, role, isAc
 
 const deleteCompanyUser = async (companyId, userId) => {
   const link = await prisma.companyUser.findFirst({ where: { companyId, userId } })
-  if (!link) throw { status: 404, message: 'Usuario nao encontrado nesta empresa.' }
+  if (!link) throw new AppError(404, 'Usuario nao encontrado nesta empresa.')
 
   try {
     await prisma.user.delete({ where: { id: userId } })
     return { deleted: true }
   } catch (err) {
     if (err.code === 'P2003' || err.code === '23503') {
-      throw {
-        status: 409,
-        message: 'Este usuario possui registros associados (projetos, tarefas, etc.). Desative-o em vez de excluir.',
-      }
+      throw new AppError(409, 'Este usuario possui registros associados (projetos, tarefas, etc.). Desative-o em vez de excluir.')
     }
     throw err
   }
@@ -326,22 +324,19 @@ const listCompanyClients = async (companyId) => {
 
 const createClientPortalAccess = async (companyId, clientId, { portalEmail, password, projectIds, grantedBy }) => {
   const client = await prisma.clientLead.findFirst({ where: { id: clientId, companyId } })
-  if (!client) throw { status: 404, message: 'Cliente nao encontrado nesta empresa.' }
+  if (!client) throw new AppError(404, 'Cliente nao encontrado nesta empresa.')
 
   if (client.status !== 'cliente') {
-    throw {
-      status: 400,
-      message: 'Somente registros com status "cliente" podem receber acesso ao portal. Atualize o status na página de Clientes antes de continuar.',
-    }
+    throw new AppError(400, 'Somente registros com status "cliente" podem receber acesso ao portal. Atualize o status na página de Clientes antes de continuar.')
   }
   if (!portalEmail || !portalEmail.trim()) {
-    throw { status: 400, message: 'Informe o e-mail de acesso ao portal.' }
+    throw new AppError(400, 'Informe o e-mail de acesso ao portal.')
   }
   if (!password || password.length < 8) {
-    throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+    throw new AppError(400, 'A senha deve ter no minimo 8 caracteres.')
   }
   if (!Array.isArray(projectIds) || projectIds.length === 0) {
-    throw { status: 400, message: 'Selecione ao menos um projeto para vincular o acesso.' }
+    throw new AppError(400, 'Selecione ao menos um projeto para vincular o acesso.')
   }
 
   const normalizedEmail = portalEmail.toLowerCase().trim()
@@ -349,7 +344,9 @@ const createClientPortalAccess = async (companyId, clientId, { portalEmail, pass
 
   try {
     await prisma.$transaction(async (tx) => {
-      await tx.clientLead.update({
+      // updateMany (nao update): a extensao do Prisma bloqueia operacoes
+      // unique em modelos tenant; updateMany e escopado por company_id.
+      await tx.clientLead.updateMany({
         where: { id: clientId },
         data: {
           portalEmail:        normalizedEmail,
@@ -372,7 +369,7 @@ const createClientPortalAccess = async (companyId, clientId, { portalEmail, pass
     })
   } catch (err) {
     if (err.code === 'P2002') {
-      throw { status: 409, message: 'Este e-mail de acesso já está em uso por outro cliente.' }
+      throw new AppError(409, 'Este e-mail de acesso já está em uso por outro cliente.')
     }
     throw err
   }
@@ -383,21 +380,21 @@ const createClientPortalAccess = async (companyId, clientId, { portalEmail, pass
 
 const updateClientPortalAccess = async (companyId, clientId, { password, isActive, projectIds }) => {
   const client = await prisma.clientLead.findFirst({ where: { id: clientId, companyId } })
-  if (!client) throw { status: 404, message: 'Cliente nao encontrado nesta empresa.' }
+  if (!client) throw new AppError(404, 'Cliente nao encontrado nesta empresa.')
   if (!client.portalEmail) {
-    throw { status: 400, message: 'Este cliente ainda não possui acesso ao portal. Crie o acesso primeiro.' }
+    throw new AppError(400, 'Este cliente ainda não possui acesso ao portal. Crie o acesso primeiro.')
   }
 
   const data = {}
   if (password) {
-    if (password.length < 8) throw { status: 400, message: 'A senha deve ter no minimo 8 caracteres.' }
+    if (password.length < 8) throw new AppError(400, 'A senha deve ter no minimo 8 caracteres.')
     data.portalPasswordHash = await bcrypt.hash(password, 12)
   }
   if (isActive !== undefined) data.portalIsActive = !!isActive
 
   await prisma.$transaction(async (tx) => {
     if (Object.keys(data).length) {
-      await tx.clientLead.update({ where: { id: clientId }, data })
+      await tx.clientLead.updateMany({ where: { id: clientId }, data })
     }
     if (Array.isArray(projectIds)) {
       await tx.clientProjectAccess.deleteMany({ where: { clientLeadId: clientId, companyId } })
@@ -419,9 +416,9 @@ const updateClientPortalAccess = async (companyId, clientId, { password, isActiv
 // portal_email para liberar reuso futuro do endereço por outro cliente.
 const revokeClientPortalAccess = async (companyId, clientId) => {
   const client = await prisma.clientLead.findFirst({ where: { id: clientId, companyId } })
-  if (!client) throw { status: 404, message: 'Cliente nao encontrado nesta empresa.' }
+  if (!client) throw new AppError(404, 'Cliente nao encontrado nesta empresa.')
 
-  await prisma.clientLead.update({
+  await prisma.clientLead.updateMany({
     where: { id: clientId },
     data: {
       portalEmail:        null,
