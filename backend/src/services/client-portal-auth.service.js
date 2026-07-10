@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs')
+const AppError = require('../utils/AppError')
 const jwt = require('jsonwebtoken')
 const jwtConfig = require('../config/jwt')
 const clientRepo = require('../repositories/client.repository')
@@ -12,16 +13,16 @@ const clientRepo = require('../repositories/client.repository')
  */
 const login = async (portalEmail, password) => {
   if (!portalEmail || !password) {
-    throw { status: 400, message: 'Informe usuário e senha.' }
+    throw new AppError(400, 'Informe usuário e senha.')
   }
 
   const client = await clientRepo.findByPortalEmail(portalEmail.toLowerCase().trim())
   if (!client || !client.portal_password_hash) {
-    throw { status: 401, message: 'Credenciais inválidas' }
+    throw new AppError(401, 'Credenciais inválidas')
   }
 
   const valid = await bcrypt.compare(password, client.portal_password_hash)
-  if (!valid) throw { status: 401, message: 'Credenciais inválidas' }
+  if (!valid) throw new AppError(401, 'Credenciais inválidas')
 
   await clientRepo.updatePortalLastLogin(client.id)
 
@@ -54,7 +55,7 @@ const refreshToken = async (token) => {
   try {
     const decoded = jwt.verify(token, jwtConfig.refreshSecret)
     if (decoded.scope !== 'client') {
-      throw { status: 401, message: 'Token inválido' }
+      throw new AppError(401, 'Token inválido')
     }
 
     const payload = {
@@ -67,7 +68,7 @@ const refreshToken = async (token) => {
     return { accessToken }
   } catch (err) {
     if (err.status) throw err
-    throw { status: 401, message: 'Refresh token inválido ou expirado' }
+    throw new AppError(401, 'Refresh token inválido ou expirado')
   }
 }
 

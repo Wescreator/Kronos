@@ -1,4 +1,4 @@
-const calendarService = require('../services/calendarService')
+const calendarService = require('../services/calendar.service')
 const R = require('../utils/response')
 
 // Toda a Agenda e isolada pela empresa do usuario (req.user.company_id).

@@ -19,7 +19,10 @@ const register = Joi.object({
     'any.required': 'Senha é obrigatória'
   }),
   position: Joi.string().max(100).optional().allow(''),
-  phone:    Joi.string().max(30).optional().allow('')
+  phone:    Joi.string().max(30).optional().allow(''),
+  // Consumido por auth.service.register (admittedAt) — precisa estar no
+  // schema porque o validate agora descarta campos desconhecidos.
+  admitted_at: Joi.date().iso().optional().allow(null)
 })
 
 module.exports = { login, register }

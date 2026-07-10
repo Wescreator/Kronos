@@ -1,4 +1,5 @@
 const projectRepo = require('../repositories/project.repository')
+const AppError = require('../utils/AppError')
 const companyRepo = require('../repositories/company.repository')
 const notificationService = require('./notification.service')
 const { paginate, paginatedResponse } = require('../utils/pagination')
@@ -29,7 +30,7 @@ const getAll = async (query, companyId) => {
 
 const getById = async (id, companyId) => {
   const project = await projectRepo.findById(id, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
   const members = await projectRepo.findMembers(id)
   return { ...project, members }
 }
@@ -47,7 +48,7 @@ const create = async (data, userId, companyId) => {
 
 const update = async (id, data, userId, companyId) => {
   const project = await projectRepo.findById(id, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
 
   if (data.status && data.status !== project.status) {
     await projectRepo.addStatusHistory(id, companyId, project.status, data.status, userId, data.status_note)
@@ -67,22 +68,22 @@ const update = async (id, data, userId, companyId) => {
 
 const updateCover = async (id, fileUrl, companyId) => {
   const project = await projectRepo.updateCover(id, companyId, fileUrl)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
   return project
 }
 
 const getStatusHistory = async (id, companyId) => {
   const project = await projectRepo.findById(id, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
   return projectRepo.findStatusHistory(id)
 }
 
 const addMember = async (projectId, userId, companyId) => {
   const project = await projectRepo.findById(projectId, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
 
   const link = await companyRepo.findCompanyUser(companyId, userId)
-  if (!link) throw { status: 400, message: 'Usuário não pertence a esta empresa' }
+  if (!link) throw new AppError(400, 'Usuário não pertence a esta empresa')
 
   await projectRepo.addMember(projectId, userId)
 
@@ -97,16 +98,16 @@ const addMember = async (projectId, userId, companyId) => {
 
 const removeMember = async (projectId, userId, companyId) => {
   const project = await projectRepo.findById(projectId, companyId);
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' };
+  if (!project) throw new AppError(404, 'Projeto não encontrado');
   const wasDeleted = await projectRepo.removeMember(projectId, userId);
   if (!wasDeleted) {
-    throw { status: 404, message: 'Membro não encontrado' };}
+    throw new AppError(404, 'Membro não encontrado');}
   return await projectRepo.findMembers(projectId);
 };
 
 const remove = async (id, companyId) => {
   const project = await projectRepo.findById(id, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
 
   const dep = await projectRepo.countDependents(id)
   const blocks = []
@@ -116,14 +117,11 @@ const remove = async (id, companyId) => {
   if (dep.leads    > 0) blocks.push(`${dep.leads} cliente(s)/lead(s)`)
 
   if (blocks.length > 0) {
-    throw {
-      status: 400,
-      message: `Não é possível excluir: existem ${blocks.join(', ')} vinculado(s) a este projeto.`
-    }
+    throw new AppError(400, `Não é possível excluir: existem ${blocks.join(', ')} vinculado(s) a este projeto.`)
   }
 
   const deleted = await projectRepo.remove(id, companyId)
-  if (!deleted) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!deleted) throw new AppError(404, 'Projeto não encontrado')
 }
 
 module.exports = {getAll, getById, create, update, updateCover, getStatusHistory, addMember, removeMember, remove}

@@ -1,4 +1,5 @@
 const { getTransporter } = require('./gmail.service')
+const AppError = require('../utils/AppError')
 
 const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
   // Instanciado aqui: só executa quando a função é chamada, não na inicialização
@@ -75,7 +76,7 @@ const sendPasswordResetEmail = async ({ to, name, resetLink }) => {
     return info
   } catch (error) {
     console.error('[EmailService] Erro ao enviar email de recuperação:', error)
-    throw { status: 500, message: 'Erro ao enviar email de recuperação. Tente novamente.' }
+    throw new AppError(500, 'Erro ao enviar email de recuperação. Tente novamente.')
   }
 }
 

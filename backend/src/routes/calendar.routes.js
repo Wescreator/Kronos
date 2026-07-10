@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 
-const ctrl = require('../controllers/calendarController')
+const ctrl = require('../controllers/calendar.controller')
 
 const {
   authenticate,
@@ -12,21 +12,21 @@ const {
 router.get(
   '/month',
   authenticate,
-  authorize('owner', 'admin', 'manager', 'employee', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee'),
   ctrl.getByMonth
 )
 
 router.get(
   '/week',
   authenticate,
-  authorize('owner', 'admin', 'manager', 'employee', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee'),
   ctrl.getByWeek
 )
 
 router.get(
   '/agenda',
   authenticate,
-  authorize('owner', 'admin', 'manager', 'employee', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee'),
   ctrl.getAgenda
 )
 
@@ -34,14 +34,14 @@ router.get(
 router.get(
   '/',
   authenticate,
-  authorize('owner', 'admin', 'manager', 'employee', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee'),
   ctrl.getAll
 )
 
 router.get(
   '/:id',
   authenticate,
-  authorize('owner', 'admin', 'manager', 'employee', 'member'),
+  authorize('owner', 'admin', 'manager', 'employee'),
   ctrl.getById
 )
 

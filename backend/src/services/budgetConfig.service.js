@@ -1,10 +1,11 @@
 // backend/src/services/budgetConfig.service.js
 const budgetConfigRepo = require('../repositories/budgetConfig.repository')
+const AppError = require('../utils/AppError')
 
 const getStructure = (companyId) => budgetConfigRepo.getFullStructure(companyId)
 
 const createTitle = async (companyId, data) => {
-  if (!data.label || !data.label.trim()) throw { status: 400, message: 'Título é obrigatório' }
+  if (!data.label || !data.label.trim()) throw new AppError(400, 'Título é obrigatório')
   return budgetConfigRepo.createTitle(companyId, { label: data.label.trim(), sortOrder: data.sort_order })
 }
 
@@ -16,8 +17,8 @@ const updateTitle = (id, companyId, data) =>
 const removeTitle = (id, companyId) => budgetConfigRepo.removeTitle(id, companyId)
 
 const createLevel = async (companyId, data) => {
-  if (!data.budget_title_id) throw { status: 400, message: 'budget_title_id é obrigatório' }
-  if (!data.label || !data.label.trim()) throw { status: 400, message: 'Nível é obrigatório' }
+  if (!data.budget_title_id) throw new AppError(400, 'budget_title_id é obrigatório')
+  if (!data.label || !data.label.trim()) throw new AppError(400, 'Nível é obrigatório')
   const level = await budgetConfigRepo.createLevel(companyId, {
     budgetTitleId: data.budget_title_id, label: data.label.trim(), sortOrder: data.sort_order,
   })
@@ -39,7 +40,7 @@ const removeLevel = (id, companyId) => budgetConfigRepo.removeLevel(id, companyI
 // ── Atualizar taxa NUNCA sobrescreve: sempre cria uma nova versão vigente ──
 const setLevelRate = async (levelId, companyId, data) => {
   if (data.value === undefined || data.value === null) {
-    throw { status: 400, message: 'Valor da taxa é obrigatório' }
+    throw new AppError(400, 'Valor da taxa é obrigatório')
   }
   return budgetConfigRepo.setLevelRate(levelId, companyId, {
     rateType: data.rate_type || 'per_area', value: data.value,

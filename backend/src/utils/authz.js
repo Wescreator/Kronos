@@ -1,4 +1,5 @@
 const projectRepo = require('../repositories/project.repository')
+const AppError = require('./AppError')
 
 const COMPANY_ADMIN_ROLES = ['owner', 'admin']
 
@@ -20,7 +21,7 @@ const assertProjectAccess = async (projectId, req) => {
   if (hasFullAccess(req.user.role)) return true
   const isMember = await projectRepo.isMember(projectId, req.user.user_id)
   if (!isMember) {
-    throw { status: 403, message: 'Você precisa estar vinculado a este projeto para realizar esta ação' }
+    throw new AppError(403, 'Você precisa estar vinculado a este projeto para realizar esta ação')
   }
   return true
 }

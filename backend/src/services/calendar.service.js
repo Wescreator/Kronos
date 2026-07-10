@@ -1,7 +1,7 @@
-// backend/services/calendarService.js
+// backend/services/calendar.service.js
 // Módulo Agenda — Kronos (multi-tenant)
 
-const repo = require('../repositories/calendarRepository');
+const repo = require('../repositories/calendar.repository');
 
 function validateDates(start_date, end_date) {
   const s = new Date(start_date);

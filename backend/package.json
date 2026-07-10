@@ -15,7 +15,8 @@
     "prisma:pull": "prisma db pull",
     "prisma:studio": "prisma studio",
     "dev:local": "cross-env NODE_ENV=development node -r dotenv/config src/server.js dotenv_config_path=.env.development",
-    "seed:local": "node src/database/seeds/004_seed_local_users.js"
+    "seed:local": "node src/database/seeds/004_seed_local_users.js",
+    "test": "node --test"
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
@@ -32,7 +33,7 @@
     "helmet": "^7.0.0",
     "joi": "^17.0.0",
     "jsonwebtoken": "^9.0.0",
-    "multer": "^1.4.5-lts.1",
+    "multer": "^2.2.0",
     "node-cron": "^4.5.0",
     "nodemailer": "^8.0.10",
     "pg": "^8.11.0",
@@ -44,6 +45,7 @@
     "cross-env": "^10.1.0",
     "dotenv-cli": "^11.0.0",
     "nodemon": "^3.0.0",
-    "prisma": "^5.22.0"
+    "prisma": "^5.22.0",
+    "supertest": "^7.2.2"
   }
 }

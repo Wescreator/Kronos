@@ -1,4 +1,5 @@
 const stageRepo       = require('../repositories/stage.repository')
+const AppError = require('../utils/AppError')
 const projectRepo     = require('../repositories/project.repository')
 const commentRepo     = require('../repositories/phase-comment.repository')
 const attachmentRepo  = require('../repositories/phase-attachment.repository')
@@ -13,7 +14,7 @@ const asyncHandler = fn => (req, res) =>
 
 async function assertProjectInTenant(projectId, companyId) {
   const project = await projectRepo.findById(projectId, companyId)
-  if (!project) throw { status: 404, message: 'Projeto não encontrado' }
+  if (!project) throw new AppError(404, 'Projeto não encontrado')
   return project
 }
 

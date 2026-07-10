@@ -1,4 +1,5 @@
 const crypto = require('crypto')
+const AppError = require('../utils/AppError')
 const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const r2       = require('../config/r2')
 const fileRepo = require('../repositories/project-file.repository')
@@ -52,7 +53,7 @@ const uploadForProject = async ({
   companyId
 }) => {
   if (!projectId) {
-    throw { status: 400, message: 'projectId obrigatório' }
+    throw new AppError(400, 'projectId obrigatório')
   }
 
   const objectKey = generateObjectKey(`projects/${projectId}`, originalFilename)
@@ -93,7 +94,7 @@ const remove = async (objectKey) => {
 const deleteProjectFile = async (fileId, projectId) => {
   const file = await fileRepo.findById(fileId)
   if (!file || file.project_id !== projectId) {
-    throw { status: 404, message: 'Arquivo não encontrado' }
+    throw new AppError(404, 'Arquivo não encontrado')
   }
 
   await remove(file.drive_file_id)

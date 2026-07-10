@@ -1,4 +1,5 @@
 const budgetRepo = require('../repositories/budget.repository')
+const AppError = require('../utils/AppError')
 const budgetConfigRepo = require('../repositories/budgetConfig.repository')
 const { calculateBudgetTotal } = require('./budgetCalculator')
 const { paginate, paginatedResponse } = require('../utils/pagination')
@@ -66,16 +67,16 @@ const getAll = async (query, companyId) => {
 
 const getById = async (id, companyId) => {
   const budget = await budgetRepo.findById(id, companyId)
-  if (!budget) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!budget) throw new AppError(404, 'Orçamento não encontrado')
   return budget
 }
 
 // ── Cria orçamento: resolve itens contra taxas vigentes e já grava lineTotal ──
 const create = async (data, userId, companyId) => {
   if (!data.title || !data.title.trim()) {
-    throw { status: 400, message: 'Título é obrigatório' }
+    throw new AppError(400, 'Título é obrigatório')
   }
-  if (!companyId) throw { status: 400, message: 'companyId inválido' }
+  if (!companyId) throw new AppError(400, 'companyId inválido')
 
   const items = Array.isArray(data.items) ? data.items : []
   const { items: resolvedItems } = await resolveItemsAgainstCurrentRates(
@@ -111,9 +112,9 @@ const create = async (data, userId, companyId) => {
 // ── Atualiza rascunho (sempre re-resolve contra vigente, pois ainda não é imutável) ──
 const update = async (id, data, companyId) => {
   const existing = await budgetRepo.findById(id, companyId)
-  if (!existing) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!existing) throw new AppError(404, 'Orçamento não encontrado')
   if (existing.status === 'finalized') {
-    throw { status: 400, message: 'Orçamento finalizado não pode ser editado diretamente. Use o recálculo.' }
+    throw new AppError(400, 'Orçamento finalizado não pode ser editado diretamente. Use o recálculo.')
   }
 
   const allowed = ['title', 'client_id', 'client_name', 'project_area', 'fixed_fees_total', 'final_notes']
@@ -144,7 +145,7 @@ const update = async (id, data, companyId) => {
 // ── Finalizar: congela tudo em um BudgetSnapshot imutável ──────────────
 const finalize = async (id, companyId, userId) => {
   const budget = await budgetRepo.findById(id, companyId)
-  if (!budget) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!budget) throw new AppError(404, 'Orçamento não encontrado')
 
   const payload = buildSnapshotPayload(budget)
 
@@ -159,7 +160,7 @@ const finalize = async (id, companyId, userId) => {
 // ── Compara rascunho salvo vs métricas vigentes (para o modal de divergência) ──
 const checkDivergence = async (id, companyId) => {
   const budget = await budgetRepo.findById(id, companyId)
-  if (!budget) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!budget) throw new AppError(404, 'Orçamento não encontrado')
 
   const levelIds = budget.items.filter(i => i.budget_level_id).map(i => i.budget_level_id)
   const currentRates = await budgetConfigRepo.getCurrentRatesByLevelIds(levelIds, companyId)
@@ -187,9 +188,9 @@ const checkDivergence = async (id, companyId) => {
 // ── Aplica métricas vigentes num rascunho (re-resolve tudo) ────────────
 const applyCurrentRatesToDraft = async (id, companyId) => {
   const budget = await budgetRepo.findById(id, companyId)
-  if (!budget) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!budget) throw new AppError(404, 'Orçamento não encontrado')
   if (budget.status === 'finalized') {
-    throw { status: 400, message: 'Use o recálculo para orçamentos finalizados' }
+    throw new AppError(400, 'Use o recálculo para orçamentos finalizados')
   }
 
   const items = budget.items.map(it => ({
@@ -217,9 +218,9 @@ const applyCurrentRatesToDraft = async (id, companyId) => {
 // ── Recalcular orçamento finalizado: gera NOVO snapshot, mantém histórico ──
 const recalculateFinalized = async (id, companyId, userId) => {
   const budget = await budgetRepo.findById(id, companyId)
-  if (!budget) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!budget) throw new AppError(404, 'Orçamento não encontrado')
   if (budget.status !== 'finalized') {
-    throw { status: 400, message: 'Apenas orçamentos finalizados podem ser recalculados' }
+    throw new AppError(400, 'Apenas orçamentos finalizados podem ser recalculados')
   }
 
   const items = budget.items.map(it => ({
@@ -256,7 +257,7 @@ const recalculateFinalized = async (id, companyId, userId) => {
 // ── Busca o snapshot mais recente com payload completo (para o PDF) ────
 const getLatestSnapshotFull = async (id, companyId) => {
   const budget = await budgetRepo.findById(id, companyId)
-  if (!budget) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!budget) throw new AppError(404, 'Orçamento não encontrado')
 
   const snapshot = await budgetRepo.getLatestSnapshot(id, companyId)
   return { budget, snapshot }
@@ -264,7 +265,7 @@ const getLatestSnapshotFull = async (id, companyId) => {
 
 const remove = async (id, companyId) => {
   const existing = await budgetRepo.findById(id, companyId)
-  if (!existing) throw { status: 404, message: 'Orçamento não encontrado' }
+  if (!existing) throw new AppError(404, 'Orçamento não encontrado')
   await budgetRepo.remove(id, companyId)
 }
 

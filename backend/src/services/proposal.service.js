@@ -1,4 +1,5 @@
 const proposalRepo = require('../repositories/proposal.repository')
+const AppError = require('../utils/AppError')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 
 // ── Listar todas ───────────────────────────────────────────────
@@ -16,22 +17,22 @@ const getAll = async (query, companyId) => {
 // ── Buscar por ID ──────────────────────────────────────────────
 const getById = async (id, companyId) => {
   const proposal = await proposalRepo.findById(id, companyId)
-  if (!proposal) throw { status: 404, message: 'Proposta não encontrada' }
+  if (!proposal) throw new AppError(404, 'Proposta não encontrada')
   return proposal
 }
 
 // ── Criar ──────────────────────────────────────────────────────
 const create = async (data, userId, companyId) => {
   if (!data.title || !data.title.trim()) {
-    throw { status: 400, message: 'Título é obrigatório' }
+    throw new AppError(400, 'Título é obrigatório')
   }
 
   if (!userId) {
-    throw { status: 400, message: 'createdBy inválido' }
+    throw new AppError(400, 'createdBy inválido')
   }
 
   if (!companyId) {
-    throw { status: 400, message: 'companyId inválido' }
+    throw new AppError(400, 'companyId inválido')
   }
 
   const proposalNumber = await proposalRepo.nextProposalNumber()
@@ -67,7 +68,7 @@ const create = async (data, userId, companyId) => {
 // ── Atualizar ──────────────────────────────────────────────────
 const update = async (id, data, companyId) => {
   const existing = await proposalRepo.findById(id, companyId)
-  if (!existing) throw { status: 404, message: 'Proposta não encontrada' }
+  if (!existing) throw new AppError(404, 'Proposta não encontrada')
 
   const allowed = [
     'title',
@@ -107,7 +108,7 @@ const update = async (id, data, companyId) => {
 // ── Duplicar ───────────────────────────────────────────────────
 const duplicate = async (id, userId, companyId) => {
   const original = await proposalRepo.findById(id, companyId)
-  if (!original) throw { status: 404, message: 'Proposta não encontrada' }
+  if (!original) throw new AppError(404, 'Proposta não encontrada')
 
   const proposalNumber = await proposalRepo.nextProposalNumber()
 
@@ -137,7 +138,7 @@ const duplicate = async (id, userId, companyId) => {
 // ── Excluir ────────────────────────────────────────────────────
 const remove = async (id, companyId) => {
   const existing = await proposalRepo.findById(id, companyId)
-  if (!existing) throw { status: 404, message: 'Proposta não encontrada' }
+  if (!existing) throw new AppError(404, 'Proposta não encontrada')
 
   await proposalRepo.remove(id, companyId)
 }

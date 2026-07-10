@@ -1,4 +1,4 @@
-// backend/repositories/calendarRepository.js
+// backend/repositories/calendar.repository.js
 // Módulo Agenda — Kronos
 // Multi-tenant: todas as consultas sao escopadas por company_id.
 

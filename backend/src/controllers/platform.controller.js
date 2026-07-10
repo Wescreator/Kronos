@@ -1,4 +1,5 @@
 const platformService = require('../services/platform.service')
+const AppError = require('../utils/AppError')
 const fileService     = require('../services/file.service')
 const R = require('../utils/response')
 
@@ -32,7 +33,7 @@ const updateCompany = asyncHandler(async (req, res) => {
 // é perdido a cada deploy/restart, por isso não usamos mais diskStorage
 // nem montamos a URL a partir de req.protocol/req.get('host').
 const uploadCompanyLogo = asyncHandler(async (req, res) => {
-  if (!req.file) throw { status: 400, message: 'Nenhum arquivo enviado.' }
+  if (!req.file) throw new AppError(400, 'Nenhum arquivo enviado.')
 
   const { url } = await fileService.upload({
     buffer:           req.file.buffer,
