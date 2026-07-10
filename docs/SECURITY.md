@@ -24,13 +24,20 @@
 
 ---
 
-## Acao de operacoes obrigatoria
+## Acao de operacoes obrigatoria — CONCLUIDA (2026-07-10)
 
-As correcoes de codigo nao bastam para os itens abaixo. Execute manualmente:
-
-1. **Rotacionar imediatamente** a senha do banco Supabase e todos os segredos que estavam em `backend/.env.example` (string de conexao, `DB_PASSWORD`). Verificar tambem `JWT_SECRET`, chaves do Google Drive, R2 e e-mail.
-2. **Remover os segredos do historico do git** (`git filter-repo` ou BFG). Apagar do `HEAD` nao basta.
-3. **Aplicar a migration multi-tenant** `20250602_001_add_company_id_multitenant.sql` no banco (ver item 2 abaixo) antes de subir o codigo novo.
+1. ~~Rotacionar a senha do banco Supabase e segredos~~ **Feito** — credenciais
+   rotacionadas pelo owner; app validado com as novas.
+2. ~~Remover os segredos do historico do git~~ **Feito** — `git filter-repo
+   --replace-text` sobre 220 commits removeu a `DATABASE_URL` antiga, a
+   `DB_PASSWORD` antiga e o project-ref; historico forcado no GitHub.
+   Auditoria confirmou que JWT_SECRET, chaves Google/R2 e e-mail NUNCA
+   estiveram no historico (sempre placeholders). Clones antigos do repo
+   precisam ser re-clonados (hashes mudaram).
+3. ~~Aplicar a migration multi-tenant~~ **Ja estava aplicada** — verificado no
+   banco em 2026-07-10: todas as tabelas tem `company_id` e nao ha registros
+   orfaos (`company_id IS NULL` = 0 em tasks/proposals/chat_rooms/
+   calendar_events).
 
 ---
 
