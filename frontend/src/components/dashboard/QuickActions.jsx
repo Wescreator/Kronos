@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   FolderKanban, CheckSquare, TrendingDown, TrendingUp, FileText,
+  Calculator, CalendarPlus, UserPlus, Rss,
 } from 'lucide-react'
 import useAuthStore       from '../../store/authStore'
 import { can }            from '../../utils/permissions'
@@ -9,6 +10,13 @@ import NewTaskModal        from '../modals/NewTaskModal'
 import NewExpenseModal     from '../modals/NewExpenseModal'
 import NewRevenueModal     from '../modals/NewRevenueModal'
 import ProposalFormModal   from '../modals/ProposalFormModal'
+import NewBudgetModal      from '../modals/NewBudgetModal'
+import NewClientModal      from '../modals/NewClientModal'
+import NewPostModal        from '../modals/NewPostModal'
+import EventModal           from '../calendar/EventModal'
+import { createEvent }      from '../../services/calendar.service'
+import { createPost }       from '../../services/posts.service'
+import { getProjects }      from '../../services/projects.service'
 
 /* ── Mesmos estilos de glassmorphism usados na Dashboard ── */
 const tileStyle = {
@@ -30,12 +38,29 @@ const tileHoverLeave = (e) => {
 export default function QuickActions({ onActionSuccess }) {
   const { user } = useAuthStore()
   const role      = user?.role || 'member'
+  const [openModal, setOpenModal] = useState(null)
+  const [projectsForPost, setProjectsForPost] = useState([])
 
-  const [openModal, setOpenModal] = useState(null) // 'project' | 'task' | 'expense' | 'revenue' | 'proposal' | null
+  useEffect(() => {
+    if (openModal !== 'post') return
+    getProjects({ limit: 200 })
+      .then(({ data }) => setProjectsForPost(data.data || []))
+      .catch(() => setProjectsForPost([]))
+  }, [openModal])
 
   const handleSuccess = () => {
     setOpenModal(null)
     onActionSuccess?.()
+  }
+
+   const handleSaveEvent = async (payload) => {
+    await createEvent(payload)
+    handleSuccess()
+  }
+
+  
+  const handleCreatePost = async (payload) => {
+    await createPost(payload)
   }
 
   const ACTIONS = [
@@ -50,6 +75,26 @@ export default function QuickActions({ onActionSuccess }) {
       visible: can(role, 'tasks', 'create'),
     },
     {
+      key: 'client', label: 'Novo Cliente', icon: UserPlus,
+      iconBg: 'rgba(52,211,153,0.10)', iconColor: '#34D399',
+      visible: can(role, 'clients', 'create'),
+    },
+    {
+      key: 'budget', label: 'Novo Orçamento', icon: Calculator,
+      iconBg: 'rgba(167,139,250,0.10)', iconColor: '#A78BFA',
+      visible: can(role, 'budgets', 'create'),
+    },
+    {
+      key: 'proposal', label: 'Nova Proposta', icon: FileText,
+      iconBg: 'rgba(251,191,36,0.10)', iconColor: '#FBBF24',
+      visible: can(role, 'proposals', 'create'),
+    },
+    {
+      key: 'event', label: 'Novo Evento', icon: CalendarPlus,
+      iconBg: 'rgba(56,189,248,0.10)', iconColor: '#38BDF8',
+      visible: can(role, 'calendar', 'create'),
+    },
+    {
       key: 'expense', label: 'Nova Despesa', icon: TrendingDown,
       iconBg: 'rgba(251,113,133,0.10)', iconColor: '#FB7185',
       visible: can(role, 'financial', 'create'),
@@ -60,9 +105,9 @@ export default function QuickActions({ onActionSuccess }) {
       visible: can(role, 'financial', 'create'),
     },
     {
-      key: 'proposal', label: 'Nova Proposta', icon: FileText,
-      iconBg: 'rgba(251,191,36,0.10)', iconColor: '#FBBF24',
-      visible: can(role, 'proposals', 'create'),
+      key: 'post', label: 'Novo Post', icon: Rss,
+      iconBg: 'rgba(0, 38, 255, 0.58)', iconColor: '#ffffff',
+      visible: can(role, 'posts', 'create'),
     },
   ].filter(a => a.visible)
 
@@ -78,7 +123,17 @@ export default function QuickActions({ onActionSuccess }) {
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* Grid auto-ajustável: em vez de nº fixo de colunas por breakpoint,
+          usa auto-fit + minmax para calcular quantas colunas cabem no
+          container e esticar os itens existentes até preencher a linha
+          inteira — sem sobrar coluna vazia quando há poucos botões (ex:
+          role sem permissão pra financeiro) nem quando novos módulos
+          forem adicionados depois. Tamanho do ícone (28px) e gap (8px)
+          continuam fixos, só a largura de cada botão se adapta. */}
+      <div
+        className="grid gap-2"
+        style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(84px, 1fr))' }}
+      >
         {ACTIONS.map(action => {
           const Icon = action.icon
           return (
@@ -86,19 +141,20 @@ export default function QuickActions({ onActionSuccess }) {
               key={action.key}
               type="button"
               onClick={() => setOpenModal(action.key)}
-              className="flex flex-col items-center justify-center gap-2 rounded-2xl py-3 px-3 transition-all duration-200"
+              className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-2.5 px-2 transition-all duration-200"
               style={tileStyle}
               onMouseEnter={tileHoverEnter}
               onMouseLeave={tileHoverLeave}
             >
               <div style={{
-                width: 36, height: 36, borderRadius: 10,
+                width: 28, height: 28, borderRadius: 8,
                 background: action.iconBg,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0,
               }}>
-                <Icon size={14} style={{ color: action.iconColor }} />
+                <Icon size={13} style={{ color: action.iconColor }} />
               </div>
-              <span className="text-xs font-semibold text-center" style={{ color: 'var(--text-secondary)' }}>
+              <span className="text-[11px] font-semibold text-center leading-tight" style={{ color: 'var(--text-secondary)' }}>
                 {action.label}
               </span>
             </button>
@@ -132,6 +188,32 @@ export default function QuickActions({ onActionSuccess }) {
         proposal={null}
         onClose={() => setOpenModal(null)}
         onSuccess={handleSuccess}
+      />
+      <NewBudgetModal
+        open={openModal === 'budget'}
+        onClose={() => setOpenModal(null)}
+        onSuccess={handleSuccess}
+      />
+   
+      {openModal === 'event' && (
+        <EventModal
+          event={null}
+          onSave={handleSaveEvent}
+          onClose={() => setOpenModal(null)}
+          canDelete={false}
+        />
+      )}
+      <NewClientModal
+        open={openModal === 'client'}
+        onClose={() => setOpenModal(null)}
+        onSuccess={handleSuccess}
+      />
+      <NewPostModal
+        open={openModal === 'post'}
+        onClose={() => setOpenModal(null)}
+        onSuccess={handleSuccess}
+        projects={projectsForPost}
+        createPost={handleCreatePost}
       />
     </div>
   )
