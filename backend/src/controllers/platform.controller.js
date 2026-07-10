@@ -74,6 +74,11 @@ const getCompanyHistory = asyncHandler(async (req, res) => {
   return R.success(res, { history })
 })
 
+const getCompanyStats = asyncHandler(async (req, res) => {
+  const stats = await platformService.getCompanyStats(req.params.id)
+  return R.success(res, { stats })
+})
+
 // ═══════════════════════════════════════════════════════════════════════
 // NOVO — Clientes com acesso ao portal de postagens
 // ═══════════════════════════════════════════════════════════════════════
@@ -117,6 +122,7 @@ module.exports = {
   updateCompanyUser,
   deleteCompanyUser,
   getCompanyHistory,
+  getCompanyStats,
   listCompanyProjects,
   listCompanyClients,
   createClientPortalAccess,

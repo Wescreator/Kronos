@@ -53,6 +53,7 @@ router.patch('/companies/:id/active', ctrl.setCompanyActive)
 router.patch('/companies/:id',        ctrl.updateCompany)
 router.post('/companies/:id/logo',    uploadImageMemory.single('logo'), ctrl.uploadCompanyLogo)
 router.get('/companies/:id/history', ctrl.getCompanyHistory)
+router.get('/companies/:id/stats',   ctrl.getCompanyStats)
 
 // Usuarios de uma empresa
 router.get('/companies/:id/users',             ctrl.listCompanyUsers)

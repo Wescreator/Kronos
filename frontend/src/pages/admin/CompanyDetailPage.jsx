@@ -107,24 +107,33 @@ export default function CompanyDetailPage() {
   }
 
 
- // 1. Corrija o loadHistory para usar o platformService corretamente
   const loadHistory = async () => {
     try {
-      const data = await platformService.getCompanyHistory(id);
-      setHistory(data);
+      const data = await platformService.getCompanyHistory(id)
+      setHistory(data)
     } catch (err) {
-      console.error("Erro ao carregar histórico:", err);
-      setHistory([]); 
+      console.error('Erro ao carregar histórico:', err)
+      setHistory([])
     }
   }
 
-  // 2. Corrija o useEffect para chamar as funções certas
-  useEffect(() => { 
-    load(); 
-    loadUsers(); 
-    loadClients();  // NOVO
-    // loadStats(); // <--- Se você não tem essa função, remova a chamada
-    loadHistory(); 
+  // KPIs/estatísticas da empresa (soft-fail: mantém null e a UI mostra o aviso).
+  const loadStats = async () => {
+    try {
+      const data = await platformService.getCompanyStats(id)
+      setStats(data)
+    } catch (err) {
+      console.error('Erro ao carregar estatísticas:', err)
+      setStats(null)
+    }
+  }
+
+  useEffect(() => {
+    load()
+    loadUsers()
+    loadClients()
+    loadStats()
+    loadHistory()
   }, [id])
 
   /* ── Resumo: editar empresa ──────────────────────────────────────────── */
@@ -248,7 +257,7 @@ export default function CompanyDetailPage() {
 
       {activeTab === 'historico' && <HistoryTab history={history} />}
 
-      {activeTab === 'financeiro' && <FinancialTab company={company} stats={stats} />}
+      {activeTab === 'financeiro' && <FinancialTab company={company} companyId={id} onUpdated={handleCompanyUpdated} />}
 
       {activeTab === 'config' && (
         <SettingsTab company={company} companyId={id} onUpdated={handleCompanyUpdated} />
@@ -591,19 +600,64 @@ function HistoryTab({ history }) {
   )
 }
 
-function FinancialTab({ company, stats }) {
-  const financial = stats?.financial
+const FINANCIAL_STATUS_OPTIONS = ['Em dia', 'Inadimplente', 'Trial', 'Cancelado', 'Isento']
+
+function FinancialTab({ company, companyId, onUpdated }) {
+  const toDateInput = (v) => (v ? String(v).substring(0, 10) : '')
+
+  const [situacao,     setSituacao]     = useState(company.financial_status || '')
+  const [vencimento,   setVencimento]   = useState(toDateInput(company.financial_due_date))
+  const [contratadoEm, setContratadoEm] = useState(toDateInput(company.contracted_at))
+  const [saving,       setSaving]       = useState(false)
+
+  useEffect(() => {
+    setSituacao(company.financial_status || '')
+    setVencimento(toDateInput(company.financial_due_date))
+    setContratadoEm(toDateInput(company.contracted_at))
+  }, [company])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const updated = await platformService.updateCompany(companyId, {
+        financial_status:   situacao || null,
+        financial_due_date: vencimento || null,
+        contracted_at:      contratadoEm || null,
+      })
+      toast.success('Situação financeira atualizada')
+      onUpdated(updated)
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Erro ao salvar situação financeira')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   return (
-    <div className="card p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">
-      <Field label="Plano"               value={company.plan} />
-      <Field label="Situação"            value={financial?.situacao} />
-      <Field label="Vencimento"          value={financial?.vencimento} />
-      <Field label="Data de contratação" value={financial?.contratadoEm} />
-      {!financial && (
-        <p className="sm:col-span-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
-          Situação, vencimento e data de contratação aparecem aqui assim que o endpoint de estatísticas financeiras da empresa for implementado no backend.
-        </p>
-      )}
+    <div className="card p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <Field label="Plano contratado" value={company.plan} />
+        <div>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Situação</label>
+          <select className="input" value={situacao} onChange={e => setSituacao(e.target.value)}>
+            <option value="">— Não definida —</option>
+            {FINANCIAL_STATUS_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Vencimento</label>
+          <input className="input" type="date" value={vencimento} onChange={e => setVencimento(e.target.value)} />
+        </div>
+        <div>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Data de contratação</label>
+          <input className="input" type="date" value={contratadoEm} onChange={e => setContratadoEm(e.target.value)} />
+        </div>
+      </div>
+      <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <button onClick={handleSave} disabled={saving} className="btn-primary">
+          {saving ? 'Salvando...' : 'Salvar situação financeira'}
+        </button>
+      </div>
     </div>
   )
 }

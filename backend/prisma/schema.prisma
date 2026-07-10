@@ -26,20 +26,29 @@ model User {
   resetTokenExpiresAt                               DateTime?              @map("reset_token_expires_at") @db.Timestamptz(6)
   companyId                                         String?                @map("company_id") @db.Uuid
   activity_logs                                     activity_logs[]
+  budget_snapshots                                  BudgetSnapshot[]
+  budgets                                           Budget[]
   calendar_events_calendar_events_created_byTousers CalendarEvent[]        @relation("calendar_events_created_byTousers")
   calendar_events_calendar_events_user_idTousers    CalendarEvent[]        @relation("calendar_events_user_idTousers")
   chat_messages                                     chat_messages[]
   chat_room_members                                 chat_room_members[]
   chat_rooms                                        ChatRoom[]
+  client_project_access                             ClientProjectAccess[]
   clients_leads                                     ClientLead[]
   company_users                                     CompanyUser[]
   expense_categories                                ExpenseCategory[]
   expenses                                          Expense[]
   notifications                                     Notification[]
+  phase_attachments                                 phase_attachments[]
+  phase_comments                                    phase_comments[]
+  post_attachments                                  PostAttachment[]
+  post_comments                                     PostComment[]
+  posts                                             Post[]
   project_files                                     project_files[]
   project_members                                   project_members[]
   project_phases_project_phases_completed_byTousers project_phases[]       @relation("project_phases_completed_byTousers")
   project_phases_project_phases_created_byTousers   project_phases[]       @relation("project_phases_created_byTousers")
+  project_stages_created                            project_stages[]       @relation("project_stages_created_by")
   project_status_history                            ProjectStatusHistory[]
   projects_projects_created_byTousers               Project[]              @relation("projects_created_byTousers")
   projects_projects_owner_idTousers                 Project[]              @relation("projects_owner_idTousers")
@@ -48,19 +57,7 @@ model User {
   task_assignments                                  task_assignments[]
   task_comments                                     task_comments[]
   tasks                                             Task[]
-  posts                                              Post[]
-  post_attachments                                  PostAttachment[]
-  post_comments                                     PostComment[]
-  client_project_access                             ClientProjectAccess[]
-  // NOVO — etapas/fases de projeto
-  project_stages_created                            project_stages[]       @relation("project_stages_created_by")
-  phase_comments                                    phase_comments[]
-  phase_attachments                                 phase_attachments[]
   companies                                         Company?               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_company")
-
-  // NOVO — Módulo de Orçamentos Dinâmicos
-  budgets                                           Budget[]
-  budget_snapshots                                  BudgetSnapshot[]
 
   @@index([companyId], map: "idx_users_company")
   @@index([email], map: "idx_users_email")
@@ -78,21 +75,38 @@ model Company {
   logo_url               String?
   plan                   String?                  @default("starter") @db.VarChar(30)
   status                 String?                  @default("active") @db.VarChar(20)
-  responsible_name       String?                  @db.VarChar(150)
-  responsible_role       String?                  @db.VarChar(100)
   createdAt              DateTime?                @default(now()) @map("created_at") @db.Timestamptz(6)
   updated_at             DateTime?                @default(now()) @db.Timestamptz(6)
   slug                   String                   @unique(map: "companies_slug_unique")
   isActive               Boolean                  @default(true) @map("is_active")
+  responsible_name       String?                  @db.VarChar(150)
+  responsible_role       String?                  @db.VarChar(100)
+  contracted_at          DateTime?                @db.Date
+  financial_due_date     DateTime?                @db.Date
+  financial_status       String?                  @db.VarChar(30)
   activity_logs          activity_logs[]
+  budget_configs         BudgetConfig?
+  budget_items           BudgetItem[]
+  budget_levels          BudgetLevel[]
+  budget_rates           BudgetRate[]
+  budget_snapshots       BudgetSnapshot[]
+  budget_titles          BudgetTitle[]
+  budgets                Budget[]
   calendar_events        CalendarEvent[]
   chat_messages          chat_messages[]
   chat_rooms             ChatRoom[]
+  client_project_access  ClientProjectAccess[]
   clients_leads          ClientLead[]
+  comment_attachments    CommentAttachment[]
   company_users          CompanyUser[]
   expense_categories     ExpenseCategory[]
   expenses               Expense[]
   notifications          Notification[]
+  phase_attachments      phase_attachments[]
+  phase_comments         phase_comments[]
+  post_attachments       PostAttachment[]
+  post_comments          PostComment[]
+  posts                  Post[]
   project_phases         project_phases[]
   project_stages         project_stages[]
   project_status_history ProjectStatusHistory[]
@@ -108,23 +122,6 @@ model Company {
   task_comments          task_comments[]
   tasks                  Task[]
   users                  User[]
-  posts                  Post[]
-  post_attachments       PostAttachment[]
-  post_comments          PostComment[]
-  comment_attachments    CommentAttachment[]
-  client_project_access  ClientProjectAccess[]
-  // NOVO
-  phase_comments         phase_comments[]
-  phase_attachments      phase_attachments[]
-
-  // NOVO — Módulo de Orçamentos Dinâmicos
-  budget_configs         BudgetConfig[]
-  budget_titles          BudgetTitle[]
-  budget_levels          BudgetLevel[]
-  budget_rates           BudgetRate[]
-  budgets                Budget[]
-  budget_items           BudgetItem[]
-  budget_snapshots       BudgetSnapshot[]
 
   @@map("companies")
 }
@@ -184,8 +181,10 @@ model Project {
   drive_folder_id                  String?                @db.VarChar(255)
   drive_folder_url                 String?
   companyId                        String                 @map("company_id") @db.Uuid
+  client_project_access            ClientProjectAccess[]
   clients_leads                    ClientLead[]
   expenses                         Expense[]
+  posts                            Post[]
   project_files                    project_files[]
   project_members                  project_members[]
   project_stages                   project_stages[]
@@ -195,8 +194,6 @@ model Project {
   users_projects_owner_idTousers   User                   @relation("projects_owner_idTousers", fields: [ownerId], references: [id], onUpdate: NoAction)
   revenues                         Revenue[]
   tasks                            Task[]
-  posts                            Post[]
-  client_project_access            ClientProjectAccess[]
 
   @@index([companyId], map: "idx_projects_company")
   @@index([companyId], map: "idx_projects_company_id")
@@ -424,32 +421,28 @@ model Proposal {
 }
 
 model ClientLead {
-  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  companyId  String    @map("company_id") @db.Uuid
-  name       String    @db.VarChar(255)
-  email      String?   @db.VarChar(255)
-  phone      String?   @db.VarChar(50)
-  status     String    @default("lead") @db.VarChar(20)
-  situacao   String?   @db.VarChar(30)
-  financeiro String?   @db.VarChar(20)
-  projectId  String?   @map("project_id") @db.Uuid
-  userId     String?   @map("user_id") @db.Uuid
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  portalEmail        String?    @unique @map("portal_email") @db.VarChar(255)
-  portalPasswordHash String?    @map("portal_password_hash") @db.VarChar(255)
-  portalIsActive     Boolean    @default(true) @map("portal_is_active")
-  portalLastLoginAt  DateTime?  @map("portal_last_login_at") @db.Timestamptz(6)
-
-  companies             Company               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_clients_leads_company")
+  id                    String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId             String                @map("company_id") @db.Uuid
+  name                  String                @db.VarChar(255)
+  email                 String?               @db.VarChar(255)
+  phone                 String?               @db.VarChar(50)
+  status                String                @default("lead") @db.VarChar(20)
+  projectId             String?               @map("project_id") @db.Uuid
+  userId                String?               @map("user_id") @db.Uuid
+  createdAt             DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  financeiro            String?               @db.VarChar(20)
+  situacao              String?               @db.VarChar(30)
+  portalEmail           String?               @unique @map("portal_email") @db.VarChar(255)
+  portalIsActive        Boolean               @default(true) @map("portal_is_active")
+  portalLastLoginAt     DateTime?             @map("portal_last_login_at") @db.Timestamptz(6)
+  portalPasswordHash    String?               @map("portal_password_hash") @db.VarChar(255)
+  budgets               Budget[]
+  client_project_access ClientProjectAccess[]
   projects              Project?              @relation(fields: [projectId], references: [id], onUpdate: NoAction)
   users                 User?                 @relation(fields: [userId], references: [id], onUpdate: NoAction)
-  client_project_access ClientProjectAccess[]
+  companies             Company               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_clients_leads_company")
   post_comments         PostComment[]
-
-  // NOVO — Módulo de Orçamentos Dinâmicos
-  budgets               Budget[]
 
   @@unique([companyId, email], map: "clients_leads_company_email_key")
   @@index([companyId], map: "idx_clients_leads_company")
@@ -457,17 +450,16 @@ model ClientLead {
 }
 
 model ClientProjectAccess {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  clientLeadId String   @map("client_lead_id") @db.Uuid
-  projectId    String   @map("project_id") @db.Uuid
-  companyId    String   @map("company_id") @db.Uuid
-  grantedBy    String?  @map("granted_by") @db.Uuid
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
+  id            String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  clientLeadId  String     @map("client_lead_id") @db.Uuid
+  projectId     String     @map("project_id") @db.Uuid
+  companyId     String     @map("company_id") @db.Uuid
+  grantedBy     String?    @map("granted_by") @db.Uuid
+  createdAt     DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   clients_leads ClientLead @relation(fields: [clientLeadId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  projects      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   companies     Company    @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users         User?      @relation(fields: [grantedBy], references: [id], onUpdate: NoAction)
+  projects      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@unique([clientLeadId, projectId])
   @@index([companyId], map: "idx_client_project_access_company")
@@ -476,19 +468,18 @@ model ClientProjectAccess {
 }
 
 model Post {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  companyId String   @map("company_id") @db.Uuid
-  projectId String   @map("project_id") @db.Uuid
-  createdBy String   @map("created_by") @db.Uuid
-  content   String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  companies        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  projects         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users            User             @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  id               String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId        String           @map("company_id") @db.Uuid
+  projectId        String           @map("project_id") @db.Uuid
+  createdBy        String           @map("created_by") @db.Uuid
+  content          String?
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   post_attachments PostAttachment[]
   post_comments    PostComment[]
+  companies        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users            User             @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  projects         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([companyId], map: "idx_posts_company")
   @@index([projectId], map: "idx_posts_project")
@@ -507,10 +498,9 @@ model PostAttachment {
   objectKey  String   @map("object_key") @db.VarChar(500)
   url        String
   createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  posts     Post    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  companies Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users     User    @relation(fields: [uploadedBy], references: [id], onUpdate: NoAction)
+  companies  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  posts      Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User     @relation(fields: [uploadedBy], references: [id], onUpdate: NoAction)
 
   @@index([postId], map: "idx_post_attachments_post")
   @@index([companyId], map: "idx_post_attachments_company")
@@ -518,21 +508,19 @@ model PostAttachment {
 }
 
 model PostComment {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  postId    String   @map("post_id") @db.Uuid
-  companyId String   @map("company_id") @db.Uuid
-  content   String?
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
-  userId       String? @map("user_id") @db.Uuid
-  clientLeadId String? @map("client_lead_id") @db.Uuid
-
-  posts               Post                @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                  String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId              String              @map("post_id") @db.Uuid
+  companyId           String              @map("company_id") @db.Uuid
+  content             String?
+  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  userId              String?             @map("user_id") @db.Uuid
+  clientLeadId        String?             @map("client_lead_id") @db.Uuid
+  comment_attachments CommentAttachment[]
+  clients_leads       ClientLead?         @relation(fields: [clientLeadId], references: [id], onUpdate: NoAction)
   companies           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  users                User?               @relation(fields: [userId], references: [id], onUpdate: NoAction)
-  clients_leads        ClientLead?         @relation(fields: [clientLeadId], references: [id], onUpdate: NoAction)
-  comment_attachments  CommentAttachment[]
+  posts               Post                @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users               User?               @relation(fields: [userId], references: [id], onUpdate: NoAction)
 
   @@index([postId], map: "idx_post_comments_post")
   @@index([companyId], map: "idx_post_comments_company")
@@ -540,16 +528,15 @@ model PostComment {
 }
 
 model CommentAttachment {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  commentId String   @map("comment_id") @db.Uuid
-  companyId String   @map("company_id") @db.Uuid
-  fileName  String   @map("file_name") @db.VarChar(255)
-  fileSize  BigInt?  @map("file_size")
-  mimeType  String?  @map("mime_type") @db.VarChar(127)
-  objectKey String   @map("object_key") @db.VarChar(500)
-  url       String
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  commentId     String      @map("comment_id") @db.Uuid
+  companyId     String      @map("company_id") @db.Uuid
+  fileName      String      @map("file_name") @db.VarChar(255)
+  fileSize      BigInt?     @map("file_size")
+  mimeType      String?     @map("mime_type") @db.VarChar(127)
+  objectKey     String      @map("object_key") @db.VarChar(500)
+  url           String
+  createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   post_comments PostComment @relation(fields: [commentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   companies     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
@@ -658,7 +645,7 @@ model project_phases {
   id                                       String              @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
   project_stage_id                         String              @db.Uuid
   phase_name                               String              @db.VarChar(200)
-  comment                                  String?             // LEGADO — mantido só para não perder dados antigos; não é mais lido/escrito pela aplicação. Ver phase_comments.
+  comment                                  String?
   is_completed                             Boolean             @default(false)
   created_by                               String?             @db.Uuid
   completed_by                             String?             @db.Uuid
@@ -666,13 +653,13 @@ model project_phases {
   completed_at                             DateTime?           @db.Timestamptz(6)
   updated_at                               DateTime            @default(now()) @db.Timestamptz(6)
   company_id                               String              @db.Uuid
-  phase_order                              Int                 @default(0) @db.SmallInt // NOVO — ordenação manual (drag-and-drop)
+  phase_order                              Int                 @default(0) @db.SmallInt
+  phase_attachments                        phase_attachments[]
+  phase_comments                           phase_comments[]
   companies                                Company             @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_phases_company")
   users_project_phases_completed_byTousers User?               @relation("project_phases_completed_byTousers", fields: [completed_by], references: [id], onUpdate: NoAction)
   users_project_phases_created_byTousers   User?               @relation("project_phases_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction)
   project_stages                           project_stages      @relation(fields: [project_stage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  phase_comments                           phase_comments[]    // NOVO
-  phase_attachments                        phase_attachments[] // NOVO
 
   @@index([project_stage_id], map: "idx_proj_phases_stage")
   @@index([company_id], map: "idx_project_phases_company")
@@ -689,32 +676,27 @@ model project_stages {
   stage_order    Int              @default(0) @db.SmallInt
   created_at     DateTime         @default(now()) @db.Timestamptz(6)
   company_id     String           @db.Uuid
-  created_by     String?          @db.Uuid // NOVO — nullable: as 5 etapas legadas não têm criador registrado
+  created_by     String?          @db.Uuid
   project_phases project_phases[]
   companies      Company          @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_stages_company")
-  projects       Project          @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users          User?            @relation("project_stages_created_by", fields: [created_by], references: [id], onUpdate: NoAction)
+  projects       Project          @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([project_id], map: "idx_proj_stages_project")
   @@index([company_id], map: "idx_project_stages_company")
   @@index([project_id], map: "idx_project_stages_project")
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// NOVO — Histórico de comentários por fase (autor, data/hora, editável e
-// excluível pelo autor ou por admin/owner/developer)
-// ═══════════════════════════════════════════════════════════════════════
 model phase_comments {
-  id         String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  phase_id   String   @db.Uuid
-  company_id String   @db.Uuid
-  user_id    String   @db.Uuid
-  content    String
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  updated_at DateTime @default(now()) @db.Timestamptz(6)
-
-  project_phases project_phases @relation(fields: [phase_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id             String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  phase_id       String         @db.Uuid
+  company_id     String         @db.Uuid
+  user_id        String         @db.Uuid
+  content        String
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime       @default(now()) @db.Timestamptz(6)
   companies      Company        @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project_phases project_phases @relation(fields: [phase_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users          User           @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@index([phase_id], map: "idx_phase_comments_phase")
@@ -722,23 +704,19 @@ model phase_comments {
   @@map("phase_comments")
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// NOVO — Anexos por fase (mesma arquitetura de project_files, agora no R2)
-// ═══════════════════════════════════════════════════════════════════════
 model phase_attachments {
-  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
-  phase_id    String   @db.Uuid
-  company_id  String   @db.Uuid
-  uploaded_by String   @db.Uuid
-  file_name   String   @db.VarChar(255)
-  file_size   BigInt?
-  mime_type   String?  @db.VarChar(127)
-  object_key  String   @db.VarChar(500)
-  url         String
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
-
-  project_phases project_phases @relation(fields: [phase_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id             String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  phase_id       String         @db.Uuid
+  company_id     String         @db.Uuid
+  uploaded_by    String         @db.Uuid
+  file_name      String         @db.VarChar(255)
+  file_size      BigInt?
+  mime_type      String?        @db.VarChar(127)
+  object_key     String         @db.VarChar(500)
+  url            String
+  created_at     DateTime       @default(now()) @db.Timestamptz(6)
   companies      Company        @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project_phases project_phases @relation(fields: [phase_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   users          User           @relation(fields: [uploaded_by], references: [id], onUpdate: NoAction)
 
   @@index([phase_id], map: "idx_phase_attachments_phase")
@@ -836,17 +814,12 @@ model task_comments {
   @@index([company_id], map: "idx_task_comments_company")
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-// NOVO — Módulo de Orçamentos Dinâmicos (Budget)
-// ═══════════════════════════════════════════════════════════════════════
-
 model BudgetConfig {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  companyId String   @unique @map("company_id") @db.Uuid
-  name      String   @default("Configuração de Orçamentos") @db.VarChar(150)
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId     String        @unique @map("company_id") @db.Uuid
+  name          String        @default("Configuração de Orçamentos") @db.VarChar(150)
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   companies     Company       @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_configs_company")
   budget_titles BudgetTitle[]
 
@@ -854,17 +827,16 @@ model BudgetConfig {
 }
 
 model BudgetTitle {
-  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  budgetConfigId String   @map("budget_config_id") @db.Uuid
-  companyId      String   @map("company_id") @db.Uuid
-  label          String   @db.VarChar(150)
-  sortOrder      Int      @default(0) @map("sort_order") @db.SmallInt
-  isActive       Boolean  @default(true) @map("is_active")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  budgetConfigId String        @map("budget_config_id") @db.Uuid
+  companyId      String        @map("company_id") @db.Uuid
+  label          String        @db.VarChar(150)
+  sortOrder      Int           @default(0) @map("sort_order") @db.SmallInt
+  isActive       Boolean       @default(true) @map("is_active")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  budget_levels  BudgetLevel[]
   budget_configs BudgetConfig  @relation(fields: [budgetConfigId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   companies      Company       @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_titles_company")
-  budget_levels  BudgetLevel[]
 
   @@index([budgetConfigId], map: "idx_budget_titles_config")
   @@index([companyId], map: "idx_budget_titles_company")
@@ -872,18 +844,17 @@ model BudgetTitle {
 }
 
 model BudgetLevel {
-  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  budgetTitleId String   @map("budget_title_id") @db.Uuid
-  companyId     String   @map("company_id") @db.Uuid
-  label         String   @db.VarChar(150)
-  sortOrder     Int      @default(0) @map("sort_order") @db.SmallInt
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
+  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  budgetTitleId String       @map("budget_title_id") @db.Uuid
+  companyId     String       @map("company_id") @db.Uuid
+  label         String       @db.VarChar(150)
+  sortOrder     Int          @default(0) @map("sort_order") @db.SmallInt
+  isActive      Boolean      @default(true) @map("is_active")
+  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz(6)
+  budget_items  BudgetItem[]
   budget_titles BudgetTitle  @relation(fields: [budgetTitleId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   companies     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_levels_company")
   budget_rates  BudgetRate[]
-  budget_items  BudgetItem[]
 
   @@index([budgetTitleId], map: "idx_budget_levels_title")
   @@index([companyId], map: "idx_budget_levels_company")
@@ -899,9 +870,8 @@ model BudgetRate {
   isCurrent     Boolean          @default(true) @map("is_current")
   effectiveFrom DateTime         @default(now()) @map("effective_from") @db.Timestamptz(6)
   createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  budget_levels BudgetLevel @relation(fields: [budgetLevelId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  companies     Company     @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_rates_company")
+  budget_levels BudgetLevel      @relation(fields: [budgetLevelId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies     Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_rates_company")
 
   @@index([budgetLevelId, isCurrent], map: "idx_budget_rates_level_current")
   @@index([companyId], map: "idx_budget_rates_company")
@@ -909,25 +879,24 @@ model BudgetRate {
 }
 
 model Budget {
-  id             Int           @id @default(autoincrement())
-  budgetNumber   String        @map("budget_number") @db.VarChar(20)
-  title          String
-  clientId       String?       @map("client_id") @db.Uuid
-  clientName     String?       @map("client_name")
-  projectArea    Decimal       @default(0) @map("project_area") @db.Decimal(14, 4)
-  fixedFeesTotal Decimal       @default(0) @map("fixed_fees_total") @db.Decimal(14, 2)
-  finalNotes     String?       @map("final_notes")
-  status         budget_status @default(draft)
-  createdBy      String        @map("created_by") @db.Uuid
-  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  companyId      String        @map("company_id") @db.Uuid
-
-  companies        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budgets_company")
-  users            User             @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  clients_leads    ClientLead?      @relation(fields: [clientId], references: [id], onUpdate: NoAction)
+  id               Int              @id @default(autoincrement())
+  budgetNumber     String           @map("budget_number") @db.VarChar(20)
+  title            String
+  clientId         String?          @map("client_id") @db.Uuid
+  clientName       String?          @map("client_name")
+  projectArea      Decimal          @default(0) @map("project_area") @db.Decimal(14, 4)
+  fixedFeesTotal   Decimal          @default(0) @map("fixed_fees_total") @db.Decimal(14, 2)
+  finalNotes       String?          @map("final_notes")
+  status           budget_status    @default(draft)
+  createdBy        String           @map("created_by") @db.Uuid
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  companyId        String           @map("company_id") @db.Uuid
   budget_items     BudgetItem[]
   budget_snapshots BudgetSnapshot[]
+  clients_leads    ClientLead?      @relation(fields: [clientId], references: [id], onUpdate: NoAction)
+  users            User             @relation(fields: [createdBy], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  companies        Company          @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budgets_company")
 
   @@unique([companyId, budgetNumber], name: "unique_company_budget")
   @@index([companyId], map: "idx_budgets_company")
@@ -946,10 +915,9 @@ model BudgetItem {
   rateType          budget_rate_type? @map("rate_type")
   lineTotal         Decimal           @default(0) @map("line_total") @db.Decimal(14, 2)
   orderIndex        Int               @default(0) @map("order_index")
-
-  budgets       Budget       @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  companies     Company      @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_items_company")
-  budget_levels BudgetLevel? @relation(fields: [budgetLevelId], references: [id], onUpdate: NoAction)
+  budgets           Budget            @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  budget_levels     BudgetLevel?      @relation(fields: [budgetLevelId], references: [id], onUpdate: NoAction)
+  companies         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_items_company")
 
   @@index([budgetId], map: "idx_budget_items_budget")
   @@index([companyId], map: "idx_budget_items_company")
@@ -965,10 +933,9 @@ model BudgetSnapshot {
   totalAmount Decimal  @map("total_amount") @db.Decimal(14, 2)
   createdBy   String   @map("created_by") @db.Uuid
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
-
-  budgets   Budget  @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  companies Company @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_snapshots_company")
-  users     User    @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  budgets     Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       User     @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
+  companies   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_budget_snapshots_company")
 
   @@unique([budgetId, version])
   @@index([budgetId], map: "idx_budget_snapshots_budget")
@@ -1045,7 +1012,6 @@ enum task_status {
   cancelled
 }
 
-// NOVO — enums do módulo de Orçamentos
 enum budget_rate_type {
   per_area
   fixed

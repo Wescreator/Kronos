@@ -50,6 +50,11 @@ const platformService = {
   getCompanyHistory: (companyId) =>
     api.get(`/platform/companies/${companyId}/history`).then(r => r.data.history || []),
 
+  // KPIs/estatísticas da empresa: { projects, clients, files, lastAccess,
+  // financial: { situacao, vencimento, contratadoEm } }.
+  getCompanyStats: (companyId) =>
+    api.get(`/platform/companies/${companyId}/stats`).then(r => r.data.stats),
+
   // ── NOVO — Clientes com acesso ao portal de postagens ──────────────────
 
   // Lista de projetos da empresa, usada para popular o multi-select de

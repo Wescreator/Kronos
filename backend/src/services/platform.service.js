@@ -1,6 +1,28 @@
 const bcrypt = require('bcryptjs')
 const AppError = require('../utils/AppError')
 const prisma = require('../config/prisma')
+const pool = require('../config/database')
+const { logActivity } = require('../utils/activityLog')
+
+// Rótulos legíveis dos campos de empresa — usados no histórico de auditoria.
+const FIELD_LABELS = {
+  name:             'Nome',
+  trade_name:       'Nome fantasia',
+  document:         'Documento',
+  email:            'E-mail',
+  phone:            'Telefone',
+  plan:             'Plano',
+  status:           'Status',
+  responsible_name: 'Responsável técnico',
+  responsible_role: 'Cargo do responsável',
+  financial_status: 'Situação financeira',
+  financial_due_date: 'Vencimento',
+  contracted_at:    'Data de contratação',
+}
+
+// Entity types que compõem o "histórico de alterações" da empresa no Admin
+// (filtra o ruído do logger genérico de requisições).
+const HISTORY_ENTITY_TYPES = ['company', 'company_user', 'client_access']
 
 /**
  * Servico de plataforma (escopo global / super admin).
@@ -29,6 +51,9 @@ const toCompanyDTO = (c) => ({
   logo_url:         c.logo_url,
   responsible_name: c.responsible_name,
   responsible_role: c.responsible_role,
+  financial_status:   c.financial_status ?? null,
+  financial_due_date: c.financial_due_date ?? null,
+  contracted_at:      c.contracted_at ?? null,
 })
 
 /**
@@ -95,20 +120,66 @@ const getCompanyHistory = async (companyId) => {
   const company = await prisma.company.findUnique({ where: { id: companyId } })
   if (!company) throw new AppError(404, 'Empresa nao encontrada.')
 
-  const history = await prisma.activity_logs.findMany({
-    where: { company_id: companyId },
-    orderBy: { created_at: 'desc' },
-  })
+  // Leitura via pool cru: activity_logs usa company_id (snake_case), o que
+  // a extensão multi-tenant do Prisma (que injeta companyId) não suporta.
+  // Filtra pelos entity_types de admin para não misturar o ruído do logger
+  // genérico de requisições.
+  const { rows } = await pool.query(
+    `SELECT l.id, l.action, l.entity_type, l.entity_id, l.payload, l.created_at,
+            u.name AS actor_name
+       FROM activity_logs l
+       LEFT JOIN users u ON u.id = l.user_id
+      WHERE l.company_id = $1
+        AND l.entity_type = ANY($2::text[])
+      ORDER BY l.created_at DESC
+      LIMIT 100`,
+    [companyId, HISTORY_ENTITY_TYPES]
+  )
 
-  return history.map(h => ({
-    id: h.id,
-    label: h.action || 'Alteração realizada',
-    actor: h.user_id || 'Sistema',
-    createdAt: h.created_at ? h.created_at.toLocaleString('pt-BR') : null,
-    field: h.entity_type || null,
-    oldValue: null,
-    newValue: null,
-  }))
+  return rows.map(r => {
+    const p = r.payload || {}
+    return {
+      id:        r.id,
+      label:     p.label || r.action || 'Alteração realizada',
+      actor:     r.actor_name || 'Sistema',
+      createdAt: r.created_at ? new Date(r.created_at).toLocaleString('pt-BR') : null,
+      field:     p.field ?? null,
+      oldValue:  p.oldValue ?? null,
+      newValue:  p.newValue ?? null,
+    }
+  })
+}
+
+// ── Estatísticas / KPIs de uma empresa ─────────────────────────
+//
+// Agregações por company_id: projetos, clientes (status='cliente'),
+// arquivos de projeto, último acesso (maior last_login_at entre os
+// usuários) e a situação financeira (colunas da própria empresa).
+const getCompanyStats = async (companyId) => {
+  const company = await prisma.company.findUnique({ where: { id: companyId } })
+  if (!company) throw new AppError(404, 'Empresa nao encontrada.')
+
+  const [projects, clients, files, lastAccessAgg] = await Promise.all([
+    prisma.project.count(),                                   // context injeta companyId
+    prisma.clientLead.count({ where: { status: 'cliente' } }), // idem
+    prisma.project_files.count({ where: { projects: { companyId } } }), // via relação (não é tenant model)
+    prisma.user.aggregate({ where: { companyId }, _max: { lastLoginAt: true } }),
+  ])
+
+  const last = lastAccessAgg?._max?.lastLoginAt
+  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : null)
+
+  return {
+    projects,
+    clients,
+    files,
+    lastAccess: last ? new Date(last).toLocaleString('pt-BR') : null,
+    financial: {
+      situacao:     company.financial_status ?? null,
+      vencimento:   fmtDate(company.financial_due_date),
+      contratadoEm: fmtDate(company.contracted_at) || fmtDate(company.createdAt),
+    },
+  }
 }
 
 // ── Usuarios de uma empresa ─────────────────────────────────────
@@ -153,7 +224,7 @@ const createCompanyUser = async ({ companyId, name, email, password, role, posit
   const companyRole = role || 'admin'
   const passwordHash = await bcrypt.hash(password, 12)
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
     const user = await tx.user.create({
       data: {
         name:        name.trim(),
@@ -178,10 +249,25 @@ const createCompanyUser = async ({ companyId, name, email, password, role, posit
       position: user.position,
     }
   })
+
+  await logActivity({
+    entityType: 'company_user',
+    entityId:   created.id,
+    action:     'user_created',
+    payload:    { label: 'Usuário adicionado', field: 'Usuário', newValue: created.name },
+  })
+
+  return created
 }
 
 const setCompanyActive = async (companyId, isActive) => {
   await prisma.company.update({ where: { id: companyId }, data: { isActive: !!isActive } })
+  await logActivity({
+    entityType: 'company',
+    entityId:   companyId,
+    action:     isActive ? 'company_activated' : 'company_blocked',
+    payload:    { label: isActive ? 'Empresa ativada' : 'Empresa bloqueada' },
+  })
   return { id: companyId, is_active: !!isActive }
 }
 
@@ -203,11 +289,40 @@ const updateCompany = async (companyId, fields) => {
   if (fields.is_active !== undefined) data.isActive = !!fields.is_active
   if (fields.responsible_name !== undefined) data.responsible_name = fields.responsible_name || null
   if (fields.responsible_role !== undefined) data.responsible_role = fields.responsible_role || null
+  // Situação financeira (editável no painel Admin → aba Financeiro)
+  if (fields.financial_status !== undefined) data.financial_status = fields.financial_status || null
+  if (fields.financial_due_date !== undefined) {
+    data.financial_due_date = fields.financial_due_date ? new Date(fields.financial_due_date) : null
+  }
+  if (fields.contracted_at !== undefined) {
+    data.contracted_at = fields.contracted_at ? new Date(fields.contracted_at) : null
+  }
   data.updated_at = new Date()
 
   try {
     const updated = await prisma.company.update({ where: { id: companyId }, data })
     const count = await prisma.companyUser.count({ where: { companyId } })
+
+    // Auditoria: um evento por campo efetivamente alterado.
+    const fmt = (v) => {
+      if (v === null || v === undefined || v === '') return '—'
+      if (v instanceof Date) return v.toLocaleDateString('pt-BR')
+      return String(v)
+    }
+    for (const key of Object.keys(data)) {
+      if (key === 'updated_at') continue
+      const before = fmt(company[key])
+      const after  = fmt(data[key])
+      if (before !== after) {
+        await logActivity({
+          entityType: 'company',
+          entityId:   companyId,
+          action:     'company_updated',
+          payload:    { label: 'Empresa atualizada', field: FIELD_LABELS[key] || key, oldValue: before, newValue: after },
+        })
+      }
+    }
+
     return { ...toCompanyDTO(updated), users_count: count }
   } catch (err) {
     if (err.code === 'P2002') {
@@ -228,6 +343,12 @@ const uploadCompanyLogo = async (companyId, logoUrl) => {
     data:  { logo_url: logoUrl, updated_at: new Date() },
   })
   const count = await prisma.companyUser.count({ where: { companyId } })
+  await logActivity({
+    entityType: 'company',
+    entityId:   companyId,
+    action:     'company_logo_updated',
+    payload:    { label: 'Logomarca atualizada' },
+  })
   return { ...toCompanyDTO(updated), users_count: count }
 }
 
@@ -255,15 +376,32 @@ const updateCompanyUser = async (companyId, userId, { name, position, role, isAc
   })
 
   const users = await listCompanyUsers(companyId)
-  return users.find(u => u.id === userId)
+  const updated = users.find(u => u.id === userId)
+
+  await logActivity({
+    entityType: 'company_user',
+    entityId:   userId,
+    action:     'user_updated',
+    payload:    { label: 'Usuário atualizado', field: 'Usuário', newValue: updated?.name },
+  })
+
+  return updated
 }
 
 const deleteCompanyUser = async (companyId, userId) => {
   const link = await prisma.companyUser.findFirst({ where: { companyId, userId } })
   if (!link) throw new AppError(404, 'Usuario nao encontrado nesta empresa.')
 
+  const target = await prisma.user.findUnique({ where: { id: userId } })
+
   try {
     await prisma.user.delete({ where: { id: userId } })
+    await logActivity({
+      entityType: 'company_user',
+      entityId:   userId,
+      action:     'user_deleted',
+      payload:    { label: 'Usuário removido', field: 'Usuário', oldValue: target?.name },
+    })
     return { deleted: true }
   } catch (err) {
     if (err.code === 'P2003' || err.code === '23503') {
@@ -374,6 +512,13 @@ const createClientPortalAccess = async (companyId, clientId, { portalEmail, pass
     throw err
   }
 
+  await logActivity({
+    entityType: 'client_access',
+    entityId:   clientId,
+    action:     'access_granted',
+    payload:    { label: 'Acesso ao portal criado', field: 'Cliente', newValue: client.name },
+  })
+
   const list = await listCompanyClients(companyId)
   return list.find(c => c.id === clientId)
 }
@@ -407,6 +552,13 @@ const updateClientPortalAccess = async (companyId, clientId, { password, isActiv
     }
   })
 
+  await logActivity({
+    entityType: 'client_access',
+    entityId:   clientId,
+    action:     'access_updated',
+    payload:    { label: 'Acesso ao portal atualizado', field: 'Cliente', newValue: client.name },
+  })
+
   const list = await listCompanyClients(companyId)
   return list.find(c => c.id === clientId)
 }
@@ -427,6 +579,13 @@ const revokeClientPortalAccess = async (companyId, clientId) => {
     },
   })
 
+  await logActivity({
+    entityType: 'client_access',
+    entityId:   clientId,
+    action:     'access_revoked',
+    payload:    { label: 'Acesso ao portal revogado', field: 'Cliente', oldValue: client.name },
+  })
+
   return { revoked: true }
 }
 
@@ -441,6 +600,7 @@ module.exports = {
   updateCompanyUser,
   deleteCompanyUser,
   getCompanyHistory,
+  getCompanyStats,
   listCompanyProjects,
   listCompanyClients,
   createClientPortalAccess,
