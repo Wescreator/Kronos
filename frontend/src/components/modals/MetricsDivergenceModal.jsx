@@ -21,7 +21,7 @@ export default function MetricsDivergenceModal({ open, onClose, onApply, diverge
           <div
             key={d.item_id}
             className="flex items-center justify-between px-3 py-2.5 rounded-xl"
-            style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}
+            style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid var(--border-subtle)' }}
           >
             <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{d.label}</span>
             <span className="text-xs" style={{ color: 'var(--text-muted)' }}>

@@ -18,17 +18,17 @@ import { getTasks, getTasksDashboard }    from '../../services/tasks.service'
 
 /* Mesmos estilos de linha da DashboardPage (elevação sólida do tema claro) */
 const glassRow = {
-  background: '#FAFAFA',
-  border: '1px solid #E5E7EB',
-  borderTop: '1px solid #E5E7EB',
+  background: 'var(--bg-surface-2)',
+  border: '1px solid var(--border-subtle)',
+  borderTop: '1px solid var(--border-subtle)',
 }
 const glassRowHoverEnter = (e) => {
-  e.currentTarget.style.background  = '#F3F4F6'
-  e.currentTarget.style.borderColor = '#D1D5DB'
+  e.currentTarget.style.background  = 'var(--bg-hover)'
+  e.currentTarget.style.borderColor = 'var(--border-medium)'
 }
 const glassRowHoverLeave = (e) => {
   e.currentTarget.style.background  = glassRow.background
-  e.currentTarget.style.borderColor = '#E5E7EB'
+  e.currentTarget.style.borderColor = 'var(--border-subtle)'
 }
 
 /**
@@ -74,7 +74,7 @@ export default function TeamDashboard() {
   const TaskRow = ({ t }) => (
     <Link key={t.id} to={`/app/tasks/${t.id}`}
       className="flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
-      onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
       onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
       <div className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`} />
       <div className="flex-1 min-w-0">
@@ -128,7 +128,7 @@ export default function TeamDashboard() {
         .kpi-glow-wrap > * {
           position: relative;
           z-index: 1;
-          background: #FFFFFF;
+          background: var(--bg-surface);
           border-radius: 17.5px;
         }
 
@@ -138,7 +138,7 @@ export default function TeamDashboard() {
         }
 
         .kpi-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #374151 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, var(--brand-slate) 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-violet:hover {
           box-shadow: 0 0 18px rgba(55,65,81,.25);
@@ -169,8 +169,8 @@ export default function TeamDashboard() {
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Zap size={16} style={{ color: '#374151' }} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#374151' }}>
+          <Zap size={16} style={{ color: 'var(--text-primary)' }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--text-primary)' }}>
             Visão Geral
           </span>
         </div>
@@ -218,7 +218,7 @@ export default function TeamDashboard() {
             </div>
             <Link to="/app/projects"
               className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#374151' }}>
+              style={{ color: 'var(--text-primary)' }}>
               Ver todos <ArrowRight size={13} />
             </Link>
           </div>
@@ -271,7 +271,7 @@ export default function TeamDashboard() {
               </h3>
             </div>
             <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#374151' }}>
+              style={{ color: 'var(--text-primary)' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
@@ -297,7 +297,7 @@ export default function TeamDashboard() {
             </h3>
           </div>
           <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
-            style={{ color: '#374151' }}>
+            style={{ color: 'var(--text-primary)' }}>
             Ver todas <ArrowRight size={13} />
           </Link>
         </div>

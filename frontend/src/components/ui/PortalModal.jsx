@@ -70,8 +70,8 @@ export default function PortalModal({
         className={`relative w-full ${sizes[size] || sizes.md} flex flex-col`}
         style={{
           maxHeight,
-          background: '#FFFFFF',
-          border: '1px solid #E5E7EB',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border-subtle)',
           borderRadius: '24px',
           boxShadow: '0 25px 60px -15px rgba(15,23,42,0.25), 0 1px 0 rgba(255,255,255,0.6) inset',
           animation: 'fadeInUp 0.2s ease forwards',
@@ -83,11 +83,11 @@ export default function PortalModal({
         <div
           className="flex items-center justify-between px-6 py-5 shrink-0"
           style={{
-            borderBottom: '1px solid rgba(0,0,0,0.06)',
+            borderBottom: '1px solid var(--border-subtle)',
             position: stickyHeader ? 'sticky' : 'relative',
             top: 0,
             zIndex: 20,
-            background: '#FFFFFF',
+            background: 'var(--bg-surface)',
           }}
         >
           <h2
@@ -103,7 +103,7 @@ export default function PortalModal({
             style={{ color: 'var(--text-secondary)' }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(0,0,0,0.06)'
-              e.currentTarget.style.color = '#374151'
+              e.currentTarget.style.color = 'var(--brand-slate)'
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = 'transparent'
@@ -133,11 +133,11 @@ export default function PortalModal({
           <div
             className="px-6 py-4 shrink-0"
             style={{
-              borderTop: '1px solid rgba(0,0,0,0.06)',
+              borderTop: '1px solid var(--border-subtle)',
               position: stickyFooter ? 'sticky' : 'relative',
               bottom: 0,
               zIndex: 20,
-              background: '#FFFFFF',
+              background: 'var(--bg-surface)',
             }}
           >
             {footer}

@@ -176,7 +176,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         </div>
 
         <div className="flex justify-end gap-3 pt-2"
-          style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+          style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Criando...' : 'Criar Projeto'}

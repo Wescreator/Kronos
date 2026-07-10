@@ -61,9 +61,9 @@ function ScopeList({ items, onChange, disabled }) {
           type="button"
           onClick={add}
           className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl w-full transition-all"
-          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(0,0,0,0.10)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.20)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.10)' }}
+          style={{ color: 'var(--text-muted)', border: '1px dashed var(--border-medium)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--text-muted)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-medium)' }}
         >
           <Plus size={13} /> Adicionar item
         </button>
@@ -145,16 +145,16 @@ function ServicesTable({ items, onChange, disabled }) {
           type="button"
           onClick={add}
           className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl w-full mt-2 transition-all"
-          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(0,0,0,0.10)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.20)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.10)' }}
+          style={{ color: 'var(--text-muted)', border: '1px dashed var(--border-medium)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--text-muted)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-medium)' }}
         >
           <Plus size={13} /> Adicionar serviço
         </button>
       )}
 
       {items.length > 0 && (
-        <div className="flex justify-end mt-3 pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="flex justify-end mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <span className="text-sm font-bold" style={{ color: '#34D399' }}>
             Total: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>
@@ -227,16 +227,16 @@ function PaymentTermsTable({ items, onChange, disabled }) {
           type="button"
           onClick={add}
           className="flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-xl w-full mt-2 transition-all"
-          style={{ color: 'var(--text-muted)', border: '1px dashed rgba(0,0,0,0.10)' }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.20)' }}
-          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'rgba(0,0,0,0.10)' }}
+          style={{ color: 'var(--text-muted)', border: '1px dashed var(--border-medium)' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'var(--text-primary)'; e.currentTarget.style.borderColor = 'var(--text-muted)' }}
+          onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-medium)' }}
         >
           <Plus size={13} /> Adicionar condição
         </button>
       )}
 
       {items.length > 0 && (
-        <div className="flex justify-end mt-3 pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="flex justify-end mt-3 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <span className="text-sm font-bold" style={{ color: '#34D399' }}>
             Total: R$ {total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>

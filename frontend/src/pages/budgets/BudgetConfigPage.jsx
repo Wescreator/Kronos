@@ -197,7 +197,7 @@ function RateFormModal({ open, onClose, onSuccess, level }) {
   return (
     <Modal open={open} onClose={onClose} title={`Atualizar Taxa — ${level?.label}`} size="sm">
       <div className="mb-4 p-3 rounded-xl" style={{ background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.20)' }}>
-        <p className="text-xs" style={{ color: '#374151', lineHeight: 1.6 }}>
+        <p className="text-xs" style={{ color: 'var(--text-primary)', lineHeight: 1.6 }}>
           Taxa vigente atual:{' '}
           <strong>
             {level?.current_rate
@@ -248,7 +248,7 @@ function LevelRow({ level, canManage, onEditLevel, onEditRate, onDelete }) {
   return (
     <div
       className="flex items-center justify-between px-4 py-3 rounded-xl mb-2"
-      style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid rgba(0,0,0,0.06)' }}
+      style={{ background: 'rgba(0,0,0,0.02)', border: '1px solid var(--border-subtle)' }}
     >
       <div>
         <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{level.label}</p>
@@ -276,7 +276,7 @@ function LevelRow({ level, canManage, onEditLevel, onEditRate, onDelete }) {
             title="Editar rótulo"
             className="p-1.5 rounded-lg transition-all"
             style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#374151'; e.currentTarget.style.background = 'rgba(0,0,0,0.06)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--brand-slate)'; e.currentTarget.style.background = 'rgba(0,0,0,0.06)' }}
             onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent' }}
           >
             <Edit size={14} />
@@ -318,7 +318,7 @@ function TitleCard({ title, canManage, onEditTitle, onDeleteTitle, onAddLevel, o
         {canManage && (
           <div className="flex items-center gap-1">
             <button onClick={() => onEditTitle(title)} className="p-1.5 rounded-lg transition-all" style={{ color: 'var(--text-muted)' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#374151'; e.currentTarget.style.background = 'rgba(0,0,0,0.06)' }}
+              onMouseEnter={e => { e.currentTarget.style.color = 'var(--brand-slate)'; e.currentTarget.style.background = 'rgba(0,0,0,0.06)' }}
               onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'transparent' }}
             >
               <Edit size={14} />

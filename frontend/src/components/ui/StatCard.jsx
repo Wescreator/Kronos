@@ -2,7 +2,7 @@ export default function StatCard({ title, value, subtitle, icon: Icon, color = '
   /* Tema claro: fundo branco (herdado de .card / do wrapper de borda luminosa),
      texto escuro e apenas o VALOR colorido com o tom de destaque. */
   const palettes = {
-    purple: { accent: '#374151', tintBg: 'rgba(55,65,81,0.08)',  tintBorder: 'rgba(55,65,81,0.16)'  },
+    purple: { accent: 'var(--text-primary)', tintBg: 'rgba(55,65,81,0.08)',  tintBorder: 'rgba(55,65,81,0.16)'  },
     green:  { accent: '#16A34A', tintBg: 'rgba(22,163,74,0.10)', tintBorder: 'rgba(22,163,74,0.18)'  },
     red:    { accent: '#DC2626', tintBg: 'rgba(220,38,38,0.10)', tintBorder: 'rgba(220,38,38,0.18)'  },
     yellow: { accent: '#D97706', tintBg: 'rgba(217,119,6,0.10)', tintBorder: 'rgba(217,119,6,0.18)'  },

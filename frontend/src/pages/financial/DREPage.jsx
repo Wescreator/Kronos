@@ -33,7 +33,7 @@ export default function DREPage() {
   const DRERow = ({ label, value, color, bold, sub }) => (
     <div
       className={`flex justify-between items-center py-4 ${sub ? 'pl-5' : ''}`}
-      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+      style={{ borderBottom: '1px solid var(--border-subtle)' }}
     >
       <span className="text-sm" style={{ color: bold ? 'var(--text-primary)' : 'var(--text-muted)', fontWeight: bold ? 700 : 400 }}>
         {label}
@@ -120,7 +120,7 @@ export default function DREPage() {
                 <div
                   key={p.id}
                   className="p-3 rounded-xl"
-                  style={{ background: 'rgba(255,255,255,0.025)', border: '1px solid rgba(255,255,255,0.04)' }}
+                  style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }}
                 >
                   <p className="text-sm font-semibold truncate mb-2" style={{ color: 'var(--text-primary)' }}>
                     {p.title}

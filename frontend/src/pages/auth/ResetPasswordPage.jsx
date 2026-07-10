@@ -9,8 +9,8 @@ const KronosIcon = ({ size = 40 }) => (
     style={{ animation: 'kronosFloat 4s ease-in-out infinite' }}>
     <defs>
       <linearGradient id="kh3" x1="0" y1="0" x2="64" y2="64">
-        <stop offset="0%" stopColor="#E5E7EB" />
-        <stop offset="100%" stopColor="#6B7280" />
+        <stop offset="0%" stopColor="var(--border-subtle)" />
+        <stop offset="100%" stopColor="var(--text-secondary)" />
       </linearGradient>
     </defs>
     <path d="M20 10H44" stroke="url(#kh3)" strokeWidth="4" strokeLinecap="round" />
@@ -19,7 +19,7 @@ const KronosIcon = ({ size = 40 }) => (
       stroke="url(#kh3)" strokeWidth="4" fill="none" strokeLinecap="round" />
     <path d="M22 52 C22 42, 28 40, 32 34 C36 40, 42 42, 42 52"
       stroke="url(#kh3)" strokeWidth="4" fill="none" strokeLinecap="round" />
-    <circle cx="32" cy="32" r="2.5" fill="#9CA3AF" />
+    <circle cx="32" cy="32" r="2.5" fill="var(--text-muted)" />
   </svg>
 )
 
@@ -77,15 +77,15 @@ export default function ResetPasswordPage() {
         }
         .kn-input {
           width: 100%; height: 56px; padding: 0 50px 0 16px;
-          background: #FFFFFF;
-          border: 1px solid #D1D5DB; border-radius: 10px;
-          color: #111827; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-medium); border-radius: 10px;
+          color: var(--text-primary); font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
           transition: border-color .2s, box-shadow .2s;
           outline: none; box-sizing: border-box;
         }
-        .kn-input::placeholder { color: #9CA3AF; }
+        .kn-input::placeholder { color: var(--text-muted); }
         .kn-input:focus {
-          border-color: #6B7280;
+          border-color: var(--text-secondary);
           box-shadow: 0 0 0 3px rgba(107,114,128,0.15);
         }
         .kn-input.error {
@@ -94,15 +94,15 @@ export default function ResetPasswordPage() {
         }
         .kn-btn {
           width: 100%; min-height: 56px; border-radius: 10px;
-          background: #374151;
+          background: var(--brand-slate);
           border: none;
           color: #fff; font-size: 15px; font-weight: 600;
           font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: 8px;
           transition: background .2s, opacity .2s;
         }
-        .kn-btn:hover:not(:disabled)  { background: #1f2937; }
-        .kn-btn:disabled              { background: #9CA3AF; cursor: not-allowed; }
+        .kn-btn:hover:not(:disabled)  { background: var(--text-primary); }
+        .kn-btn:disabled              { background: var(--text-muted); cursor: not-allowed; }
 
         .kn-page-wrap { padding: 0 20px; }
         .kn-card { padding: 48px 44px; }
@@ -113,14 +113,14 @@ export default function ResetPasswordPage() {
         }
       `}</style>
 
-      <div style={{
+      <div data-theme="light" style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(135deg, #c7cbd1 0%, #9aa0a6 50%, #c7cbd1 100%)',
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}>
         <Toaster position="top-right" toastOptions={{
-          style: { background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: 12 },
+          style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12 },
         }} />
 
         <div className="kn-page-wrap" style={{
@@ -132,17 +132,17 @@ export default function ResetPasswordPage() {
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 18 }}>
               <KronosIcon size={52} />
             </div>
-            <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.28em', color: '#374151', marginBottom: 6 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.28em', color: 'var(--text-primary)', marginBottom: 6 }}>
               K R O N O S
             </div>
-            <div style={{ fontSize: 10.5, letterSpacing: '0.22em', color: '#6B7280', textTransform: 'uppercase', fontWeight: 500 }}>
+            <div style={{ fontSize: 10.5, letterSpacing: '0.22em', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 500 }}>
               SISTEMA CORPORATIVO DE GESTÃO
             </div>
           </div>
 
           {/* Card */}
           <div className="kn-card" style={{
-            background: '#FFFFFF',
+            background: 'var(--bg-surface)',
             borderRadius: 20,
             boxShadow: '0 30px 70px -20px rgba(20,24,28,0.45), 0 1px 0 rgba(255,255,255,0.6) inset',
             position: 'relative', overflow: 'hidden',
@@ -152,17 +152,17 @@ export default function ResetPasswordPage() {
               {!done ? (
                 /* ── Estado: formulário ── */
                 <>
-                  <h2 style={{ color: '#374151', fontSize: 24, fontWeight: 700, marginBottom: 10, letterSpacing: '-0.025em' }}>
+                  <h2 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, marginBottom: 10, letterSpacing: '-0.025em' }}>
                     Nova senha
                   </h2>
-                  <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.6', marginBottom: 32 }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: '1.6', marginBottom: 32 }}>
                     Crie uma nova senha para sua conta. Use pelo menos 8 caracteres.
                   </p>
 
                   <form onSubmit={handleSubmit}>
                     {/* Nova senha */}
                     <div style={{ marginBottom: 20 }}>
-                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 10 }}>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
                         Nova senha
                       </label>
                       <div style={{ position: 'relative' }}>
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
                         <button type="button" onClick={() => setShow(s => ({ ...s, password: !s.password }))} style={{
                           position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
                           background: 'none', border: 'none', cursor: 'pointer',
-                          color: '#9CA3AF', padding: 4, display: 'flex', alignItems: 'center',
+                          color: 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center',
                         }}>
                           {show.password ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
@@ -191,7 +191,7 @@ export default function ResetPasswordPage() {
 
                     {/* Confirmar senha */}
                     <div style={{ marginBottom: 30 }}>
-                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 10 }}>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
                         Confirmar senha
                       </label>
                       <div style={{ position: 'relative' }}>
@@ -206,7 +206,7 @@ export default function ResetPasswordPage() {
                         <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))} style={{
                           position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
                           background: 'none', border: 'none', cursor: 'pointer',
-                          color: '#9CA3AF', padding: 4, display: 'flex', alignItems: 'center',
+                          color: 'var(--text-muted)', padding: 4, display: 'flex', alignItems: 'center',
                         }}>
                           {show.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
@@ -236,20 +236,20 @@ export default function ResetPasswordPage() {
                 <div style={{ textAlign: 'center', padding: '8px 0' }}>
                   <div style={{
                     width: 64, height: 64, borderRadius: '50%', margin: '0 auto 22px',
-                    background: '#F3F4F6',
-                    border: '1px solid #D1D5DB',
+                    background: 'var(--bg-hover)',
+                    border: '1px solid var(--border-medium)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                      stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      stroke="var(--brand-slate)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                   </div>
-                  <h2 style={{ color: '#374151', fontSize: 22, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.025em' }}>
+                  <h2 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.025em' }}>
                     Senha redefinida!
                   </h2>
-                  <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.65', marginBottom: 28 }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: '1.65', marginBottom: 28 }}>
                     Sua senha foi atualizada com sucesso. Faça login com suas novas credenciais.
                   </p>
                   <button type="button" className="kn-btn" onClick={() => navigate('/login', { replace: true })}>

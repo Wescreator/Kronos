@@ -101,8 +101,8 @@ export default function RevenuesPage() {
             <button key={i} onClick={() => setSelectedMonth(i + 1)}
               className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
               style={selectedMonth === i + 1
-                ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }
+                ? { background: 'rgba(116, 116, 116, 0.88)', color: 'var(--text-onbrand)', border: '1px solid rgba(0, 0, 0, 0.3)' }
+                : { background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
               }>
               {m.slice(0, 3)}
             </button>
@@ -136,8 +136,8 @@ export default function RevenuesPage() {
           <button key={f.value} onClick={() => setStatusFilter(f.value)}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={statusFilter === f.value
-              ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
-              : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }            }>
+              ? { background: 'rgba(116, 116, 116, 0.88)', color: 'var(--text-onbrand)', border: '1px solid rgba(0, 0, 0, 0.3)' }
+              : { background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }            }>
             {f.label}
           </button>
         ))}
@@ -146,7 +146,7 @@ export default function RevenuesPage() {
       {loading ? <div className="flex justify-center py-20"><Spinner size="lg" /></div> : (
         <div className="card overflow-hidden">
           <table className="w-full">
-            <thead style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <tr>
                 <th className="table-header">Título</th>
                 <th className="table-header hidden md:table-cell">Cliente/Projeto</th>
@@ -161,8 +161,8 @@ export default function RevenuesPage() {
             <tbody>
               {revenues.map((r, i) => (
                 <tr key={r.installment_id}
-                  style={{ borderBottom: i < revenues.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}
-                  onMouseEnter={ev => ev.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  style={{ borderBottom: i < revenues.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}
+                  onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={ev => ev.currentTarget.style.background = 'transparent'}>
                   <td className="table-cell">
                     <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{r.title}</p>
@@ -263,7 +263,7 @@ export default function RevenuesPage() {
             <input className="input" placeholder="Observação opcional"
               value={editForm.note} onChange={e => setEditForm({...editForm, note: e.target.value})} />
           </div>
-          <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <button type="button" onClick={() => setEditInstall(null)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary">Salvar alterações</button>
           </div>

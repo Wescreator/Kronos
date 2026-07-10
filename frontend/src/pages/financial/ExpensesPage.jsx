@@ -19,14 +19,14 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
   if (totalPages <= 1) return null
   return (
     <div className="flex items-center justify-between px-2 pt-4 mt-2"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+      style={{ borderTop: '1px solid var(--border-subtle)' }}>
       <button
         onClick={onPrev}
         disabled={page <= 1}
         className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
         style={page <= 1
-          ? { color: 'rgba(255,255,255,0.20)', cursor: 'not-allowed', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)' }
-          : { color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }
+          ? { color: 'rgba(255,255,255,0.20)', cursor: 'not-allowed', background: 'transparent', border: '1px solid var(--border-subtle)' }
+          : { color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }
         }
       >
         <ChevronLeft size={14} /> Anterior
@@ -42,8 +42,8 @@ function Pagination({ page, totalPages, onPrev, onNext }) {
         disabled={page >= totalPages}
         className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
         style={page >= totalPages
-          ? { color: 'rgba(255,255,255,0.20)', cursor: 'not-allowed', background: 'transparent', border: '1px solid rgba(255,255,255,0.05)' }
-          : { color: 'var(--text-secondary)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }
+          ? { color: 'rgba(255,255,255,0.20)', cursor: 'not-allowed', background: 'transparent', border: '1px solid var(--border-subtle)' }
+          : { color: 'var(--text-secondary)', background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }
         }
       >
         Próxima <ChevronRight size={14} />
@@ -161,8 +161,8 @@ export default function ExpensesPage() {
               onClick={() => handleMonthChange(i + 1)}
               className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
               style={selectedMonth === i + 1
-                ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }
+                ? { background: 'rgba(116, 116, 116, 0.88)', color: 'var(--text-onbrand)', border: '1px solid rgba(0, 0, 0, 0.3)' }
+                : { background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
               }
             >
               {m.slice(0, 3)}
@@ -213,8 +213,8 @@ export default function ExpensesPage() {
               onClick={() => handleStatusFilter(f.value)}
               className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
               style={statusFilter === f.value
-                ? { background: 'rgba(116, 116, 116, 0.88)', color: '#ffffff', border: '1px solid rgba(0, 0, 0, 0.3)' }
-                : { background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }
+                ? { background: 'rgba(116, 116, 116, 0.88)', color: 'var(--text-onbrand)', border: '1px solid rgba(0, 0, 0, 0.3)' }
+                : { background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
               }
             >
               {f.label}
@@ -228,7 +228,7 @@ export default function ExpensesPage() {
 
         {categories.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold" style={{ color: 'var(--bg-card)' }}>Categoria:</span>
+            <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Categoria:</span>
             <select
               className="input text-xs py-2"
               style={{ minWidth: 140, height: 'auto' }}
@@ -245,7 +245,7 @@ export default function ExpensesPage() {
 
         <span
           className="ml-auto text-xs font-semibold px-3 py-2 rounded-xl shrink-0"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(0, 0, 0, 0.06)' }}
+          style={{ background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
         >
           {pagination.total} {pagination.total === 1 ? 'registro' : 'registros'}
         </span>
@@ -257,7 +257,7 @@ export default function ExpensesPage() {
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full">
-            <thead style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <tr>
                 <th className="table-header">Título</th>
                 <th className="table-header hidden md:table-cell">Categoria</th>
@@ -272,8 +272,8 @@ export default function ExpensesPage() {
               {expenses.map((e, i) => (
                 <tr
                   key={e.id}
-                  style={{ borderBottom: i < expenses.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}
-                  onMouseEnter={ev => ev.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  style={{ borderBottom: i < expenses.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}
+                  onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={ev => ev.currentTarget.style.background = 'transparent'}
                 >
                   <td className="table-cell">

@@ -10,9 +10,9 @@ import { toast } from 'react-hot-toast'
 
 const ROLE_LABELS = { admin: 'Administrador', manager: 'Gerente', member: 'Membro' }
 const ROLE_STYLES = {
-  admin:   { background: 'rgba(180, 180, 180, 0.55)', color: '#ffffff', border: '1px solid rgba(70, 70, 70, 0.25)' },
+  admin:   { background: 'rgba(180, 180, 180, 0.55)', color: 'var(--text-onbrand)', border: '1px solid rgba(70, 70, 70, 0.25)' },
   manager: { background: 'rgba(56,189,248,0.10)',  color: '#38BDF8', border: '1px solid rgba(56,189,248,0.20)' },
-  member:  { background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.50)', border: '1px solid rgba(255,255,255,0.10)' },
+  member:  { background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' },
 }
 
 // Converte a data vinda da API (Date/ISO string) para o formato aceito pelo
@@ -122,9 +122,9 @@ export default function TeamMemberPage() {
       <button
         onClick={() => navigate('/app/team')}
         className="flex items-center gap-2 text-sm mb-5 transition-colors"
-        style={{ color: 'var(--bg-card)' }}
+        style={{ color: 'var(--text-secondary)' }}
         onMouseEnter={e => e.currentTarget.style.color = '#222222'}
-        onMouseLeave={e => e.currentTarget.style.color = 'var(--bg-card)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
       >
         <ArrowLeft size={15} /> Voltar para Equipe
       </button>
@@ -142,7 +142,7 @@ export default function TeamMemberPage() {
                   className="w-full h-full flex items-center justify-center text-2xl font-bold"
                   style={{
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(124, 124, 124, 0.12))',
-                    color: '#ffffff'
+                    color: 'var(--text-onbrand)'
                   }}
                 >
                   {user.name.split(' ').map(n => n[0]).join('').slice(0,2).toUpperCase()}
@@ -324,7 +324,7 @@ export default function TeamMemberPage() {
             style={isActive ? {
               background: 'rgba(255, 0, 38, 0.53)',
               border: '1px solid rgb(250, 0, 37)',
-              color: '#ffffff',
+              color: 'var(--text-onbrand)',
             } : {
               background: 'rgba(52,211,153,0.10)',
               border: '1px solid rgba(52,211,153,0.25)',
@@ -343,7 +343,7 @@ export default function TeamMemberPage() {
         {/* Barra visual de status */}
         <div
           className="mt-4 h-1.5 rounded-full overflow-hidden"
-          style={{ background: 'rgba(255,255,255,0.05)' }}
+          style={{ background: 'var(--bg-surface-2)' }}
         >
           <div
             className="h-full rounded-full transition-all duration-500"

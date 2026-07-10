@@ -16,7 +16,7 @@ import { formatDate }        from '../../utils/format'
 
 // ── Configuração de status ─────────────────────────────────────
 const STATUS_META = {
-  draft:    { label: 'Rascunho',  color: 'rgba(107,114,128,0.12)', text: '#6B7280',                icon: Clock },
+  draft:    { label: 'Rascunho',  color: 'rgba(107,114,128,0.12)', text: 'var(--text-secondary)',                icon: Clock },
   sent:     { label: 'Enviada',   color: 'rgba(56,189,248,0.12)',  text: '#38BDF8',                icon: Send },
   approved: { label: 'Aprovada',  color: 'rgba(52,211,153,0.12)',  text: '#34D399',                icon: CheckCircle2 },
   rejected: { label: 'Rejeitada', color: 'rgba(251,113,133,0.12)', text: '#FB7185',                icon: XCircle },
@@ -56,8 +56,8 @@ function ProposalCard({ proposal, idx }) {
       to={`/app/proposals/${proposal.id}`}
       className="proposal-card block"
       style={{
-        background:   '#FFFFFF',
-        border:       '1px solid #E5E7EB',
+        background:   'var(--bg-surface)',
+        border:       '1px solid var(--border-subtle)',
         borderRadius: 20,
         overflow:     'hidden',
         boxShadow:    '0 4px 20px rgba(15,23,42,0.10)',
@@ -67,7 +67,7 @@ function ProposalCard({ proposal, idx }) {
       {/* Banner topo */}
       <div style={{
         height: 6,
-        background: `linear-gradient(90deg, ${STATUS_META[proposal.status]?.text || '#9CA3AF'}, transparent)`,
+        background: `linear-gradient(90deg, ${STATUS_META[proposal.status]?.text || 'var(--text-muted)'}, transparent)`,
         opacity: 0.6,
       }} />
 
@@ -77,7 +77,7 @@ function ProposalCard({ proposal, idx }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <span style={{
             fontSize: 11, fontWeight: 700, letterSpacing: '0.12em',
-            color: '#374151', textTransform: 'uppercase',
+            color: 'var(--text-primary)', textTransform: 'uppercase',
           }}>
             {proposal.proposal_number}
           </span>
@@ -132,7 +132,7 @@ function ProposalCard({ proposal, idx }) {
         </div>
 
         {/* Criada em */}
-        <div style={{ fontSize: 11, color: '#9CA3AF' }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
           Criada em {formatDate(proposal.created_at)}
         </div>
       </div>
@@ -202,8 +202,8 @@ export default function ProposalsPage() {
       {!loading && proposals.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
           {[
-            { label: 'Total',      value: stats.total,    icon: <Layers size={17} />,       iconBg: 'rgba(107,114,128,0.14)', iconColor: '#374151', valueColor: 'var(--text-primary)' },
-            { label: 'Rascunhos',  value: stats.draft,    icon: <Clock size={17} />,         iconBg: 'rgba(0,0,0,0.04)', iconColor: '#9CA3AF', valueColor: 'var(--text-secondary)' },
+            { label: 'Total',      value: stats.total,    icon: <Layers size={17} />,       iconBg: 'rgba(107,114,128,0.14)', iconcolor: 'var(--text-primary)', valueColor: 'var(--text-primary)' },
+            { label: 'Rascunhos',  value: stats.draft,    icon: <Clock size={17} />,         iconBg: 'rgba(0,0,0,0.04)', iconColor: 'var(--text-muted)', valueColor: 'var(--text-secondary)' },
             { label: 'Enviadas',   value: stats.sent,     icon: <Send size={17} />,          iconBg: 'rgba(56,189,248,0.10)', iconColor: '#38BDF8', valueColor: '#38BDF8' },
             { label: 'Aprovadas',  value: stats.approved, icon: <CheckCircle2 size={17} />,  iconBg: 'rgba(52,211,153,0.10)', iconColor: '#34D399', valueColor: '#34D399' },
           ].map(item => (
@@ -228,7 +228,7 @@ export default function ProposalsPage() {
       <div className="flex flex-col sm:flex-row gap-3 mb-7">
         <div
           className="prop-search relative"
-          style={{ flex: '1 1 0%', maxWidth: 340, background: 'rgb(255, 255, 255)', borderRadius: 14, border: '1px solid #414141' }}
+          style={{ flex: '1 1 0%', maxWidth: 340, background: 'rgb(255, 255, 255)', borderRadius: 14, border: '1px solid var(--border-subtle)' }}
         >
           <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
           <input
@@ -246,8 +246,8 @@ export default function ProposalsPage() {
               onClick={() => setStatusFilter(f.value)}
               className="prop-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={statusFilter === f.value
-                ? { background: 'rgba(55,65,81,0.10)', color: '#374151', border: '1px solid rgba(55,65,81,0.25)' }
-                : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-primary)', border: '1px solid rgba(0,0,0,0.06)' }
+                ? { background: 'rgba(55,65,81,0.10)', color: 'var(--text-primary)', border: '1px solid rgba(55,65,81,0.25)' }
+                : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }
               }
             >
               {f.label}

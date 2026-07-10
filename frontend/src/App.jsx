@@ -6,6 +6,7 @@ import PermissionRoute from './routes/PermissionRoute'
 import AppLayout     from './components/layout/AppLayout'
 import Spinner       from './components/ui/Spinner'
 import useAuthStore  from './store/authStore'
+import useUIStore    from './store/uiStore'
 import { getMe }     from './services/auth.service'
 import LoginPage           from './pages/auth/LoginPage'
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage'
@@ -78,6 +79,14 @@ function useSessionBootstrap() {
 
 export default function App() {
   const booting = useSessionBootstrap()
+
+  // Cada usuário tem seu próprio tema: ao logar ou restaurar a sessão,
+  // aplica a preferência salva desse usuário (claro por padrão).
+  const userId        = useAuthStore((s) => s.user?.user_id)
+  const syncUserTheme = useUIStore((s) => s.syncUserTheme)
+  useEffect(() => {
+    if (userId) syncUserTheme(userId)
+  }, [userId, syncUserTheme])
 
   // Enquanto restaura a sessão, não renderiza nenhuma rota — evita que
   // ScopeRoute/ProtectedRoute decidam algo com `user` ainda nulo.

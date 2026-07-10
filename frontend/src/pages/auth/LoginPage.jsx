@@ -4,6 +4,7 @@ import { toast, Toaster } from 'react-hot-toast'
 import {Eye, EyeOff, Mail, Phone, Globe, MapPin} from 'lucide-react'
 import { login } from '../../services/auth.service'
 import useAuthStore from '../../store/authStore'
+import { clearAuthStorage } from '../../utils/theme'
 import clockWatermark from '../../assets/clock-watermark.png'
 import kronosLogo from '../../assets/kronos-logo.png'
 
@@ -26,8 +27,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      localStorage.clear()
-      sessionStorage.clear()
+      clearAuthStorage()
 
       const { data } = await login(form)
 
@@ -104,7 +104,7 @@ export default function LoginPage() {
           opacity:.08;
           pointer-events:none;
           border-radius:50%;
-          border:2px solid #6B7280;
+          border:2px solid var(--text-secondary);
         }       
        
         .branding-content{
@@ -126,7 +126,7 @@ export default function LoginPage() {
           justify-content:center;
           font-size:72px;
           font-weight:800;
-          color:#6B7280;
+          color:var(--text-secondary);
         }
 
         .kronos-title{
@@ -134,14 +134,14 @@ export default function LoginPage() {
           font-size:96px;
           font-weight:700;
           letter-spacing:.08em;
-          color:#374151;
+          color:var(--brand-slate);
           line-height:1;
         }
 
         .divider{
           width:10px;
           height:3px;
-          background:#6B7280;
+          background:var(--text-secondary);
           margin:28px 0;
         }
 
@@ -170,7 +170,7 @@ export default function LoginPage() {
         .footer-spacer{
           width:1px;
           height:18px;
-          background:#9CA3AF;
+          background:var(--text-muted);
         }
 
         .contact-item{
@@ -194,7 +194,7 @@ export default function LoginPage() {
           width:100%;
           max-width:540px;
           padding:56px 48px;
-          background:#FFFFFF;
+          background:var(--bg-surface);
           border-radius:20px;
           box-shadow:0 30px 70px -20px rgba(20,24,28,.45), 0 1px 0 rgba(255,255,255,.6) inset;
         }
@@ -203,12 +203,12 @@ export default function LoginPage() {
           margin:0 0 12px;
           font-size:42px;
           font-weight:700;
-          color:#374151;
+          color:var(--brand-slate);
         }
 
         .login-subtitle{
           margin:0 0 36px;
-          color:#6B7280;
+          color:var(--text-secondary);
           font-size:16px;
         }
 
@@ -221,7 +221,7 @@ export default function LoginPage() {
           margin-bottom:10px;
           font-size:14px;
           font-weight:600;
-          color:#374151;
+          color:var(--brand-slate);
         }
 
         .input-wrapper{
@@ -232,9 +232,9 @@ export default function LoginPage() {
           width:100%;
           height:56px;
           border-radius:10px;
-          border:1px solid #D1D5DB;
-          background:#FFFFFF;
-          color:#111827;
+          border:1px solid var(--border-medium);
+          background:var(--bg-surface);
+          color:var(--text-primary);
           padding:0 50px 0 16px;
           outline:none;
           transition:.2s;
@@ -242,12 +242,12 @@ export default function LoginPage() {
         }
 
         .kn-input:focus{
-          border-color:#6B7280;
+          border-color:var(--text-secondary);
           box-shadow:0 0 0 3px rgba(107,114,128,.15);
         }
 
         .kn-input::placeholder{
-          color:#9CA3AF;
+          color:var(--text-muted);
         }
 
         .input-icon{
@@ -255,7 +255,7 @@ export default function LoginPage() {
           right:16px;
           top:50%;
           transform:translateY(-50%);
-          color:#9CA3AF;
+          color:var(--text-muted);
         }
 
         .password-toggle{
@@ -266,7 +266,7 @@ export default function LoginPage() {
           border:none;
           background:none;
           cursor:pointer;
-          color:#9CA3AF;
+          color:var(--text-muted);
         }
 
         .options{
@@ -301,7 +301,7 @@ export default function LoginPage() {
           height:56px;
           border:none;
           border-radius:10px;
-          background:#374151;
+          background:var(--brand-slate);
           color:white;
           font-weight:600;
           font-size:15px;
@@ -309,10 +309,10 @@ export default function LoginPage() {
           transition:.2s;
         }
         .btn-login:hover:not(:disabled){
-          background:#1f2937;
+          background:var(--text-primary);
         } 
         .btn-login:disabled{
-          background:#9CA3AF;
+          background:var(--text-muted);
           cursor:not-allowed;
         }
         .separator{
@@ -322,7 +322,7 @@ export default function LoginPage() {
           margin:28px 0;
         }
         .separator span{  
-          color:#6B7280;
+          color:var(--text-secondary);
           font-size:14px;
         } 
 
@@ -452,7 +452,7 @@ export default function LoginPage() {
        
       `}</style>
 
-      <div className="login-page">
+      <div className="login-page" data-theme="light">
 
         {/* ESQUERDA */}
 

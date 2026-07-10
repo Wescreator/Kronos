@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { clearAuthStorage } from '../utils/theme'
 
 /**
  * CONFIGURAÇÃO DA URL BASE
@@ -81,8 +82,7 @@ api.interceptors.response.use(
       } catch {
         // Calcula o destino ANTES de limpar o storage (o escopo mora lá).
         const dest = loginPath()
-        localStorage.clear()
-        sessionStorage.clear()
+        clearAuthStorage() // preserva as preferências de tema por usuário
         window.location.href = dest
         return Promise.reject(error)
       }

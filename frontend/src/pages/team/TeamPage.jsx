@@ -13,9 +13,9 @@ import api from '../../services/api'
 
 const ROLE_LABELS = { admin: 'Administrador', manager: 'Arquiteto', member: 'Estagiário' }
 const ROLE_STYLES = {
-  admin:   { background: 'rgb(170, 170, 170)', color: '#ffffff', border: '1px solid rgba(126, 126, 126, 0)' },
+  admin:   { background: 'rgb(170, 170, 170)', color: 'var(--text-onbrand)', border: '1px solid rgba(126, 126, 126, 0)' },
   manager: { background: 'rgba(8, 66, 90, 0.81)',  color: '#38BDF8', border: '1px solid rgba(56,189,248,0.20)' },
-  member:  { background: 'rgb(170, 170, 170)', color: '#ffffff', border: '1px solid rgba(126, 126, 126, 0)' },
+  member:  { background: 'rgb(170, 170, 170)', color: 'var(--text-onbrand)', border: '1px solid rgba(126, 126, 126, 0)' },
 }
 
 export default function TeamPage() {
@@ -76,7 +76,7 @@ export default function TeamPage() {
         </div>
         <span
           className="text-xs font-semibold px-3 py-2 rounded-xl"
-          style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--bg-card)', border: '1px solid rgba(255,255,255,0.06)' }}
+          style={{ background: 'var(--bg-surface-2)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
         >
           {users.length} membros
         </span>
@@ -117,7 +117,7 @@ export default function TeamPage() {
 
               <div
                 className="space-y-2 pt-4"
-                style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+                style={{ borderTop: '1px solid var(--border-subtle)' }}
               >
                 <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-muted)' }}>
                   <Mail size={11} /> <span className="truncate">{u.email}</span>
@@ -180,7 +180,7 @@ export default function TeamPage() {
                 onChange={e => setForm({...form, password: e.target.value})} />
             </div>
           </div>
-          <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+          <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Cancelar</button>
             <button type="submit" className="btn-primary">Adicionar Membro</button>
           </div>

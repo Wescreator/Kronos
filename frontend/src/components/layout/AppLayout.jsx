@@ -9,12 +9,12 @@ export default function AppLayout() {
   useAuth()
 
   return (
-    <div className="min-h-screen text-white overflow-hidden">
+    <div className="min-h-screen text-primary overflow-hidden">
 
       {/* ── Background decorativo (fixed, atrás de tudo) ─────────────────── */}
       <div
         className="pointer-events-none fixed inset-0 -z-10"
-        style={{ background: '#b1b1b1' }}
+        style={{ background: 'var(--bg-app)' }}
       >
 
         {/* Vinheta nas bordas — profundidade sutil */}
@@ -61,7 +61,7 @@ export default function AppLayout() {
           duration: 3000,
           style: {
             background: '#1B1B1B',
-            color: '#fff',
+            color: 'var(--text-onbrand)',
             border: '1px solid rgba(255,255,255,0.06)',
             borderRadius: '16px',
           },

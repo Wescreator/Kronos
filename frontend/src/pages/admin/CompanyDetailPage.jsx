@@ -214,8 +214,8 @@ export default function CompanyDetailPage() {
               onClick={() => setActiveTab(t.value)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
               style={active
-                ? { background: '#374151', color: '#fff', border: '1px solid #1f2937' }
-                : { background: '#FFFFFF', color: '#6B7280', border: '1px solid #E5E7EB' }}
+                ? { background: 'var(--brand-slate)', color: 'var(--text-onbrand)', border: '1px solid var(--text-primary)' }
+                : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
             >
               <Icon size={13} /> {t.label}
             </button>
@@ -373,8 +373,8 @@ function KPIsTab({ company, users, stats }) {
     { label: 'Projetos',            value: stats?.projects   ?? '—',     color: '#0284C7' },
     { label: 'Clientes',            value: stats?.clients    ?? '—',     color: '#16A34A' },
     { label: 'Arquivos',            value: stats?.files      ?? '—',     color: '#D97706' },
-    { label: 'Último Acesso',       value: stats?.lastAccess ?? '—',     color: '#6B7280' },
-    { label: 'Plano Contratado',    value: company.plan || '—',          color: '#374151' },
+    { label: 'Último Acesso',       value: stats?.lastAccess ?? '—',     color: 'var(--text-secondary)' },
+    { label: 'Plano Contratado',    value: company.plan || '—',          color: 'var(--text-primary)' },
   ]
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -411,7 +411,7 @@ function UsersTab({ users, onAdd, onEdit }) {
               key={u.id}
               className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
               style={{
-                background: "#ffffff",
+                background: "var(--bg-surface)",
                 border: "1px solid var(--border-subtle)",
               }}
             >
@@ -530,7 +530,7 @@ function ClientsTab({ clients, onManageAccess }) {
               </td>
               <td className="table-cell">
                 {!c.has_access ? (
-                  <span className="badge" style={{ background: 'rgba(107,114,128,0.10)', color: '#6B7280' }}>
+                  <span className="badge" style={{ background: 'rgba(107,114,128,0.10)', color: 'var(--text-secondary)' }}>
                     Sem acesso
                   </span>
                 ) : (

@@ -11,7 +11,7 @@ import NewBudgetModal   from '../../components/modals/NewBudgetModal'
 import { formatDate }   from '../../utils/format'
 
 const STATUS_META = {
-  draft:     { label: 'Rascunho',   color: 'rgba(107,114,128,0.12)', text: '#6B7280', icon: Clock },
+  draft:     { label: 'Rascunho',   color: 'rgba(107,114,128,0.12)', text: 'var(--text-secondary)', icon: Clock },
   finalized: { label: 'Finalizado', color: 'rgba(52,211,153,0.12)',  text: '#34D399', icon: CheckCircle2 },
 }
 
@@ -42,20 +42,20 @@ function BudgetCard({ budget, idx }) {
       to={`/app/budgets/${budget.id}`}
       className="proposal-card block"
       style={{
-        background: '#FFFFFF', border: '1px solid #E5E7EB', borderRadius: 20,
+        background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)', borderRadius: 20,
         overflow: 'hidden', boxShadow: '0 4px 20px rgba(15,23,42,0.10)',
         animationDelay: `${idx * 0.04}s`,
       }}
     >
       <div style={{
         height: 6,
-        background: `linear-gradient(90deg, ${STATUS_META[budget.status]?.text || '#9CA3AF'}, transparent)`,
+        background: `linear-gradient(90deg, ${STATUS_META[budget.status]?.text || 'var(--text-muted)'}, transparent)`,
         opacity: 0.6,
       }} />
 
       <div style={{ padding: '16px 18px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: '#374151', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--text-primary)', textTransform: 'uppercase' }}>
             {budget.budget_number}
           </span>
           <StatusBadge status={budget.status} />
@@ -93,7 +93,7 @@ function BudgetCard({ budget, idx }) {
           )}
         </div>
 
-        <div style={{ fontSize: 11, color: '#9CA3AF' }}>
+        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
           Criado em {formatDate(budget.created_at)}
         </div>
       </div>
@@ -151,8 +151,8 @@ export default function BudgetsPage() {
       {!loading && budgets.length > 0 && (
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-7">
           {[
-            { label: 'Total',       value: stats.total,     icon: <Layers size={17} />,      iconBg: 'rgba(107,114,128,0.14)', iconColor: '#374151', valueColor: 'var(--text-primary)' },
-            { label: 'Rascunhos',   value: stats.draft,     icon: <Clock size={17} />,        iconBg: 'rgba(0,0,0,0.04)',       iconColor: '#9CA3AF', valueColor: 'var(--text-secondary)' },
+            { label: 'Total',       value: stats.total,     icon: <Layers size={17} />,      iconBg: 'rgba(107,114,128,0.14)', iconcolor: 'var(--text-primary)', valueColor: 'var(--text-primary)' },
+            { label: 'Rascunhos',   value: stats.draft,     icon: <Clock size={17} />,        iconBg: 'rgba(0,0,0,0.04)',       iconColor: 'var(--text-muted)', valueColor: 'var(--text-secondary)' },
             { label: 'Finalizados', value: stats.finalized, icon: <CheckCircle2 size={17} />, iconBg: 'rgba(52,211,153,0.10)',  iconColor: '#34D399', valueColor: '#34D399' },
           ].map(item => (
             <div key={item.label} className="card p-5" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -169,7 +169,7 @@ export default function BudgetsPage() {
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 mb-7">
-        <div className="prop-search relative" style={{ flex: '1 1 0%', maxWidth: 340, background: '#FFFFFF', borderRadius: 14, border: '1px solid #414141' }}>
+        <div className="prop-search relative" style={{ flex: '1 1 0%', maxWidth: 340, background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border-subtle)' }}>
           <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
           <input
             style={{ width: '100%', background: 'transparent', paddingLeft: 38, paddingRight: 16, paddingTop: 10, paddingBottom: 10, fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box' }}
@@ -186,8 +186,8 @@ export default function BudgetsPage() {
               onClick={() => setStatusFilter(f.value)}
               className="prop-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={statusFilter === f.value
-                ? { background: 'rgba(55,65,81,0.10)', color: '#374151', border: '1px solid rgba(55,65,81,0.25)' }
-                : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-primary)', border: '1px solid rgba(0,0,0,0.06)' }
+                ? { background: 'rgba(55,65,81,0.10)', color: 'var(--text-primary)', border: '1px solid rgba(55,65,81,0.25)' }
+                : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }
               }
             >
               {f.label}

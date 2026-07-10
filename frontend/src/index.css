@@ -4,29 +4,95 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ── Tokens globais ─────────────────────────── */
-:root {
-  --bg-primary:     #c7cbd1;
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOKENS DE TEMA — fonte ÚNICA de verdade
+   Tema claro em :root, tema escuro em [data-theme="dark"].
+   Nada de cor literal nos componentes: tudo aponta pra var(--...).
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  /* ── Superfícies / fundo ── */
+  --bg-primary:     #c7cbd1;   /* fundo geral do sistema (alias: --bg-app) */
+  --bg-app:         var(--bg-primary);
   --bg-sidebar:     #F3F4F6;
-  --bg-card:        #FFFFFF;
+  --bg-card:        #FFFFFF;    /* alias: --bg-surface */
+  --bg-surface:     var(--bg-card);
+  --bg-surface-2:   #FAFAFA;    /* linhas / áreas levemente elevadas */
   --bg-hover:       #F3F4F6;
-  --color-primary:  #374151;
+
+  /* ── Marca / acentos ── */
+  --color-primary:  #374151;    /* slate de marca (botões, glow) — alias: --brand-slate */
+  --brand-slate:    var(--color-primary);
   --color-glow:     #6B7280;
-  --color-success:  #16A34A;
-  --color-danger:   #DC2626;
-  --color-info:     #0284C7;
-  --color-warning:  #D97706;
+  --color-success:  #16A34A;    --accent-success: var(--color-success);
+  --color-danger:   #DC2626;    --accent-danger:  var(--color-danger);
+  --color-info:     #0284C7;    --accent-info:    var(--color-info);
+  --color-warning:  #D97706;    --accent-warning: var(--color-warning);
+
+  /* ── Texto ── */
   --text-primary:   #1F2937;
   --text-secondary: #6B7280;
   --text-muted:     #9CA3AF;
+  --text-onbrand:   #FFFFFF;    /* texto sobre superfícies de marca (botões escuros) */
+
+  /* ── Bordas ── */
   --border-subtle:  #E5E7EB;
   --border-medium:  #D1D5DB;
+
+  /* ── Vidro / overlay ── */
+  --glass-bg:       rgba(255,255,255,0.85);
+  --overlay-bg:     rgba(20,24,28,0.45);
+
+  /* ── Sombras ── */
   --shadow-soft:    0 10px 30px rgba(20,24,28,0.12);
   --shadow-medium:  0 20px 40px rgba(20,24,28,0.16);
   --shadow-large:   0 25px 60px rgba(20,24,28,0.20);
   --glow-purple:    0 0 40px rgba(55,65,81,0.10);
   --glow-blue:      0 0 40px rgba(2,132,199,0.10);
   --glow-green:     0 0 40px rgba(22,163,74,0.10);
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  /* ── Superfícies / fundo ── */
+  --bg-primary:     #0B0B0C;
+  --bg-sidebar:     #141415;
+  --bg-card:        #1A1A1B;
+  --bg-surface-2:   #232325;
+  --bg-hover:       #2A2A2D;
+
+  /* ── Marca / acentos (levemente mais claros p/ contraste no escuro) ── */
+  --color-primary:  #4B5563;
+  --color-glow:     #9CA3AF;
+  --color-success:  #22C55E;
+  --color-danger:   #F87171;
+  --color-info:     #38BDF8;
+  --color-warning:  #F59E0B;
+
+  /* ── Texto ── */
+  --text-primary:   #F4F4F5;
+  --text-secondary: #A1A1AA;
+  --text-muted:     #8A8A93;
+  --text-onbrand:   #FFFFFF;
+
+  /* ── Bordas ── */
+  --border-subtle:  rgba(255,255,255,0.08);
+  --border-medium:  rgba(255,255,255,0.16);
+
+  /* ── Vidro / overlay ── */
+  --glass-bg:       rgba(26,26,27,0.80);
+  --overlay-bg:     rgba(0,0,0,0.60);
+
+  /* ── Sombras (mais profundas) ── */
+  --shadow-soft:    0 10px 30px rgba(0,0,0,0.45);
+  --shadow-medium:  0 20px 40px rgba(0,0,0,0.55);
+  --shadow-large:   0 25px 60px rgba(0,0,0,0.65);
+  --glow-purple:    0 0 40px rgba(124,92,252,0.14);
+  --glow-blue:      0 0 40px rgba(56,189,248,0.12);
+  --glow-green:     0 0 40px rgba(52,211,153,0.12);
+
+  color-scheme: dark;
 }
 
 /* ── Reset ──────────────────────────────────── */
@@ -36,23 +102,27 @@ html { scroll-behavior: smooth; }
 
 body {
   font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  background-color: var(--bg-primary);
+  background-color: var(--bg-app);
   background-image: linear-gradient(135deg, #c7cbd1 0%, #9aa0a6 50%, #c7cbd1 100%);
   background-attachment: fixed;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+[data-theme="dark"] body {
+  background-image: linear-gradient(135deg, #0B0B0C 0%, #161618 50%, #0B0B0C 100%);
 }
 
 /* ── Scrollbar ──────────────────────────────── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(55,65,81,0.25); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(55,65,81,0.45); }
+::-webkit-scrollbar-thumb { background: rgba(120,120,130,0.30); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(120,120,130,0.50); }
 
 /* ── Selection ──────────────────────────────── */
-::selection { background: rgba(55,65,81,0.20); color: #fff; }
+::selection { background: rgba(55,65,81,0.20); color: var(--text-onbrand); }
 
 /* ── Typography ─────────────────────────────── */
 h1 { font-size: 36px; font-weight: 700; letter-spacing: -0.03em; color: var(--text-primary); }
@@ -62,12 +132,12 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 /* ── Card base ──────────────────────────────── */
 .card {
   position: relative;
-  background: #FFFFFF;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 24px;
   box-shadow: var(--shadow-soft);
   overflow: hidden;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .card::before {
@@ -83,7 +153,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 
 .card-hover:hover {
   transform: translateY(-2px);
-  border-color: rgba(55,65,81,0.18);
+  border-color: var(--border-medium);
   box-shadow: var(--shadow-medium), var(--glow-purple);
 }
 
@@ -105,13 +175,13 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 
 .sidebar-link:hover {
   color: var(--text-primary);
-  background: #F3F4F6;
+  background: var(--bg-hover);
   transform: translateX(4px);
 }
 
 .sidebar-link.active {
   color: var(--text-primary);
-  background: rgba(55,65,81,0.08);
+  background: rgba(120,120,130,0.12);
   border-left-color: var(--color-primary);
 }
 
@@ -124,17 +194,18 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   border-radius: 12px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, #4b5563, #374151);
+  color: var(--text-onbrand);
+  background: var(--color-primary);
   border: 1px solid rgba(31, 41, 55, 0.4);
-  box-shadow: 0 4px 16px rgba(55, 65, 81, 0.25);
+  box-shadow: 0 4px 16px rgba(20, 24, 28, 0.20);
   transition: all 0.2s ease;
   cursor: pointer;
   white-space: nowrap;
 }
 .btn-primary:hover:not(:disabled) {
   transform: scale(1.03);
-  box-shadow: 0 6px 24px rgba(55,65,81,0.35);
+  filter: brightness(1.1);
+  box-shadow: 0 6px 24px rgba(20,24,28,0.28);
 }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -147,14 +218,14 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   font-size: 13.5px;
   font-weight: 600;
   color: var(--text-secondary);
-  background: #FFFFFF;
+  background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   transition: all 0.2s ease;
   cursor: pointer;
   white-space: nowrap;
 }
 .btn-secondary:hover {
-  background: #F3F4F6;
+  background: var(--bg-hover);
   color: var(--text-primary);
   transform: scale(1.03);
 }
@@ -174,9 +245,16 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   cursor: pointer;
 }
 .btn-danger:hover {
-  background: #DC2626;
+  background: var(--color-danger);
   box-shadow: 0 4px 20px rgba(220,38,38,0.25);
   transform: scale(1.03);
+}
+
+/* Variante pequena de botão (usada em modais/ações inline) */
+.btn-sm {
+  padding: 6px 12px !important;
+  font-size: 12px !important;
+  border-radius: 9px !important;
 }
 
 /* ── Inputs ─────────────────────────────────── */
@@ -184,7 +262,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   width: 100%;
   min-height: 44px;
   padding: 10px 14px;
-  background: #FFFFFF;
+  background: var(--bg-surface);
   border: 1px solid var(--border-medium);
   border-radius: 14px;
   color: var(--text-primary);
@@ -196,11 +274,11 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 }
 .input::placeholder { color: var(--text-muted); }
 .input:focus {
-  border-color: rgba(55,65,81,0.45);
-  background: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(55,65,81,0.10);
+  border-color: var(--color-primary);
+  background: var(--bg-surface);
+  box-shadow: 0 0 0 3px rgba(120,120,130,0.15);
 }
-.input option { background: #FFFFFF; color: #374151; }
+.input option { background: var(--bg-surface); color: var(--text-primary); }
 
 /* ── Labels ─────────────────────────────────── */
 .label {
@@ -209,7 +287,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.10em;
-  color: var(--bg-card);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -244,8 +322,9 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 
 /* ── Glassmorphism surface ──────────────────── */
 .glass {
-  background: rgba(255,255,255,0.85);
+  background: var(--glass-bg);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-subtle);
 }
 
@@ -253,7 +332,7 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 .progress-track {
   width: 100%;
   height: 4px;
-  background: #E5E7EB;
+  background: var(--border-subtle);
   border-radius: 99px;
   overflow: hidden;
 }
@@ -273,14 +352,14 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
 
 /* ── Recharts customization ─────────────────── */
 .recharts-tooltip-wrapper .recharts-default-tooltip {
-  background: #FFFFFF !important;
+  background: var(--bg-surface) !important;
   border: 1px solid var(--border-medium) !important;
   border-radius: 12px !important;
   box-shadow: var(--shadow-medium) !important;
 }
 .recharts-cartesian-grid-horizontal line,
 .recharts-cartesian-grid-vertical line {
-  stroke: #E5E7EB !important;
+  stroke: var(--border-subtle) !important;
 }
 .recharts-text { fill: var(--text-muted) !important; font-size: 11px !important; }
 
@@ -290,6 +369,12 @@ h3 { font-size: 20px; font-weight: 600; color: var(--text-primary); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-in { animation: fadeInUp 0.4s ease forwards; }
+
+/* ── Theme toggle: rolagem do ícone ao alternar ── */
+@keyframes themeSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 
 /* ── Pulse glow ─────────────────────────────── */
 @keyframes pulseGlow {

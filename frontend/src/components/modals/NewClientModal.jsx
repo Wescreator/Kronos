@@ -117,15 +117,15 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
 
   /* ── Estilos reutilizáveis ── */
   const labelStyle = {
-    fontSize: 11, fontWeight: 700, color: '#9CA3AF',
+    fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.10em',
     marginBottom: 6, display: 'block',
   }
-  const optionalStyle = { fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#9CA3AF' }
+  const optionalStyle = { fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--text-muted)' }
   const inputStyle = {
     width: '100%', padding: '11px 14px',
-    borderRadius: 14, border: '1px solid #D1D5DB',
-    background: '#FFFFFF', color: '#374151',
+    borderRadius: 14, border: '1px solid var(--border-medium)',
+    background: 'var(--bg-surface)', color: 'var(--text-primary)',
     fontSize: 14, fontFamily: 'inherit',
     outline: 'none', boxSizing: 'border-box',
     transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -137,7 +137,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
     e.target.style.boxShadow   = '0 0 0 3px rgba(55,65,81,0.08)'
   }
   const onBlur = (e) => {
-    e.target.style.borderColor = '#D1D5DB'
+    e.target.style.borderColor = 'var(--border-medium)'
     e.target.style.boxShadow   = 'none'
   }
 
@@ -164,10 +164,10 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
       {/* Modal */}
       <div style={{
         position: 'relative', zIndex: 1,
-        background: '#FFFFFF', width: '100%', maxWidth: 520,
+        background: 'var(--bg-surface)', width: '100%', maxWidth: 520,
         borderRadius: 24,
         boxShadow: '0 30px 70px -20px rgba(20,24,28,0.30), 0 8px 24px rgba(20,24,28,0.10), 0 1px 0 rgba(255,255,255,.7) inset',
-        border: '1px solid #E5E7EB',
+        border: '1px solid var(--border-subtle)',
         maxHeight: '90vh', display: 'flex', flexDirection: 'column',
         overflow: 'hidden',
       }}>
@@ -175,25 +175,25 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
         {/* Header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '24px 28px 20px', borderBottom: '1px solid #F3F4F6', flexShrink: 0,
+          padding: '24px 28px 20px', borderBottom: '1px solid var(--bg-hover)', flexShrink: 0,
         }}>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 3 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 3 }}>
               CRM
             </p>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#374151', margin: 0 }}>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
               {isEditing ? 'Editar Cliente' : 'Novo Cliente'}
             </h2>
           </div>
           <button onClick={onClose} style={{
-            border: 'none', background: '#F3F4F6', padding: '8px',
+            border: 'none', background: 'var(--bg-hover)', padding: '8px',
             borderRadius: 12, cursor: 'pointer', display: 'flex',
             alignItems: 'center', justifyContent: 'center', transition: 'background 0.15s',
           }}
-            onMouseEnter={e => e.currentTarget.style.background = '#E5E7EB'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F3F4F6'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--border-subtle)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-hover)'}
           >
-            <X size={18} color="#6B7280" />
+            <X size={18} color="var(--text-secondary)" />
           </button>
         </div>
 
@@ -228,7 +228,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
           </div>
 
           {/* Divisor */}
-          <div style={{ height: 1, background: '#F3F4F6' }} />
+          <div style={{ height: 1, background: 'var(--bg-hover)' }} />
 
           {/* Linha: Status + Situação */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -274,7 +274,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
           {/* Footer */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            marginTop: 8, paddingTop: 20, borderTop: '1px solid #F3F4F6',
+            marginTop: 8, paddingTop: 20, borderTop: '1px solid var(--bg-hover)',
           }}>
             {/* Excluir — só no modo edição */}
             {isEditing ? (
@@ -284,7 +284,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
                     display: 'flex', alignItems: 'center', gap: 6,
                     padding: '9px 16px', borderRadius: 10, border: 'none',
                     background: confirmDelete ? '#DC2626' : 'rgba(220,38,38,0.07)',
-                    color: confirmDelete ? '#fff' : '#DC2626',
+                    color: confirmDelete ? 'var(--text-onbrand)' : '#DC2626',
                     fontSize: 13, fontWeight: 600, cursor: 'pointer',
                     transition: 'background 0.18s, color 0.18s',
                   }}
@@ -294,7 +294,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
                 </button>
                 {confirmDelete && (
                   <button type="button" onClick={() => setConfirmDelete(false)}
-                    style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}>
+                    style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}>
                     Cancelar
                   </button>
                 )}
@@ -305,25 +305,25 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
               <button type="button" onClick={onClose}
                 style={{
                   padding: '9px 18px', borderRadius: 10,
-                  border: '1px solid #D1D5DB', background: '#fff',
-                  fontSize: 13, fontWeight: 600, color: '#6B7280', cursor: 'pointer',
+                  border: '1px solid var(--border-medium)', background: 'var(--bg-surface)',
+                  fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
-                onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-surface)'}
               >
                 Cancelar
               </button>
               <button type="submit" disabled={saving}
                 style={{
                   padding: '9px 22px', borderRadius: 10, border: 'none',
-                  background: saving ? '#6B7280' : '#374151',
-                  fontSize: 13, fontWeight: 600, color: '#fff',
+                  background: saving ? 'var(--text-secondary)' : 'var(--brand-slate)',
+                  fontSize: 13, fontWeight: 600, color: 'var(--text-onbrand)',
                   cursor: saving ? 'not-allowed' : 'pointer',
                   transition: 'background 0.15s',
                 }}
-                onMouseEnter={e => { if (!saving) e.currentTarget.style.background = '#1f2937' }}
-                onMouseLeave={e => { if (!saving) e.currentTarget.style.background = '#374151' }}
+                onMouseEnter={e => { if (!saving) e.currentTarget.style.background = 'var(--text-primary)' }}
+                onMouseLeave={e => { if (!saving) e.currentTarget.style.background = 'var(--brand-slate)' }}
               >
                 {saving ? 'Salvando...' : isEditing ? 'Salvar alterações' : 'Criar cliente'}
               </button>

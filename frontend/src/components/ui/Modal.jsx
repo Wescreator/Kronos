@@ -31,9 +31,9 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
       <div
         className={`relative w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
         style={{
-          background: 'linear-gradient(180deg, #ffffff 0%, #383838 100%)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderTop: '1px solid rgba(255,255,255,0.10)',
+          background: 'linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-surface-2) 100%)',
+          border: '1px solid var(--border-subtle)',
+          borderTop: '1px solid var(--border-subtle)',
           borderRadius: '24px',
           boxShadow: '0 24px 60px rgba(0,0,0,0.55)',
           animation: 'fadeInUp 0.2s ease forwards'
@@ -48,7 +48,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
         {/* Header */}
         <div
           className="flex items-center justify-between px-6 py-5 shrink-0"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', position: 'relative', zIndex: 1 }}
+          style={{ borderBottom: '1px solid var(--border-subtle)', position: 'relative', zIndex: 1 }}
         >
           <h2 className="text-[17px]" style={{ color: 'var(--text-primary)', fontWeight: 700 }}>
             {title}
@@ -57,7 +57,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
             onClick={onClose}
             className="p-1.5 rounded-xl transition-all duration-150"
             style={{ color: 'var(--text-muted)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = '#fff' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-primary)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' }}
           >
             <X size={18} />

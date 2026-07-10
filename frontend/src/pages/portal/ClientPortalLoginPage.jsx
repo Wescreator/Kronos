@@ -4,6 +4,7 @@ import { toast, Toaster } from 'react-hot-toast'
 import { Eye, EyeOff } from 'lucide-react'
 import { clientPortalLogin } from '../../services/client-portal-auth.service'
 import useAuthStore from '../../store/authStore'
+import { clearAuthStorage } from '../../utils/theme'
 import kronosLogo from '../../assets/kronos-logo.png'
 
 /**
@@ -27,8 +28,7 @@ export default function ClientPortalLoginPage() {
     e.preventDefault()
     setLoading(true)
     try {
-      localStorage.clear()
-      sessionStorage.clear()
+      clearAuthStorage()
 
       const { data } = await clientPortalLogin(form)
       if (!data.accessToken) throw new Error('Token não recebido')
@@ -44,6 +44,7 @@ export default function ClientPortalLoginPage() {
 
   return (
     <div
+      data-theme="light"
       className="flex items-center justify-center min-h-screen"
       style={{ background: 'linear-gradient(135deg, #c7cbd1 0%, #9aa0a6 50%, #c7cbd1 100%)' }}
     >

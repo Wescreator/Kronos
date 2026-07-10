@@ -9,6 +9,7 @@ import Spinner           from '../../components/ui/Spinner'
 import EmptyState        from '../../components/ui/EmptyState'
 import CompanyCard        from '../../components/admin/CompanyCard'
 import NewCompanyModal   from '../../components/modals/NewCompanyModal'
+import ThemeToggle       from '../../components/ui/ThemeToggle'
 
 const STATUS_FILTERS = [
   { value: '',        label: 'Todas'      },
@@ -71,8 +72,8 @@ export default function AdminPage() {
   const handleCreated = () => loadCompanies()
 
   const pillStyle = (active) => active
-    ? { background: '#374151', color: '#fff', border: '1px solid #1f2937' }
-    : { background: '#FFFFFF', color: '#6B7280', border: '1px solid #E5E7EB' }
+    ? { background: 'var(--brand-slate)', color: 'var(--text-onbrand)', border: '1px solid var(--text-primary)' }
+    : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
 
   return (
     <div className="fade-in" style={{ minHeight: '100vh', padding: '32px', maxWidth: 1280, margin: '0 auto' }}>
@@ -81,7 +82,8 @@ export default function AdminPage() {
         tag="Painel Global"
         subtitle={`Olá, ${user?.name || 'developer'}. Gerencie as empresas da plataforma.`}
         actions={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             <button onClick={() => { logout(); navigate('/login') }} className="btn-secondary">
               Sair
             </button>
@@ -99,7 +101,7 @@ export default function AdminPage() {
           { label: 'Empresas Ativas',          value: kpis.active,     color: '#16A34A' },
           { label: 'Empresas Bloqueadas',      value: kpis.blocked,    color: '#DC2626' },
           { label: 'Total de Usuários',        value: kpis.totalUsers, color: '#0284C7' },
-          { label: 'Média de Usuários/Empresa',value: kpis.avgUsers,   color: '#6B7280' },
+          { label: 'Média de Usuários/Empresa',value: kpis.avgUsers,   color: 'var(--text-secondary)' },
         ].map(s => (
           <div key={s.label} className="card p-4 text-center">
             <p className="text-2xl font-bold mb-1" style={{ color: s.color }}>{s.value}</p>
@@ -113,7 +115,7 @@ export default function AdminPage() {
       {/* Busca */}
       <div className="mb-4">
         <div className="relative" style={{ maxWidth: 320 }}>
-          <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none' }} />
+          <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
           <input
             className="input"
             style={{ paddingLeft: 38 }}

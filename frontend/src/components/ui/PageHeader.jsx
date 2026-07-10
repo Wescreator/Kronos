@@ -6,9 +6,9 @@ export default function PageHeader({ title, subtitle, actions, tag }) {
           <span
             className="inline-block text-[10px] font-bold uppercase tracking-[0.15em] mb-2 px-2.5 py-1 rounded-md"
             style={{
-              background: 'rgba(63, 63, 63, 0.27)',
-              color: '#ffffff',
-              border: '1px solid rgba(124,92,252,0.20)'
+              background: 'var(--brand-slate)',
+              color: 'var(--text-onbrand)',
+              border: '1px solid var(--border-medium)'
             }}
           >
             {tag}

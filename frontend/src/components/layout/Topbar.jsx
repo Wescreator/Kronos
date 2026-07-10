@@ -4,6 +4,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
 import useSocketStore from '../../store/socketStore'
 import Avatar from '../ui/Avatar'
+import ThemeToggle from '../ui/ThemeToggle'
 import {getNotifications, markRead, markAllRead, deleteNotification,} from '../../services/notifications.service'
 import { formatDateTime } from '../../utils/format'
 import { canSeeModule } from '../../utils/permissions'
@@ -114,8 +115,8 @@ export default function Topbar() {
       className="
         fixed top-0 left-0 right-0
         z-50 h-16
-        border-b border-slate-200
-        bg-white/90
+        border-b border-line
+        bg-surface
         backdrop-blur-xl
       "
     >
@@ -136,20 +137,20 @@ export default function Topbar() {
             className="
               flex h-8 w-8 items-center justify-center
               rounded-xl
-              bg-slate-100
-              text-sm font-bold text-slate-700
-              border border-slate-400
+              bg-hover
+              text-sm font-bold text-primary
+              border border-line-strong
             "
           >
             K
           </div>
-          <span className="text-sm font-semibold tracking-wide text-slate-800">
+          <span className="text-sm font-semibold tracking-wide text-primary">
             KRONOS
           </span>
         </NavLink>
 
         {/* ── SEPARADOR ────────────────────────────────────────────── */}
-        <div className="hidden lg:block h-5 w-px shrink-0 bg-slate-400" />
+        <div className="hidden lg:block h-5 w-px shrink-0 bg-line-strong" />
 
         {/* ── NAVEGAÇÃO DESKTOP (lg+) ───────────────────────────────*/}
         <nav className="hidden lg:flex items-center gap-0.5">
@@ -163,8 +164,8 @@ export default function Topbar() {
                 text-sm font-medium
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-400'
-                  : 'text-slate-500 hover:bg-slate-300 hover:text-slate-800'
+                  ? 'bg-hover text-primary ring-1 ring-line-strong'
+                  : 'text-secondary hover:bg-hover hover:text-primary'
                 }
               `}
             >
@@ -186,8 +187,8 @@ export default function Topbar() {
                 rounded-xl
                 transition-all duration-200
                 ${isActive
-                  ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-400'
-                  : 'text-slate-500 hover:bg-slate-300 hover:text-slate-800'
+                  ? 'bg-hover text-primary ring-1 ring-line-strong'
+                  : 'text-secondary hover:bg-hover hover:text-primary'
                 }
               `}
             >
@@ -198,6 +199,9 @@ export default function Topbar() {
 
         {/* ── DIREITA ──────────────────────────────────────────────── */}
         <div className="flex items-center gap-1.5 ml-auto shrink-0">
+
+          {/* TEMA (claro / escuro) */}
+          <ThemeToggle />
 
           {/* NOTIFICAÇÕES */}
           <div className="relative">
@@ -210,9 +214,9 @@ export default function Topbar() {
               className="
                 relative flex h-9 w-9 items-center justify-center
                 rounded-xl
-                text-slate-500
+                text-secondary
                 transition-all duration-200
-                hover:bg-slate-300 hover:text-slate-800
+                hover:bg-hover hover:text-primary
               "
             >
               <Bell size={18} />
@@ -220,7 +224,7 @@ export default function Topbar() {
                 <span
                   className="
                     absolute top-1.5 right-1.5
-                    h-2 w-2 rounded-full bg-rose-500
+                    h-2 w-2 rounded-full bg-danger
                   "
                 />
               )}
@@ -232,19 +236,19 @@ export default function Topbar() {
                   absolute right-0 top-12
                   w-[380px]
                   overflow-hidden rounded-3xl
-                  border border-slate-200
-                  bg-white
+                  border border-line
+                  bg-surface
                   backdrop-blur-xl
                   shadow-[0_20px_50px_rgba(15,23,42,0.12)]
                 "
               >
-                <div className="flex items-center justify-between border-b border-slate-100 p-4">
-                  <h3 className="font-semibold text-slate-800">
+                <div className="flex items-center justify-between border-b border-line p-4">
+                  <h3 className="font-semibold text-primary">
                     Notificações
                   </h3>
                   <button
                     onClick={handleMarkAll}
-                    className="text-xs text-slate-500 hover:text-slate-800"
+                    className="text-xs text-secondary hover:text-primary"
                   >
                     Marcar todas
                   </button>
@@ -252,39 +256,39 @@ export default function Topbar() {
 
                 <div className="max-h-[420px] overflow-y-auto">
                   {notifs.length === 0 ? (
-                    <div className="p-8 text-center text-sm text-slate-400">
+                    <div className="p-8 text-center text-sm text-muted">
                       Nenhuma notificação
                     </div>
                   ) : (
                     <>
                       {notifs.filter((n) => !n.is_read).length > 0 && (
-                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                           Não lidas
                         </div>
                       )}
                       {notifs
                         .filter((n) => !n.is_read)
                         .map((n) => (
-                          <div key={n.id} className="group relative border-b border-slate-100 bg-slate-50">
+                          <div key={n.id} className="group relative border-b border-line bg-surface-2">
                             <button
                               onClick={() => handleNotifClick(n)}
                               className={`
                                 block w-full p-4 pr-9
                                 text-left
                                 transition-colors
-                                hover:bg-slate-100
+                                hover:bg-hover
                                 ${n.link ? 'cursor-pointer' : 'cursor-default'}
                               `}
                             >
-                              <p className="text-sm font-medium text-slate-800">
+                              <p className="text-sm font-medium text-primary">
                                 {n.title}
                               </p>
                               {n.body && (
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="mt-1 text-xs text-secondary">
                                   {n.body}
                                 </p>
                               )}
-                              <p className="mt-2 text-xs text-slate-400">
+                              <p className="mt-2 text-xs text-muted">
                                 {formatDateTime(n.created_at)}
                               </p>
                             </button>
@@ -294,9 +298,9 @@ export default function Topbar() {
                               className="
                                 absolute right-2 top-3
                                 rounded-lg p-1.5
-                                text-slate-300 opacity-0
+                                text-muted opacity-0
                                 transition-all duration-150
-                                hover:bg-slate-200 hover:text-slate-600
+                                hover:bg-hover hover:text-secondary
                                 group-hover:opacity-100
                               "
                             >
@@ -306,7 +310,7 @@ export default function Topbar() {
                         ))}
 
                       {notifs.filter((n) => n.is_read).length > 0 && (
-                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        <div className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
                           Lidas
                         </div>
                       )}
@@ -314,26 +318,26 @@ export default function Topbar() {
                         .filter((n) => n.is_read)
                         .slice(0, 15)
                         .map((n) => (
-                          <div key={n.id} className="group relative border-b border-slate-100">
+                          <div key={n.id} className="group relative border-b border-line">
                             <button
                               onClick={() => handleNotifClick(n)}
                               className={`
                                 block w-full p-4 pr-9
                                 text-left
                                 transition-colors
-                                hover:bg-slate-50
+                                hover:bg-surface-2
                                 ${n.link ? 'cursor-pointer' : 'cursor-default'}
                               `}
                             >
-                              <p className="text-sm font-medium text-slate-800">
+                              <p className="text-sm font-medium text-primary">
                                 {n.title}
                               </p>
                               {n.body && (
-                                <p className="mt-1 text-xs text-slate-500">
+                                <p className="mt-1 text-xs text-secondary">
                                   {n.body}
                                 </p>
                               )}
-                              <p className="mt-2 text-xs text-slate-400">
+                              <p className="mt-2 text-xs text-muted">
                                 {formatDateTime(n.created_at)}
                               </p>
                             </button>
@@ -343,9 +347,9 @@ export default function Topbar() {
                               className="
                                 absolute right-2 top-3
                                 rounded-lg p-1.5
-                                text-slate-300 opacity-0
+                                text-muted opacity-0
                                 transition-all duration-150
-                                hover:bg-slate-200 hover:text-slate-600
+                                hover:bg-hover hover:text-secondary
                                 group-hover:opacity-100
                               "
                             >
@@ -372,7 +376,7 @@ export default function Topbar() {
                 flex items-center gap-2
                 rounded-2xl px-2 py-1.5
                 transition-all duration-200
-                hover:bg-slate-300
+                hover:bg-hover
               "
             >
               <Avatar
@@ -381,10 +385,10 @@ export default function Topbar() {
                 size="sm"
               />
               <div className="hidden md:block text-left">
-                <p className="text-sm font-medium leading-tight text-slate-800">
+                <p className="text-sm font-medium leading-tight text-primary">
                   {user?.name}
                 </p>
-                <p className="text-xs leading-tight text-slate-400">
+                <p className="text-xs leading-tight text-muted">
                   {user?.email}
                 </p>
               </div>
@@ -396,17 +400,17 @@ export default function Topbar() {
                   absolute right-0 top-12
                   w-60
                   overflow-hidden rounded-3xl
-                  border border-slate-200
-                  bg-white
+                  border border-line
+                  bg-surface
                   backdrop-blur-xl
                   shadow-[0_20px_50px_rgba(15,23,42,0.12)]
                 "
               >
-                <div className="border-b border-slate-100 p-4">
-                  <p className="font-semibold text-slate-800">
+                <div className="border-b border-line p-4">
+                  <p className="font-semibold text-primary">
                     {user?.name}
                   </p>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-muted">
                     {user?.email}
                   </p>
                 </div>
@@ -414,9 +418,9 @@ export default function Topbar() {
                   onClick={logout}
                   className="
                     w-full px-4 py-3
-                    text-left text-sm text-rose-600
+                    text-left text-sm text-danger
                     transition-colors
-                    hover:bg-rose-50
+                    hover:bg-hover
                   "
                 >
                   Sair da conta
@@ -435,9 +439,9 @@ export default function Topbar() {
             className="
               flex md:hidden h-9 w-9 items-center justify-center
               rounded-xl
-              text-slate-500
+              text-secondary
               transition-all duration-200
-              hover:bg-slate-100 hover:text-slate-800
+              hover:bg-hover hover:text-primary
             "
           >
             {showMobileMenu ? <X size={18} /> : <Menu size={18} />}
@@ -451,8 +455,8 @@ export default function Topbar() {
           className="
             absolute left-0 right-0 top-16
             z-50
-            border-b border-slate-200
-            bg-white
+            border-b border-line
+            bg-surface
             backdrop-blur-xl
             md:hidden
           "
@@ -470,8 +474,8 @@ export default function Topbar() {
                   text-sm font-medium
                   transition-all duration-200
                   ${isActive
-                    ? 'bg-slate-100 text-slate-800 ring-1 ring-slate-200'
-                    : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                    ? 'bg-hover text-primary ring-1 ring-line'
+                    : 'text-secondary hover:bg-hover hover:text-primary'
                   }
                 `}
               >

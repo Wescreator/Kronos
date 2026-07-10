@@ -3,7 +3,7 @@ export default function Spinner({ size = 'md' }) {
   return (
     <div
       className={`${s} animate-spin rounded-full`}
-      style={{ border: '2px solid rgba(255,255,255,0.08)', borderTopColor: '#7C5CFC' }}
+      style={{ border: '2px solid var(--border-subtle)', borderTopColor: '#7C5CFC' }}
     />
   )
 }

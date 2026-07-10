@@ -13,7 +13,7 @@ import NewClientModal from '../../components/modals/NewClientModal'
 
 /* ── Mapa de Status (Lead vs Cliente) ───────────────────────────── */
 const STATUS_MAP = {
-  lead:    { label: 'Lead',    bg: 'rgba(55,65,81,0.08)',  color: '#374151' },
+  lead:    { label: 'Lead',    bg: 'rgba(55,65,81,0.08)',  color: 'var(--text-primary)' },
   cliente: { label: 'Cliente', bg: 'rgba(2,132,199,0.10)', color: '#0284C7' },
 }
 
@@ -51,9 +51,9 @@ const PAGE_SIZE = 20
 
 /* ── Badge genérico ─────────────────────────────────────────────── */
 function MapBadge({ map, value }) {
-  if (!value) return <span style={{ color: '#9CA3AF' }}>—</span>
+  if (!value) return <span style={{ color: 'var(--text-muted)' }}>—</span>
   const cfg = map[value]
-  if (!cfg) return <span style={{ color: '#9CA3AF' }}>—</span>
+  if (!cfg) return <span style={{ color: 'var(--text-muted)' }}>—</span>
   const { Icon } = cfg
   return (
     <span style={{
@@ -76,7 +76,7 @@ function Initials({ name }) {
       width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
       background: 'rgba(55,65,81,0.08)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 12, fontWeight: 700, color: '#374151',
+      fontSize: 12, fontWeight: 700, color: 'var(--text-primary)',
     }}>
       {letters}
     </div>
@@ -161,7 +161,7 @@ export default function ClientsPage() {
   // pagination.total (vindo do backend) e continua correto.
   const statsCards = [
     { label: 'Total',               value: pagination.total,                                               color: 'var(--text-primary)' },
-    { label: 'Leads',               value: clients.filter(c => c.status === 'lead').length,               color: '#374151'             },
+    { label: 'Leads',               value: clients.filter(c => c.status === 'lead').length,               color: 'var(--text-primary)'             },
     { label: 'Clientes',            value: clients.filter(c => c.status === 'cliente').length,            color: '#0284C7'             },
     { label: 'Contratos Assinados', value: clients.filter(c => c.situacao === 'contrato_assinado').length,color: '#16A34A'             },
     { label: 'Inadimplentes',       value: clients.filter(c => c.financeiro === 'inadimplente').length,   color: '#DC2626'             },
@@ -171,7 +171,7 @@ export default function ClientsPage() {
     <div className="fade-in">
       <style>{`
         .client-row { transition: background 0.12s ease; }
-        .client-row:hover { background: #F9FAFB !important; }
+        .client-row:hover { background: var(--bg-surface-2) !important; }
         .crm-filter-btn { transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s; }
         .crm-filter-btn:hover { transform: translateY(-1px); }
         .crm-search:focus-within { border-color: rgba(55,65,81,0.40) !important; box-shadow: 0 0 0 3px rgba(55,65,81,0.08); }
@@ -217,18 +217,18 @@ export default function ClientsPage() {
       {/* Busca + Filtros */}
       <div className="flex flex-col gap-3 mb-5">
         <div className="crm-search relative" style={{
-          maxWidth: 340, background: '#FFFFFF', borderRadius: 14,
-          border: '1px solid #D1D5DB', transition: 'border-color 0.2s, box-shadow 0.2s',
+          maxWidth: 340, background: 'var(--bg-surface)', borderRadius: 14,
+          border: '1px solid var(--border-medium)', transition: 'border-color 0.2s, box-shadow 0.2s',
         }}>
           <Search size={14} style={{
             position: 'absolute', left: 14, top: '50%',
-            transform: 'translateY(-50%)', color: '#9CA3AF', pointerEvents: 'none',
+            transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none',
           }} />
           <input
             style={{
               width: '100%', background: 'transparent',
               paddingLeft: 38, paddingRight: 16, paddingTop: 10, paddingBottom: 10,
-              fontSize: 13, color: '#374151', outline: 'none', boxSizing: 'border-box',
+              fontSize: 13, color: 'var(--text-primary)', outline: 'none', boxSizing: 'border-box',
             }}
             placeholder="Buscar cliente ou lead..."
             value={search}
@@ -241,17 +241,17 @@ export default function ClientsPage() {
             <button key={f.value} onClick={() => setStatusFilter(f.value)}
               className="crm-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={statusFilter === f.value
-                ? { background: '#374151', color: '#fff', border: '1px solid #1f2937' }
-                : { background: '#FFFFFF', color: '#6B7280', border: '1px solid #E5E7EB' }
+                ? { background: 'var(--brand-slate)', color: 'var(--text-onbrand)', border: '1px solid var(--text-primary)' }
+                : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
               }>{f.label}</button>
           ))}
-          <div style={{ width: 1, height: 20, background: '#E5E7EB', margin: '0 4px' }} />
+          <div style={{ width: 1, height: 20, background: 'var(--border-subtle)', margin: '0 4px' }} />
           {SITUACAO_FILTERS.map(f => (
             <button key={f.value} onClick={() => setSituacaoFilter(f.value)}
               className="crm-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={situacaoFilter === f.value
-                ? { background: '#374151', color: '#fff', border: '1px solid #1f2937' }
-                : { background: '#FFFFFF', color: '#6B7280', border: '1px solid #E5E7EB' }
+                ? { background: 'var(--brand-slate)', color: 'var(--text-onbrand)', border: '1px solid var(--text-primary)' }
+                : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
               }>{f.label}</button>
           ))}
         </div>
@@ -264,16 +264,16 @@ export default function ClientsPage() {
           background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.20)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
         }}>
-          <p style={{ fontSize: 14, color: '#374151', margin: 0 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-primary)', margin: 0 }}>
             Confirmar exclusão permanente deste cliente? Esta ação não pode ser desfeita.
           </p>
           <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
             <button onClick={() => setDeletingId(null)}
-              style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid #D1D5DB', background: '#fff', fontSize: 13, fontWeight: 600, color: '#6B7280', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 10, border: '1px solid var(--border-medium)', background: 'var(--bg-surface)', fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', cursor: 'pointer' }}>
               Cancelar
             </button>
             <button onClick={confirmDelete}
-              style={{ padding: '7px 14px', borderRadius: 10, border: 'none', background: '#DC2626', fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer' }}>
+              style={{ padding: '7px 14px', borderRadius: 10, border: 'none', background: '#DC2626', fontSize: 13, fontWeight: 600, color: 'var(--text-onbrand)', cursor: 'pointer' }}>
               Confirmar exclusão
             </button>
           </div>
@@ -287,7 +287,7 @@ export default function ClientsPage() {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           borderRadius: 24, minHeight: 300,
-          background: '#FAFAFA', border: '1px dashed #D1D5DB',
+          background: 'var(--bg-surface-2)', border: '1px dashed var(--border-medium)',
         }}>
           <EmptyState
             icon={Building2}
@@ -308,7 +308,7 @@ export default function ClientsPage() {
                 interno que rola quando a tabela é mais larga que a tela. */}
             <div className="clients-table-scroll">
               <table className="w-full">
-                <thead style={{ borderBottom: '1px solid #E5E7EB' }}>
+                <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                   <tr>
                     <th className="table-header">Nome</th>
                     <th className="table-header hidden sm:table-cell">Telefone</th>
@@ -323,13 +323,13 @@ export default function ClientsPage() {
                 <tbody>
                   {clients.map((c, i) => (
                     <tr key={c.id} className="client-row"
-                      style={{ borderBottom: i < clients.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                      style={{ borderBottom: i < clients.length - 1 ? '1px solid var(--bg-hover)' : 'none' }}>
 
                       {/* Nome */}
                       <td className="table-cell">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <Initials name={c.name} />
-                          <span className="text-sm font-semibold" style={{ color: '#374151' }}>{c.name}</span>
+                          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{c.name}</span>
                         </div>
                       </td>
 
@@ -337,10 +337,10 @@ export default function ClientsPage() {
                       <td className="table-cell hidden sm:table-cell">
                         {c.phone
                           ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Phone size={12} style={{ color: '#9CA3AF' }} />
-                              <span className="text-sm" style={{ color: '#6B7280' }}>{c.phone}</span>
+                              <Phone size={12} style={{ color: 'var(--text-muted)' }} />
+                              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{c.phone}</span>
                             </div>
-                          : <span style={{ color: '#9CA3AF' }}>—</span>
+                          : <span style={{ color: 'var(--text-muted)' }}>—</span>
                         }
                       </td>
 
@@ -348,10 +348,10 @@ export default function ClientsPage() {
                       <td className="table-cell hidden md:table-cell">
                         {c.email
                           ? <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Mail size={12} style={{ color: '#9CA3AF' }} />
-                              <span className="text-sm" style={{ color: '#6B7280' }}>{c.email}</span>
+                              <Mail size={12} style={{ color: 'var(--text-muted)' }} />
+                              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{c.email}</span>
                             </div>
-                          : <span style={{ color: '#9CA3AF' }}>—</span>
+                          : <span style={{ color: 'var(--text-muted)' }}>—</span>
                         }
                       </td>
 
@@ -373,7 +373,7 @@ export default function ClientsPage() {
                                 {c.project_title}
                               </Link>
                             </div>
-                          : <span style={{ color: '#9CA3AF' }}>—</span>
+                          : <span style={{ color: 'var(--text-muted)' }}>—</span>
                         }
                       </td>
 
@@ -399,12 +399,12 @@ export default function ClientsPage() {
                             style={{
                               display: 'flex', alignItems: 'center', gap: 5,
                               padding: '6px 12px', borderRadius: 9, cursor: 'pointer',
-                              background: '#F3F4F6', border: '1px solid #E5E7EB',
-                              fontSize: 12, fontWeight: 600, color: '#6B7280',
+                              background: 'var(--bg-hover)', border: '1px solid var(--border-subtle)',
+                              fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)',
                               transition: 'background 0.15s, color 0.15s',
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#E5E7EB'; e.currentTarget.style.color = '#374151' }}
-                            onMouseLeave={e => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.color = '#6B7280' }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--border-subtle)'; e.currentTarget.style.color = 'var(--brand-slate)' }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-secondary)' }}
                           >
                             <Pencil size={12} /> Editar
                           </button>

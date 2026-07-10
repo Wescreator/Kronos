@@ -21,7 +21,7 @@ export default function ClientPortalLayout() {
     <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
       <header
         className="flex items-center justify-between px-6 py-3.5 sticky top-0 z-10"
-        style={{ background: '#FFFFFF', borderBottom: '1px solid var(--border-subtle)' }}
+        style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-subtle)' }}
       >
         <div className="flex items-center gap-2.5">
           <img src={kronosLogo} alt="Kronos" style={{ width: 28 }} />

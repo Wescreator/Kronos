@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import PortalModal from '../ui/PortalModal'
 import platformService from '../../services/platform.service'
 
 const EMPTY = { portalEmail: '', password: '', projectIds: [], isActive: true }
@@ -41,7 +42,7 @@ export default function ClientAccessModal({ open, onClose, onSuccess, companyId,
       .finally(() => setLoadingProjects(false))
   }, [open, client, companyId, isManaging])
 
-  if (!open || !client) return null
+  if (!client) return null
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
@@ -104,22 +105,15 @@ export default function ClientAccessModal({ open, onClose, onSuccess, companyId,
   }
 
   return (
-    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal-content" style={{ maxWidth: 520 }}>
-        <div className="flex items-center justify-between px-7 pt-6 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <div>
-            <p className="label" style={{ marginBottom: 3 }}>Clientes</p>
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-              {isManaging ? 'Gerenciar Acesso' : 'Criar Acesso ao Portal'}
-            </h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>{client.name}</p>
-          </div>
-          <button onClick={onClose} className="btn-secondary" style={{ padding: 8, borderRadius: 12 }}>
-            <X size={18} />
-          </button>
-        </div>
+    <PortalModal
+      open={open}
+      onClose={onClose}
+      title={isManaging ? 'Gerenciar Acesso' : 'Criar Acesso ao Portal'}
+      size="md"
+    >
+      <p className="text-xs mb-4" style={{ color: 'var(--text-secondary)', marginTop: -4 }}>{client.name}</p>
 
-        <form onSubmit={handleSubmit} className="px-7 py-6 flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
               E-mail de acesso {isManaging && '(não editável)'}
@@ -156,7 +150,7 @@ export default function ClientAccessModal({ open, onClose, onSuccess, companyId,
               <p className="text-xs" style={{ color: 'var(--text-primary)' }}>Nenhum projeto encontrado nesta empresa.</p>
             ) : (
               <div
-                className="flex flex-col gap-1.5 p-3 rounded-xl bg-white"
+                className="flex flex-col gap-1.5 p-3 rounded-xl bg-surface"
                 style={{ border: '1px solid var(--border-subtle)', maxHeight: 180, overflowY: 'auto' }}
               >
                 {projects.map(p => (
@@ -209,7 +203,6 @@ export default function ClientAccessModal({ open, onClose, onSuccess, companyId,
             </div>
           </div>
         </form>
-      </div>
-    </div>
+    </PortalModal>
   )
 }

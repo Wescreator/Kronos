@@ -62,7 +62,7 @@ function PhaseCommentItem({ comment, projectId, stageId, phaseId, onUpdate, user
   }
 
   return (
-    <div className="p-2.5 rounded-lg" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+    <div className="p-2.5 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
       <div className="flex items-center justify-between mb-1 gap-2">
         <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
           {comment.author_name}
@@ -123,8 +123,8 @@ function PhaseAttachmentItem({ attachment, projectId, stageId, phaseId, onUpdate
   }
 
   return (
-    <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: '#FFFFFF', border: '1px solid #E5E7EB' }}>
-      <File size={13} style={{ color: '#374151' }} />
+    <div className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)' }}>
+      <File size={13} style={{ color: 'var(--text-primary)' }} />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
           {attachment.file_name}
@@ -139,7 +139,7 @@ function PhaseAttachmentItem({ attachment, projectId, stageId, phaseId, onUpdate
           target="_blank"
           rel="noopener noreferrer"
           className="text-[11px] px-2 py-0.5 rounded font-semibold shrink-0"
-          style={{ background: 'rgba(55,65,81,0.08)', color: '#374151' }}
+          style={{ background: 'rgba(55,65,81,0.08)', color: 'var(--text-primary)' }}
         >
           Abrir
         </a>
@@ -220,11 +220,11 @@ function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canMa
           ref={provided.innerRef}
           {...provided.draggableProps}
           className="rounded-xl p-3 transition-all duration-150"
-          style={{ ...provided.draggableProps.style, background: '#FAFAFA', border: '1px solid #E5E7EB' }}
+          style={{ ...provided.draggableProps.style, background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }}
         >
           <div className="flex items-start gap-3">
             {canManageProjectItems && (
-              <span {...provided.dragHandleProps} className="mt-1 shrink-0 cursor-grab" style={{ color: '#D1D5DB' }}>
+              <span {...provided.dragHandleProps} className="mt-1 shrink-0 cursor-grab" style={{ color: 'var(--border-medium)' }}>
                 <GripVertical size={14} />
               </span>
             )}
@@ -234,8 +234,8 @@ function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canMa
               disabled={!canManageProjectItems}
               className="mt-0.5 shrink-0 h-5 w-5 rounded-md flex items-center justify-center transition-all duration-150"
               style={{
-                background: phase.is_completed ? '#374151' : '#FFFFFF',
-                border: `1px solid ${phase.is_completed ? '#374151' : '#D1D5DB'}`,
+                background: phase.is_completed ? 'var(--brand-slate)' : 'var(--bg-surface)',
+                border: `1px solid ${phase.is_completed ? 'var(--brand-slate)' : 'var(--border-medium)'}`,
                 cursor: canManageProjectItems ? 'pointer' : 'default'
               }}
             >
@@ -336,7 +336,7 @@ function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canMa
                 <Paperclip size={11} /> Arquivos ({phase.attachments?.length || 0})
               </p>
               {canManageProjectItems && (
-                <label className="text-[11px] font-semibold cursor-pointer flex items-center gap-1" style={{ color: '#374151' }}>
+                <label className="text-[11px] font-semibold cursor-pointer flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
                   <Upload size={11} /> {uploading ? 'Enviando...' : 'Anexar'}
                   <input ref={fileRef} type="file" className="hidden" onChange={handleUpload} disabled={uploading} />
                 </label>
@@ -412,18 +412,18 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
           ref={provided.innerRef}
           {...provided.draggableProps}
           className="rounded-2xl overflow-hidden"
-          style={{ ...provided.draggableProps.style, border: '1px solid #E5E7EB' }}
+          style={{ ...provided.draggableProps.style, border: '1px solid var(--border-subtle)' }}
         >
-          <div className="w-full flex items-center justify-between px-5 py-4" style={{ background: '#FAFAFA' }}>
+          <div className="w-full flex items-center justify-between px-5 py-4" style={{ background: 'var(--bg-surface-2)' }}>
             <div className="flex items-center gap-3 flex-1 min-w-0">
               {canManageProjectItems && (
-                <span {...provided.dragHandleProps} className="cursor-grab shrink-0" style={{ color: '#D1D5DB' }}>
+                <span {...provided.dragHandleProps} className="cursor-grab shrink-0" style={{ color: 'var(--border-medium)' }}>
                   <GripVertical size={15} />
                 </span>
               )}
               <button onClick={() => setExpanded(!expanded)} className="shrink-0">
                 {expanded
-                  ? <ChevronDown size={16} style={{ color: '#6B7280' }} />
+                  ? <ChevronDown size={16} style={{ color: 'var(--text-secondary)' }} />
                   : <ChevronRight size={16} style={{ color: 'var(--text-muted)' }} />
                 }
               </button>
@@ -453,7 +453,7 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
                 <span
                   className="text-xs px-2.5 py-1 rounded-full font-semibold"
                   style={{
-                    background: completedCount === totalCount ? 'rgba(22,163,74,0.10)' : '#F3F4F6',
+                    background: completedCount === totalCount ? 'rgba(22,163,74,0.10)' : 'var(--bg-hover)',
                     color:      completedCount === totalCount ? '#16A34A' : 'var(--text-muted)'
                   }}
                 >
@@ -474,7 +474,7 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
           </div>
 
           {expanded && (
-            <div className="px-5 py-4 space-y-2.5" style={{ background: '#FFFFFF' }}>
+            <div className="px-5 py-4 space-y-2.5" style={{ background: 'var(--bg-surface)' }}>
               <Droppable droppableId={`phases-${stage.id}`} type="PHASE">
                 {(dropProvided) => (
                   <div ref={dropProvided.innerRef} {...dropProvided.droppableProps} className="space-y-2.5">
@@ -505,7 +505,7 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
                 <form
                   onSubmit={handleAddPhase}
                   className="p-3 rounded-xl space-y-2"
-                  style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}
+                  style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-medium)' }}
                 >
                   <input
                     className="input text-sm py-1.5"
@@ -527,7 +527,7 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
                 <button
                   onClick={() => setShowAddForm(true)}
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
-                  style={{ color: 'var(--text-muted)', border: '1px dashed #D1D5DB' }}
+                  style={{ color: 'var(--text-muted)', border: '1px dashed var(--border-medium)' }}
                 >
                   <Plus size={13} /> Adicionar fase
                 </button>
@@ -758,7 +758,7 @@ export default function ProjectDetailPage() {
       <button onClick={() => navigate('/app/projects')}
       className="flex items-center gap-2 text-sm mb-5 transition-colors"
       style={{ color: 'var(--text-primary)' }}
-      onMouseEnter={e => e.currentTarget.style.color = 'var(--bg-card)'}
+      onMouseEnter={e => e.currentTarget.style.color = 'var(--text-secondary)'}
       onMouseLeave={e => e.currentTarget.style.color = 'var(--text-primary)'}>
         <ArrowLeft size={15} /> Voltar para Projetos</button>
 
@@ -858,12 +858,12 @@ export default function ProjectDetailPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 p-1 rounded-2xl"
-        style={{ background: '#F3F4F6', border: '1px solid #E5E7EB', display: 'inline-flex' }}>
+        style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-subtle)', display: 'inline-flex' }}>
         {TABS.map(({ label, icon: Icon }, i) => (
           <button key={i} onClick={() => setTab(i)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-150"
             style={tab === i
-              ? { background: '#FFFFFF', color: '#374151', border: '1px solid #D1D5DB' }
+              ? { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-medium)' }
               : { color: 'var(--text-muted)', background: 'transparent', border: '1px solid transparent' }
             }>
             <Icon size={14} /> {label}
@@ -904,15 +904,15 @@ export default function ProjectDetailPage() {
           </DragDropContext>
 
           {stages.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-2xl" style={{ border: '1px dashed #D1D5DB' }}>
-              <CheckSquare size={26} style={{ color: '#D1D5DB', marginBottom: 8 }} />
+            <div className="flex flex-col items-center justify-center py-10 rounded-2xl" style={{ border: '1px dashed var(--border-medium)' }}>
+              <CheckSquare size={26} style={{ color: 'var(--border-medium)', marginBottom: 8 }} />
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nenhuma etapa criada ainda</p>
             </div>
           )}
 
           {canManageProjectItems && (
             showAddStageForm ? (
-              <form onSubmit={handleCreateStage} className="p-4 rounded-2xl space-y-2" style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}>
+              <form onSubmit={handleCreateStage} className="p-4 rounded-2xl space-y-2" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-medium)' }}>
                 <input
                   className="input text-sm"
                   placeholder="Nome da etapa *"
@@ -933,7 +933,7 @@ export default function ProjectDetailPage() {
               <button
                 onClick={() => setShowAddStageForm(true)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-150"
-                style={{ color: '#374151', border: '1px dashed #D1D5DB' }}
+                style={{ color: 'var(--text-primary)', border: '1px dashed var(--border-medium)' }}
               >
                 <Plus size={15} /> Criar nova etapa
               </button>
@@ -957,8 +957,8 @@ export default function ProjectDetailPage() {
           </div>
           {showAddMember && (
             <div className="mb-5 p-4 rounded-2xl"
-              style={{ background: '#F3F4F6', border: '1px solid #D1D5DB' }}>
-              <p className="text-xs font-semibold mb-3" style={{ color: '#374151' }}>Selecione para adicionar:</p>
+              style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-medium)' }}>
+              <p className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>Selecione para adicionar:</p>
               {nonMembers.length === 0
                 ? <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Todos os membros já estão no projeto.</p>
                 : <div className="flex flex-wrap gap-2">
@@ -966,9 +966,9 @@ export default function ProjectDetailPage() {
                       <button key={u.id}
                         onClick={() => { handleAddMember(u.id); setShowAddMember(false) }}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
-                        style={{ background: '#FFFFFF', color: 'var(--text-secondary)', border: '1px solid #E5E7EB' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#F3F4F6'; e.currentTarget.style.color = '#374151' }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '#FFFFFF'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
+                        style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--brand-slate)' }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-surface)'; e.currentTarget.style.color = 'var(--text-secondary)' }}>
                         <Avatar name={u.name} size="sm" /> {u.name}
                       </button>
                     ))}
@@ -982,14 +982,14 @@ export default function ProjectDetailPage() {
             )}
             {(project.members || []).map(m => (
               <div key={m.id} className="flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: '#FAFAFA', border: '1px solid #E5E7EB' }}>
+                style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }}>
                 <Avatar name={m.name} src={m.avatar_url} />
                 <div className="flex-1">
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{m.name}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{m.position || m.role}</p>
                 </div>
                 <span className="text-xs px-2.5 py-1 rounded-full font-semibold"
-                  style={{ background: 'rgba(55,65,81,0.08)', color: '#374151' }}>{m.role}</span>
+                  style={{ background: 'rgba(55,65,81,0.08)', color: 'var(--text-primary)' }}>{m.role}</span>
                 {canEdit && (
                   <button onClick={() => setRemovingId(m.user_id)}
                     className="p-1.5 rounded-lg transition-all duration-150 ml-1"
@@ -1020,8 +1020,8 @@ export default function ProjectDetailPage() {
           </div>
           {files.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 rounded-2xl"
-              style={{ border: '1px dashed #D1D5DB' }}>
-              <Paperclip size={28} style={{ color: '#D1D5DB', marginBottom: 10 }} />
+              style={{ border: '1px dashed var(--border-medium)' }}>
+              <Paperclip size={28} style={{ color: 'var(--border-medium)', marginBottom: 10 }} />
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Nenhum arquivo anexado</p>
             </div>
           ) : (
@@ -1031,11 +1031,11 @@ export default function ProjectDetailPage() {
                   key={f.id}
                   className="flex items-center gap-3 p-3 rounded-xl"
                   style={{
-                    background: '#FAFAFA',
-                    border: '1px solid #E5E7EB'
+                    background: 'var(--bg-surface-2)',
+                    border: '1px solid var(--border-subtle)'
                   }}
                 >
-                  <File size={16} style={{ color: '#374151' }} />
+                  <File size={16} style={{ color: 'var(--text-primary)' }} />
 
                   <div className="flex-1 min-w-0">
                     <p
@@ -1061,7 +1061,7 @@ export default function ProjectDetailPage() {
                       className="text-xs px-2.5 py-1 rounded-lg font-semibold"
                       style={{
                         background: 'rgba(55,65,81,0.08)',
-                        color: '#374151'
+                        color: 'var(--text-primary)'
                       }}
                     >
                       Abrir
@@ -1101,10 +1101,10 @@ export default function ProjectDetailPage() {
               {history.map((h, i) => (
                 <div key={i} className="relative">
                   <div className="absolute -left-7 top-1 h-3 w-3 rounded-full"
-                    style={{ background: '#374151', boxShadow: '0 0 10px rgba(55,65,81,0.40)' }} />
+                    style={{ background: 'var(--brand-slate)', boxShadow: '0 0 10px rgba(55,65,81,0.40)' }} />
                   <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
                     {h.from_status ? `${statusLabel[h.from_status]} → ` : 'Criado como '}
-                    <span style={{ color: '#374151' }}>{statusLabel[h.to_status]}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>{statusLabel[h.to_status]}</span>
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
                     por {h.changed_by_name} · {formatDate(h.changed_at)}

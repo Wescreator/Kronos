@@ -8,8 +8,8 @@ const KronosIcon = ({ size = 40 }) => (
     style={{ animation: 'kronosFloat 4s ease-in-out infinite' }}>
     <defs>
       <linearGradient id="kh2" x1="0" y1="0" x2="64" y2="64">
-        <stop offset="0%" stopColor="#E5E7EB" />
-        <stop offset="100%" stopColor="#6B7280" />
+        <stop offset="0%" stopColor="var(--border-subtle)" />
+        <stop offset="100%" stopColor="var(--text-secondary)" />
       </linearGradient>
     </defs>
     <path d="M20 10H44" stroke="url(#kh2)" strokeWidth="4" strokeLinecap="round" />
@@ -18,7 +18,7 @@ const KronosIcon = ({ size = 40 }) => (
       stroke="url(#kh2)" strokeWidth="4" fill="none" strokeLinecap="round" />
     <path d="M22 52 C22 42, 28 40, 32 34 C36 40, 42 42, 42 52"
       stroke="url(#kh2)" strokeWidth="4" fill="none" strokeLinecap="round" />
-    <circle cx="32" cy="32" r="2.5" fill="#9CA3AF" />
+    <circle cx="32" cy="32" r="2.5" fill="var(--text-muted)" />
   </svg>
 )
 
@@ -56,45 +56,45 @@ export default function ForgotPasswordPage() {
         }
         .kn-input {
           width: 100%; height: 56px; padding: 0 50px 0 16px;
-          background: #FFFFFF;
-          border: 1px solid #D1D5DB; border-radius: 10px;
-          color: #111827; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
+          background: var(--bg-surface);
+          border: 1px solid var(--border-medium); border-radius: 10px;
+          color: var(--text-primary); font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif;
           transition: border-color .2s, box-shadow .2s;
           outline: none; box-sizing: border-box;
         }
-        .kn-input::placeholder { color: #9CA3AF; }
+        .kn-input::placeholder { color: var(--text-muted); }
         .kn-input:focus {
-          border-color: #6B7280;
+          border-color: var(--text-secondary);
           box-shadow: 0 0 0 3px rgba(107,114,128,0.15);
         }
         .kn-btn {
           width: 100%; height: 56px; border-radius: 10px;
-          background: #374151;
+          background: var(--brand-slate);
           border: none;
           color: #fff; font-size: 15px; font-weight: 600;
           font-family: 'Plus Jakarta Sans', sans-serif; cursor: pointer;
           display: flex; align-items: center; justify-content: center; gap: 8px;
           transition: background .2s, opacity .2s;
         }
-        .kn-btn:hover:not(:disabled)  { background: #1f2937; }
-        .kn-btn:disabled              { background: #9CA3AF; cursor: not-allowed; }
+        .kn-btn:hover:not(:disabled)  { background: var(--text-primary); }
+        .kn-btn:disabled              { background: var(--text-muted); cursor: not-allowed; }
         .kn-back {
           background: none; border: none; cursor: pointer;
-          font-size: 13px; color: #6B7280;
+          font-size: 13px; color: var(--text-secondary);
           font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 500;
           padding: 0; transition: color .2s; display: flex; align-items: center; gap: 5px;
         }
-        .kn-back:hover { color: #374151; }
+        .kn-back:hover { color: var(--brand-slate); }
       `}</style>
 
-      <div style={{
+      <div data-theme="light" style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
         position: 'relative', overflow: 'hidden',
         background: 'linear-gradient(135deg, #c7cbd1 0%, #9aa0a6 50%, #c7cbd1 100%)',
         fontFamily: "'Plus Jakarta Sans', sans-serif",
       }}>
         <Toaster position="top-right" toastOptions={{
-          style: { background: '#FFFFFF', color: '#374151', border: '1px solid #E5E7EB', borderRadius: 12 },
+          style: { background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)', borderRadius: 12 },
         }} />
 
         <div style={{
@@ -103,17 +103,17 @@ export default function ForgotPasswordPage() {
         }}>
           {/* Logo */}
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
-                        <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.28em', color: '#374151', marginBottom: 6 }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: '0.28em', color: 'var(--text-primary)', marginBottom: 6 }}>
               K R O N O S
             </div>
-            <div style={{ fontSize: 10.5, letterSpacing: '0.22em', color: '#6B7280', textTransform: 'uppercase', fontWeight: 500 }}>
+            <div style={{ fontSize: 10.5, letterSpacing: '0.22em', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: 500 }}>
               SISTEMA CORPORATIVO DE GESTÃO
             </div>
           </div>
 
           {/* Card */}
           <div style={{
-            background: '#FFFFFF',
+            background: 'var(--bg-surface)',
             borderRadius: 20,
             boxShadow: '0 30px 70px -20px rgba(20,24,28,0.45), 0 1px 0 rgba(255,255,255,0.6) inset',
             padding: '48px 44px', position: 'relative', overflow: 'hidden',
@@ -132,16 +132,16 @@ export default function ForgotPasswordPage() {
                     </button>
                   </div>
 
-                  <h2 style={{ color: '#374151', fontSize: 24, fontWeight: 700, marginBottom: 10, letterSpacing: '-0.025em' }}>
+                  <h2 style={{ color: 'var(--text-primary)', fontSize: 24, fontWeight: 700, marginBottom: 10, letterSpacing: '-0.025em' }}>
                     Recuperar senha
                   </h2>
-                  <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.6', marginBottom: 32 }}>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: '1.6', marginBottom: 32 }}>
                     Informe seu e-mail cadastrado. Enviaremos um link para você criar uma nova senha.
                   </p>
 
                   <form onSubmit={handleSubmit}>
                     <div style={{ marginBottom: 28 }}>
-                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: '#374151', marginBottom: 10 }}>
+                      <label style={{ display: 'block', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 10 }}>
                         E-mail
                       </label>
                       <div style={{ position: 'relative' }}>
@@ -149,7 +149,7 @@ export default function ForgotPasswordPage() {
                           value={email} onChange={e => setEmail(e.target.value)} required autoFocus />
                         <svg style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}
                           width="15" height="15" viewBox="0 0 24 24" fill="none"
-                          stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                           <polyline points="22,6 12,13 2,6" />
                         </svg>
@@ -174,24 +174,24 @@ export default function ForgotPasswordPage() {
                 <div style={{ textAlign: 'center', padding: '8px 0' }}>
                   <div style={{
                     width: 64, height: 64, borderRadius: '50%', margin: '0 auto 22px',
-                    background: '#F3F4F6',
-                    border: '1px solid #D1D5DB',
+                    background: 'var(--bg-hover)',
+                    border: '1px solid var(--border-medium)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
-                      stroke="#374151" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      stroke="var(--brand-slate)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                       <polyline points="22 4 12 14.01 9 11.01" />
                     </svg>
                   </div>
-                  <h2 style={{ color: '#374151', fontSize: 22, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.025em' }}>
+                  <h2 style={{ color: 'var(--text-primary)', fontSize: 22, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.025em' }}>
                     Email enviado!
                   </h2>
-                  <p style={{ color: '#6B7280', fontSize: 14, lineHeight: '1.65', marginBottom: 28 }}>
-                    Se o endereço <strong style={{ color: '#374151' }}>{email}</strong> estiver cadastrado,
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: '1.65', marginBottom: 28 }}>
+                    Se o endereço <strong style={{ color: 'var(--text-primary)' }}>{email}</strong> estiver cadastrado,
                     você receberá as instruções de recuperação em instantes.
                   </p>
-                  <p style={{ color: '#9CA3AF', fontSize: 12, lineHeight: '1.5', marginBottom: 28 }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: 12, lineHeight: '1.5', marginBottom: 28 }}>
                     Não recebeu? Verifique a pasta de spam ou aguarde alguns minutos.
                   </p>
                   <button type="button" className="kn-btn" onClick={() => navigate('/login')}>

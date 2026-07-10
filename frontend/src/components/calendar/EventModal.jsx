@@ -2,6 +2,7 @@
 // Módulo Agenda — Kronos
 
 import { useState, useEffect } from 'react';
+import PortalModal from '../ui/PortalModal';
 
 const STATUS_OPTIONS = [
   { value: 'scheduled',   label: 'Agendado' },
@@ -105,124 +106,23 @@ export default function EventModal({ event, defaultDate, users = [], onSave, onC
     }
   }
 
+  const labelClass = 'block mb-1 text-sm font-semibold';
+  const labelStyle = { color: 'var(--text-primary)' };
+
   return (
-    <div className="cal-modal-overlay" onClick={onClose}>
-      <div className="cal-modal" onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className="cal-modal-header">
-          <h2 className="cal-modal-title">{isEdit ? 'Editar Evento' : 'Novo Evento'}</h2>
-          <button className="cal-modal-close" onClick={onClose}>✕</button>
-        </div>
-
-        {/* Body */}
-        <div className="cal-modal-body">
-          {error && <div className="cal-modal-error">{error}</div>}
-
-          <div className="cal-field">
-            <label>Título *</label>
-            <input
-              type="text"
-              value={form.title}
-              onChange={e => set('title', e.target.value)}
-              placeholder="Nome do evento"
-              autoFocus
-            />
-          </div>
-
-          <div className="cal-field">
-            <label>Descrição</label>
-            <textarea
-              value={form.description}
-              onChange={e => set('description', e.target.value)}
-              placeholder="Descrição opcional"
-              rows={3}
-            />
-          </div>
-
-          <div className="cal-field-row">
-            <div className="cal-field">
-              <label>Data *</label>
-              <input
-                type="date"
-                value={form.date}
-                onChange={e => set('date', e.target.value)}
-              />
-            </div>
-            <div className="cal-field">
-              <label>Hora inicial</label>
-              <input
-                type="time"
-                value={form.start_time}
-                onChange={e => set('start_time', e.target.value)}
-              />
-            </div>
-            <div className="cal-field">
-              <label>Hora final</label>
-              <input
-                type="time"
-                value={form.end_time}
-                onChange={e => set('end_time', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="cal-field">
-            <label>Local</label>
-            <input
-              type="text"
-              value={form.location}
-              onChange={e => set('location', e.target.value)}
-              placeholder="Endereço ou link"
-            />
-          </div>
-
-          <div className="cal-field-row">
-            <div className="cal-field">
-              <label>Status</label>
-              <select value={form.status} onChange={e => set('status', e.target.value)}>
-                {STATUS_OPTIONS.map(s => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {users.length > 0 && (
-              <div className="cal-field">
-                <label>Responsável</label>
-                <select value={form.user_id} onChange={e => set('user_id', e.target.value)}>
-                  <option value="">— Selecionar —</option>
-                  {users.map(u => (
-                    <option key={u.id} value={u.id}>{u.name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="cal-field">
-            <label>Cor do evento</label>
-            <div className="cal-color-picker">
-              {COLOR_OPTIONS.map(c => (
-                <button
-                  key={c}
-                  className={`cal-color-swatch ${form.color === c ? 'active' : ''}`}
-                  style={{ background: c }}
-                  onClick={() => set('color', c)}
-                  type="button"
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="cal-modal-footer">
-          {isEdit && canDelete && (
+    <PortalModal
+      open
+      onClose={onClose}
+      title={isEdit ? 'Editar Evento' : 'Novo Evento'}
+      size="lg"
+      footer={
+        <div className="flex items-center justify-between">
+          {isEdit && canDelete ? (
             <button className="btn-danger" onClick={handleDelete} disabled={loading}>
               Excluir
             </button>
-          )}
-          <div className="cal-modal-footer-right">
+          ) : <span />}
+          <div className="flex gap-3">
             <button className="btn-secondary" onClick={onClose} disabled={loading}>
               Cancelar
             </button>
@@ -231,7 +131,120 @@ export default function EventModal({ event, defaultDate, users = [], onSave, onC
             </button>
           </div>
         </div>
+      }
+    >
+      <div className="space-y-5">
+        {error && (
+          <div style={{
+            background: 'rgba(220,38,38,0.08)',
+            border: '1px solid rgba(220,38,38,0.20)',
+            color: 'var(--color-danger)',
+            padding: '0.55rem 0.85rem',
+            borderRadius: 12,
+            fontSize: 13,
+            fontWeight: 500,
+          }}>
+            {error}
+          </div>
+        )}
+
+        <div>
+          <label className={labelClass} style={labelStyle}>Título *</label>
+          <input
+            className="input"
+            type="text"
+            value={form.title}
+            onChange={e => set('title', e.target.value)}
+            placeholder="Nome do evento"
+            autoFocus
+          />
+        </div>
+
+        <div>
+          <label className={labelClass} style={labelStyle}>Descrição</label>
+          <textarea
+            className="input resize-none"
+            rows={3}
+            value={form.description}
+            onChange={e => set('description', e.target.value)}
+            placeholder="Descrição opcional"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <label className={labelClass} style={labelStyle}>Data *</label>
+            <input className="input" type="date" value={form.date}
+              onChange={e => set('date', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>Hora inicial</label>
+            <input className="input" type="time" value={form.start_time}
+              onChange={e => set('start_time', e.target.value)} />
+          </div>
+          <div>
+            <label className={labelClass} style={labelStyle}>Hora final</label>
+            <input className="input" type="time" value={form.end_time}
+              onChange={e => set('end_time', e.target.value)} />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass} style={labelStyle}>Local</label>
+          <input
+            className="input"
+            type="text"
+            value={form.location}
+            onChange={e => set('location', e.target.value)}
+            placeholder="Endereço ou link"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className={labelClass} style={labelStyle}>Status</label>
+            <select className="input" value={form.status} onChange={e => set('status', e.target.value)}>
+              {STATUS_OPTIONS.map(s => (
+                <option key={s.value} value={s.value}>{s.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {users.length > 0 && (
+            <div>
+              <label className={labelClass} style={labelStyle}>Responsável</label>
+              <select className="input" value={form.user_id} onChange={e => set('user_id', e.target.value)}>
+                <option value="">— Selecionar —</option>
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>{u.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className={labelClass} style={labelStyle}>Cor do evento</label>
+          <div className="flex flex-wrap gap-2 mt-1.5">
+            {COLOR_OPTIONS.map(c => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => set('color', c)}
+                className="rounded-full transition-all duration-150"
+                style={{
+                  width: 28,
+                  height: 28,
+                  background: c,
+                  border: form.color === c ? '2px solid var(--text-primary)' : '2px solid transparent',
+                  boxShadow: form.color === c ? '0 0 0 3px rgba(120,120,130,0.20)' : 'none',
+                  cursor: 'pointer',
+                }}
+              />
+            ))}
+          </div>
+        </div>
       </div>
-    </div>
+    </PortalModal>
   );
 }

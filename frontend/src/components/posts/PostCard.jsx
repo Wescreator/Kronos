@@ -25,14 +25,14 @@ function AttachmentGrid({ attachments }) {
           target="_blank"
           rel="noreferrer"
           className="block rounded-xl overflow-hidden"
-          style={{ border: '1px solid var(--border-subtle)', background: '#F9FAFB' }}
+          style={{ border: '1px solid var(--border-subtle)', background: 'var(--bg-surface-2)' }}
         >
           {isImage(att.mime_type) ? (
             <img 
               src={att.url} 
               alt={att.file_name} 
               className="w-full h-auto block" 
-              style={{ maxHeight: '500px', objectFit: 'contain', backgroundColor: '#f3f4f6' }} 
+              style={{ maxHeight: '500px', objectFit: 'contain', backgroundColor: 'var(--bg-hover)' }} 
             />
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 p-4" style={{ height: 100 }}>
@@ -60,7 +60,7 @@ function CommentItem({ comment, currentUser, onDelete }) {
       <div className="flex-1 min-w-0">
         <div
           className="rounded-2xl px-3.5 py-2.5"
-          style={{ background: '#F3F4F6', border: '1px solid var(--border-subtle)' }}
+          style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-subtle)' }}
         >
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{authorName}</span>
@@ -193,7 +193,7 @@ export default function PostCard({
             
             {menuOpen && createPortal(
               <div
-                className="fixed z-[9999] py-1 rounded-xl bg-white border border-[var(--border-subtle)] shadow-xl"
+                className="fixed z-[9999] py-1 rounded-xl bg-surface border border-[var(--border-subtle)] shadow-xl"
                 style={{
                   top: triggerRef.current.getBoundingClientRect().bottom + window.scrollY + 5,
                   left: triggerRef.current.getBoundingClientRect().right - 160,
@@ -202,18 +202,18 @@ export default function PostCard({
               >
                 <button
                   onClick={() => { setEditing(true); setMenuOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-black/[0.03]"
+                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-hover"
                   style={{ color: 'var(--text-primary)' }}
                 >
                   <Pencil size={13} /> Editar
                 </button>
-                <label className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-black/[0.03] cursor-pointer" style={{ color: 'var(--text-primary)' }}>
+                <label className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-hover cursor-pointer" style={{ color: 'var(--text-primary)' }}>
                   <Paperclip size={13} /> Anexar arquivo
                   <input type="file" multiple className="hidden" onChange={(e) => { handleAttachMore(e); setMenuOpen(false) }} />
                 </label>
                 <button
                   onClick={() => { setMenuOpen(false); onDeletePost(post.id) }}
-                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-black/[0.03]"
+                  className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-hover"
                   style={{ color: 'var(--color-danger)' }}
                 >
                   <Trash2 size={13} /> Excluir
@@ -275,7 +275,7 @@ export default function PostCard({
           <form onSubmit={handleSendComment} className="flex flex-col gap-2 mt-1">
             <div className="flex gap-2">
               <Avatar name={currentUser.name || ''} src={currentUser.avatar_url} size="sm" />
-              <div className="flex-1 flex items-center gap-2 rounded-2xl px-3 py-1" style={{ background: '#F3F4F6', border: '1px solid var(--border-subtle)' }}>
+              <div className="flex-1 flex items-center gap-2 rounded-2xl px-3 py-1" style={{ background: 'var(--bg-hover)', border: '1px solid var(--border-subtle)' }}>
                 <input
                   className="flex-1 bg-transparent outline-none text-sm py-1.5"
                   placeholder="Escreva um comentário..."

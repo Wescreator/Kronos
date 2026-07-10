@@ -93,7 +93,7 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
                   className="flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-150"
                   style={form.priority === opt.value
                     ? { background: `${opt.color}20`, color: opt.color, border: `1px solid ${opt.color}40` }
-                    : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-muted)', border: '1px solid rgba(0,0,0,0.06)' }
+                    : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' }
                   }
                 >
                   {opt.label}
@@ -121,8 +121,8 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
                 onClick={() => toggleAssignee(u.id)}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
                 style={form.assignees.includes(u.id)
-                  ? { background: 'rgba(55,65,81,0.10)', color: '#374151', border: '1px solid rgba(55,65,81,0.20)' }
-                  : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-muted)', border: '1px solid rgba(0,0,0,0.06)' }
+                  ? { background: 'rgba(55,65,81,0.10)', color: 'var(--text-primary)', border: '1px solid rgba(55,65,81,0.20)' }
+                  : { background: 'rgba(0,0,0,0.03)', color: 'var(--text-muted)', border: '1px solid var(--border-subtle)' }
                 }
               >
                 {u.name}
@@ -130,7 +130,7 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
             ))}
           </div>
         </div>
-        <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
           <button type="submit" disabled={loading} className="btn-primary">
             {loading ? 'Criando...' : 'Criar Tarefa'}

@@ -20,18 +20,18 @@ import { getProjects }      from '../../services/projects.service'
 
 /* ── Mesmos estilos de glassmorphism usados na Dashboard ── */
 const tileStyle = {
-  background: '#3a3a3a00', // Fundo cinza neutro
-  border: '2px solid rgba(63, 63, 63, 0.07)', // Borda sutil
-  borderTop: '2px solid rgba(63, 63, 63, 0.07)',
+  background: 'transparent',
+  border: '2px solid var(--border-subtle)', // borda sutil (reage ao tema)
+  borderTop: '2px solid var(--border-subtle)',
 }
 
 const tileHoverEnter = (e) => {
-  e.currentTarget.style.background  = 'rgba(46, 46, 46, 0.22)'
-  e.currentTarget.style.borderColor = 'rgba(46, 46, 46, 0.22)'
+  e.currentTarget.style.background  = 'var(--bg-hover)'
+  e.currentTarget.style.borderColor = 'var(--border-medium)'
 }
 const tileHoverLeave = (e) => {
-  e.currentTarget.style.background  = tileStyle.background
-  e.currentTarget.style.borderColor = 'rgba(63, 63, 63, 0.07)'
+  e.currentTarget.style.background  = 'transparent'
+  e.currentTarget.style.borderColor = 'var(--border-subtle)'
 }
 
 export default function QuickActions({ onActionSuccess }) {
@@ -107,7 +107,7 @@ export default function QuickActions({ onActionSuccess }) {
     },
     {
       key: 'post', label: 'Novo Post', icon: Rss,
-      iconBg: 'rgba(0, 38, 255, 0.58)', iconColor: '#ffffff',
+      iconBg: 'rgba(0, 38, 255, 0.58)', iconcolor: 'var(--text-onbrand)',
       visible: can(role, 'posts', 'create'),
     },
   ].filter(a => a.visible)

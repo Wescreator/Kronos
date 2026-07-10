@@ -28,11 +28,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
     <div style={{
-      background: '#FFFFFF', border: '1px solid #E5E7EB',
+      background: 'var(--bg-surface)', border: '1px solid var(--border-subtle)',
       borderRadius: 12, padding: '10px 14px',
       boxShadow: '0 20px 40px rgba(20,24,28,0.18)', fontSize: 12,
     }}>
-      <p style={{ color: '#9CA3AF', marginBottom: 6, fontWeight: 600 }}>{label}</p>
+      <p style={{ color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600 }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color, fontWeight: 600, marginBottom: 2 }}>
           {p.name}: {formatCurrency(p.value)}
@@ -47,18 +47,18 @@ const CustomTooltip = ({ active, payload, label }) => {
    fundo quase branco com leve diferenciação + borda cinza visível,
    no lugar de transparências pensadas para fundo escuro. */
 const glassRow = {
-  background: '#FAFAFA',
-  border: '1px solid #E5E7EB',
-  borderTop: '1px solid #E5E7EB',
+  background: 'var(--bg-surface-2)',
+  border: '1px solid var(--border-subtle)',
+  borderTop: '1px solid var(--border-subtle)',
 }
 
 const glassRowHoverEnter = (e) => {
-  e.currentTarget.style.background  = '#F3F4F6'
-  e.currentTarget.style.borderColor = '#D1D5DB'
+  e.currentTarget.style.background  = 'var(--bg-hover)'
+  e.currentTarget.style.borderColor = 'var(--border-medium)'
 }
 const glassRowHoverLeave = (e) => {
   e.currentTarget.style.background  = glassRow.background
-  e.currentTarget.style.borderColor = '#E5E7EB'
+  e.currentTarget.style.borderColor = 'var(--border-subtle)'
 }
 
 /**
@@ -152,7 +152,7 @@ function ExecutiveDashboard() {
         .kpi-glow-wrap > * {
           position: relative;
           z-index: 1;
-          background: #FFFFFF;
+          background: var(--bg-surface);
           border-radius: 17.5px;
         }
 
@@ -169,7 +169,7 @@ function ExecutiveDashboard() {
         }
 
         .kpi-glow-wrap.glow-violet::before {
-          background: conic-gradient(from 0deg, transparent 0%, #374151 14%, transparent 28%);
+          background: conic-gradient(from 0deg, transparent 0%, var(--brand-slate) 14%, transparent 28%);
         }
         .kpi-glow-wrap.glow-violet:hover {
           box-shadow: 0 0 18px rgba(55,65,81,.25);
@@ -193,8 +193,8 @@ function ExecutiveDashboard() {
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <Zap size={16} style={{ color: '#374151' }} />
-          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: '#374151' }}>
+          <Zap size={16} style={{ color: 'var(--text-primary)' }} />
+          <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: 'var(--text-primary)' }}>
             Visão Executiva
           </span>
         </div>
@@ -242,7 +242,7 @@ function ExecutiveDashboard() {
             </div>
             <Link to="/app/projects"
               className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#374151' }}>
+              style={{ color: 'var(--text-primary)' }}>
               Ver todos <ArrowRight size={13} />
             </Link>
           </div>
@@ -302,7 +302,7 @@ function ExecutiveDashboard() {
               { label: 'A receber',     value: stats.revenue_pending,  color: '#0284C7' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between py-3"
-                style={{ borderBottom: i < 4 ? '1px solid #E5E7EB' : 'none' }}>
+                style={{ borderBottom: i < 4 ? '1px solid var(--border-subtle)' : 'none' }}>
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
                 <span className="text-sm" style={{ color: item.color, fontWeight: item.bold ? 700 : 600 }}>
                   {formatCurrency(item.value)}
@@ -313,12 +313,12 @@ function ExecutiveDashboard() {
           <Link to="/app/financial"
             className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
             style={{
-              background: '#374151',
-              border: '1px solid #1f2937',
-              color: '#ffffff',
+              background: 'var(--brand-slate)',
+              border: '1px solid var(--text-primary)',
+              color: 'var(--text-onbrand)',
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = '#1f2937' }}
-            onMouseLeave={e => { e.currentTarget.style.background = '#374151' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--text-primary)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--brand-slate)' }}
           >
             Financeiro completo <ArrowRight size={13} />
           </Link>
@@ -346,12 +346,12 @@ function ExecutiveDashboard() {
                 <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} axisLine={false} tickLine={false}
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false}
               tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
             <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12, color: '#6B7280' }} />
+            <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }} />
             <Area type="monotone" dataKey="Receitas" stroke="#16A34A" strokeWidth={2} fill="url(#gRev)" dot={false} />
             <Area type="monotone" dataKey="Despesas" stroke="#DC2626" strokeWidth={2} fill="url(#gExp)" dot={false} />
           </AreaChart>
@@ -372,7 +372,7 @@ function ExecutiveDashboard() {
               </h3>
             </div>
             <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#374151' }}>
+              style={{ color: 'var(--text-primary)' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
@@ -385,7 +385,7 @@ function ExecutiveDashboard() {
             {tasks.map(t => (
               <Link key={t.id} to={`/app/tasks/${t.id}`}
                 className="flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
-                onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                 <div className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`} />
                 <div className="flex-1 min-w-0">
@@ -415,7 +415,7 @@ function ExecutiveDashboard() {
               </h3>
             </div>
             <Link to="/app/financial/expenses" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: '#374151' }}>
+              style={{ color: 'var(--text-primary)' }}>
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
@@ -426,7 +426,7 @@ function ExecutiveDashboard() {
               { label: 'Pago este mês', sub: 'Confirmados', value: stats.expenses_month,   color: '#16A34A' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between py-3"
-                style={{ borderBottom: i < 2 ? '1px solid #E5E7EB' : 'none' }}>
+                style={{ borderBottom: i < 2 ? '1px solid var(--border-subtle)' : 'none' }}>
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.label}</p>
                   <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{item.sub}</p>

@@ -39,7 +39,7 @@ const COVER_GRADIENT = {
 
 /* Cor do ícone no placeholder por status */
 const COVER_ICON_COLOR = {
-  in_progress: '#6B7280',
+  in_progress: 'var(--text-secondary)',
   completed:   '#16A34A',
   paused:      '#D97706',
   cancelled:   '#DC2626',
@@ -135,15 +135,15 @@ export default function ProjectsPage() {
               icon:      <Layers size={17} />,
               valueColor:'var(--text-primary)',
               iconBg:    'rgba(55, 65, 81, 0.08)',
-              iconColor: '#374151',
+              iconcolor: 'var(--text-primary)',
             },
             {
               label:     'Em Andamento',
               value:     stats.in_progress,
               icon:      <Activity size={17} />,
-              valueColor:'#374151',
+              valuecolor:'var(--text-primary)',
               iconBg:    'rgba(55,65,81,0.08)',
-              iconColor: '#374151',
+              iconcolor: 'var(--text-primary)',
             },
             {
               label:     'Concluídos',
@@ -201,7 +201,7 @@ export default function ProjectsPage() {
           style={{
             flex: '1 1 0%',
             maxWidth: 340,
-            background: '#FFFFFF',
+            background: 'var(--bg-surface)',
             borderRadius: 14,
             border: '1px solid #5d6269',
           }}
@@ -236,14 +236,14 @@ export default function ProjectsPage() {
               className="kp-filter-btn px-3.5 py-2 rounded-xl text-xs font-semibold"
               style={filters.status === f.value
                 ? {
-                    background:  '#374151',
-                    color:       '#ffffff',
-                    border:      '1px solid #1f2937',
+                    background:  'var(--brand-slate)',
+                    color:       'var(--text-onbrand)',
+                    border:      '1px solid var(--text-primary)',
                   }
                 : {
-                    background:  '#FFFFFF',
+                    background:  'var(--bg-surface)',
                     color:       'var(--text-secondary)',
-                    border:      '1px solid #E5E7EB',
+                    border:      '1px solid var(--border-subtle)',
                   }
               }
             >
@@ -264,8 +264,8 @@ export default function ProjectsPage() {
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             borderRadius: 24, minHeight: 320,
-            background: '#FAFAFA',
-            border: '1px dashed #D1D5DB',
+            background: 'var(--bg-surface-2)',
+            border: '1px dashed var(--border-medium)',
           }}
         >
           <EmptyState
@@ -294,8 +294,8 @@ export default function ProjectsPage() {
               to={`/app/projects/${p.id}`}
               className="project-card block"
               style={{
-                background:   '#FFFFFF',
-                border:       '1px solid #E5E7EB',
+                background:   'var(--bg-surface)',
+                border:       '1px solid var(--border-subtle)',
                 borderRadius: 20,
                 overflow:     'hidden',
                 boxShadow:    '0 4px 20px rgba(20,24,28,0.08)',
@@ -310,12 +310,12 @@ export default function ProjectsPage() {
                   className="p-2 rounded-lg transition-all duration-150"
                   style={{
                     position: 'absolute', top: 10, right: 10, zIndex: 2,
-                    background: 'rgba(255,255,255,0.92)',
-                    border: '1px solid #E5E7EB',
+                    background: 'var(--bg-surface-2)',
+                    border: '1px solid var(--border-subtle)',
                     color: 'var(--text-muted)',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(220,38,38,0.10)'; e.currentTarget.style.color = '#DC2626' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.92)'; e.currentTarget.style.color = 'var(--text-muted)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--text-muted)' }}
                 >
                   <Trash2 size={14} />
                 </button>
@@ -365,8 +365,8 @@ export default function ProjectsPage() {
                   <div style={{
                     position: 'relative', zIndex: 1,
                     width: 46, height: 46, borderRadius: 14,
-                    background: '#FFFFFF',
-                    border: '1px solid #E5E7EB',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     <FolderOpen
@@ -379,7 +379,7 @@ export default function ProjectsPage() {
                     position: 'relative', zIndex: 1,
                     fontSize: 10, fontWeight: 700,
                     letterSpacing: '0.16em', textTransform: 'uppercase',
-                    color: '#9CA3AF',
+                    color: 'var(--text-muted)',
                     maxWidth: '75%', overflow: 'hidden',
                     textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
@@ -444,7 +444,7 @@ export default function ProjectsPage() {
                 {/* Separador */}
                 <div style={{
                   height: 1,
-                  background: '#E5E7EB',
+                  background: 'var(--border-subtle)',
                   marginBottom: 12,
                 }} />
 
@@ -472,7 +472,7 @@ export default function ProjectsPage() {
                   <>
                     <div style={{
                       height: 1,
-                      background: '#E5E7EB',
+                      background: 'var(--border-subtle)',
                       marginBottom: 12,
                     }} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -491,7 +491,7 @@ export default function ProjectsPage() {
                           padding: '2px 8px', borderRadius: 20,
                           background: 'rgba(55,65,81,0.08)',
                           border: '1px solid rgba(55,65,81,0.16)',
-                          color: '#374151',
+                          color: 'var(--text-primary)',
                           flexShrink: 0,
                         }}>
                           +{p.member_count - 1}

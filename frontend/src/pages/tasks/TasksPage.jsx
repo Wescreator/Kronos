@@ -114,7 +114,7 @@ export default function TasksPage() {
           placeholder="Buscar por título ou membro..."
           className="w-full pl-10 pr-3.5 py-2.5 rounded-xl text-sm outline-none transition-all duration-150"
           style={{
-            background: '#ffffff',
+            background: 'var(--bg-surface)',
             color: 'var(--text-primary)',
             border: '1px solid var(--text-primary)'
           }}
@@ -127,19 +127,19 @@ export default function TasksPage() {
           <button key={f.value} onClick={() => setFilters({ ...filters, status: f.value })}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={filters.status === f.value
-              ? { background: 'rgb(255, 255, 255)', color: '#000000', border: '1px solid rgb(122, 122, 122)' }
-              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgb(122, 122, 122)' }
+              ? { background: 'var(--brand-slate)', color: 'var(--text-onbrand)', border: '1px solid var(--brand-slate)' }
+              : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
             }>
             {f.label}
           </button>
         ))}
-        <div className="w-px mx-1" style={{ background: 'rgba(255,255,255,0.06)' }} />
+        <div className="w-px mx-1" style={{ background: 'var(--border-subtle)' }} />
         {PRIORITY_FILTERS.map(f => (
           <button key={f.value} onClick={() => setFilters({ ...filters, priority: f.value })}
             className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150"
             style={filters.priority === f.value
-              ? { background: 'rgb(255, 255, 255)', color: '#000000', border: '1px solid rgb(122, 122, 122)' }
-              : { background: 'rgba(199, 199, 199, 0.2)', color: '#ffffff', border: '1px solid rgb(122, 122, 122)' }
+              ? { background: 'var(--brand-slate)', color: 'var(--text-onbrand)', border: '1px solid var(--brand-slate)' }
+              : { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }
             }>
             {f.label}
           </button>
@@ -157,7 +157,7 @@ export default function TasksPage() {
       ) : (
         <div className="card overflow-hidden">
           <table className="w-full">
-            <thead style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+            <thead style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <tr>
                 <th className="table-header">Tarefa</th>
                 <th className="table-header hidden md:table-cell">Projeto</th>
@@ -173,8 +173,8 @@ export default function TasksPage() {
               {tasks.map((t, i) => (
                 <tr
                   key={t.id}
-                  style={{ borderBottom: i < tasks.length - 1 ? '1px solid rgba(255,255,255,0.03)' : 'none' }}
-                  onMouseEnter={ev => ev.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                  style={{ borderBottom: i < tasks.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}
+                  onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-hover)'}
                   onMouseLeave={ev => ev.currentTarget.style.background = 'transparent'}
                 >
                   <td className="table-cell">
@@ -192,7 +192,7 @@ export default function TasksPage() {
                     {t.project_title ? (
                       <span
                         className="text-xs px-2.5 py-1 rounded-lg font-medium"
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)' }}
+                        style={{ background: 'var(--bg-surface-2)', color: 'var(--text-muted)' }}
                       >
                         {t.project_title}
                       </span>

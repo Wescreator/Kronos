@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { clearAuthStorage, persistTheme, applyTheme } from '../utils/theme'
 
 /* ─── Helpers de storage ──────────────────────────────────────────
  * "Lembrar-me" marcado    → localStorage  (persiste ao fechar)
@@ -47,8 +48,7 @@ const useAuthStore = create((set) => ({
    * @param {boolean} remember — true = localStorage, false = sessionStorage
    */
   setAuth: (user, accessToken, refreshToken, remember = false) => {
-    localStorage.clear()
-    sessionStorage.clear()
+    clearAuthStorage() // limpa tokens preservando as preferências de tema
 
     const storage = remember ? localStorage : sessionStorage
     storage.setItem('accessToken',  accessToken)
@@ -78,9 +78,10 @@ const useAuthStore = create((set) => ({
     // (socketStore importa useAuthStore para ler token/userId).
     import('./socketStore').then((m) => m.default.getState().disconnect())
 
-    localStorage.clear()
-    sessionStorage.clear()
-    sessionStorage.removeItem('impersonateCompany')
+    clearAuthStorage() // limpa tudo preservando as preferências de tema
+    // A tela de login é sempre clara — volta o frame ao tema claro.
+    persistTheme('light', null)
+    applyTheme('light')
     set({
       user:            null,
       accessToken:     null,

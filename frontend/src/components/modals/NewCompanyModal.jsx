@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import PortalModal from '../ui/PortalModal'
 import platformService from '../../services/platform.service'
 
 // ⚠️ Valores de plano assumidos — ajuste para os planos reais do Kronos.
@@ -16,8 +16,6 @@ const EMPTY = { name: '', trade_name: '', document: '', email: '', phone: '', pl
 export default function NewCompanyModal({ open, onClose, onCreated }) {
   const [form,   setForm]   = useState(EMPTY)
   const [saving, setSaving] = useState(false)
-
-  if (!open) return null
 
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
@@ -39,22 +37,8 @@ export default function NewCompanyModal({ open, onClose, onCreated }) {
   }
 
   return (
-    <div
-      className="modal-overlay"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="modal-content" style={{ maxWidth: 520 }}>
-        <div className="flex items-center justify-between px-7 pt-6 pb-5" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-          <div>
-            <p className="label" style={{ marginBottom: 3 }}>Plataforma</p>
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-secondary)' }}>Nova Empresa</h2>
-          </div>
-          <button onClick={onClose} className="btn-secondary" style={{ padding: 8, borderRadius: 12 }}>
-            <X size={18} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="px-7 py-6 flex flex-col gap-4">
+    <PortalModal open={open} onClose={onClose} title="Nova Empresa" size="md">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
               <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>Nome da Empresa</label>
@@ -96,7 +80,6 @@ export default function NewCompanyModal({ open, onClose, onCreated }) {
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </PortalModal>
   )
 }

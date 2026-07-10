@@ -66,9 +66,9 @@ export default function TaskDetailPage() {
         <button
           onClick={() => navigate('/app/tasks')}
           className="flex items-center gap-2 text-sm transition-colors"
-          style={{ color: 'var(--bg-card)' }}
+          style={{ color: 'var(--text-secondary)' }}
           onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'var(--bg-card)'}
+          onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
         >
           <ArrowLeft size={15} /> Voltar para Tarefas
         </button>
@@ -118,7 +118,7 @@ export default function TaskDetailPage() {
                   <Avatar name={c.user_name} src={c.avatar_url} size="sm" />
                   <div
                     className="flex-1 rounded-2xl p-4"
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                    style={{ background: 'var(--bg-surface-2)', border: '1px solid var(--border-subtle)' }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{c.user_name}</span>
