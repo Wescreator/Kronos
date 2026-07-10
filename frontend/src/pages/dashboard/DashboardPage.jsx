@@ -75,6 +75,7 @@ export default function DashboardPage() {
 }
 
 function ExecutiveDashboard() {
+  const { user } = useAuthStore()
   const [financial, setFinancial] = useState(null)
   const [projects,  setProjects]  = useState([])
   const [tasks,     setTasks]     = useState([])
@@ -198,7 +199,7 @@ function ExecutiveDashboard() {
           </span>
         </div>
         <h1 className="text-[32px] font-bold tracking-tight" style={{ letterSpacing: '-0.025em' }}>
-          Dashboard
+          Olá, {user?.name?.split(' ')[0] || 'bem-vindo'}
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-primary)' }}>
           {new Date().toLocaleDateString('pt-BR', {
