@@ -36,4 +36,31 @@ async function logActivity({ entityType, entityId = null, action, payload = {} }
   }
 }
 
-module.exports = { logActivity }
+/**
+ * Registra um evento de autenticação (login, falha de login, reset de
+ * senha). Diferente de logActivity, NÃO depende do contexto de tenant —
+ * no login público ainda não há JWT/AsyncLocalStorage. Recebe os campos
+ * explicitamente.
+ *
+ * NUNCA registrar senha, hash, token ou cookie — só metadados de auditoria
+ * (email, ip, status).
+ *
+ * @param {object}  evt
+ * @param {string}  evt.action     'login_success' | 'login_failed' | 'password_reset'
+ * @param {string=} evt.userId     id do usuário (quando conhecido)
+ * @param {string=} evt.companyId  empresa (quando conhecida)
+ * @param {object=} evt.payload    metadados livres (ex.: { email, ip })
+ */
+async function logAuthEvent({ action, userId = null, companyId = null, payload = {} }) {
+  try {
+    await pool.query(
+      `INSERT INTO activity_logs (company_id, user_id, entity_type, action, payload, ip_address)
+       VALUES ($1, $2, 'auth', $3, $4::jsonb, $5)`,
+      [companyId, userId, action, JSON.stringify(payload), payload.ip || null]
+    )
+  } catch (err) {
+    console.error('[logAuthEvent] falha ao registrar evento:', err.message)
+  }
+}
+
+module.exports = { logActivity, logAuthEvent }

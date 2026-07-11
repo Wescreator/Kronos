@@ -1,12 +1,23 @@
 const authService = require('../services/auth.service')
 const userRepo    = require('../repositories/user.repository')
 const R = require('../utils/response')
+const { logAuthEvent } = require('../utils/activityLog')
 
 const login = async (req, res) => {
+  const email = typeof req.body?.email === 'string' ? req.body.email.toLowerCase().trim() : null
   try {
     const result = await authService.login(req.body.email, req.body.password)
+    // Auditoria de login bem-sucedido (fire-and-forget, nunca derruba a resposta).
+    logAuthEvent({
+      action: 'login_success',
+      userId: result.user.user_id,
+      companyId: result.user.company_id,
+      payload: { email, ip: req.ip },
+    })
     return R.success(res, result)
   } catch (err) {
+    // Auditoria de falha (sem senha). Ajuda a detectar brute force por conta.
+    logAuthEvent({ action: 'login_failed', payload: { email, ip: req.ip } })
     return R.error(res, err.message, err.status || 500)
   }
 }
@@ -15,6 +26,21 @@ const register = async (req, res) => {
   try {
     const user = await authService.register(req.body)
     return R.created(res, { user })
+  } catch (err) {
+    return R.error(res, err.message, err.status || 500)
+  }
+}
+
+const logout = async (req, res) => {
+  try {
+    const result = await authService.logout(req.user.user_id)
+    logAuthEvent({
+      action: 'logout',
+      userId: req.user.user_id,
+      companyId: req.user.company_id || null,
+      payload: { ip: req.ip },
+    })
+    return R.success(res, result)
   } catch (err) {
     return R.error(res, err.message, err.status || 500)
   }
@@ -77,6 +103,7 @@ const resetPassword = async (req, res) => {
     }
 
     const result = await authService.resetPassword(token, password)
+    logAuthEvent({ action: 'password_reset', payload: { ip: req.ip } })
     return R.success(res, result)
 
   } catch (err) {
@@ -84,4 +111,4 @@ const resetPassword = async (req, res) => {
   }
 }
 
-module.exports = { login, register, refresh, me, forgotPassword, resetPassword }
+module.exports = { login, register, logout, refresh, me, forgotPassword, resetPassword }

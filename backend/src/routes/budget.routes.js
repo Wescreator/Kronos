@@ -3,8 +3,9 @@ const router = require('express').Router()
 const ctrl = require('../controllers/budget.controller')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
+const logger = require('../middlewares/logger.middleware')
 
-router.use(authenticate, tenantMiddleware)
+router.use(authenticate, tenantMiddleware, logger)
 
 // Listagem e criação
 router.get('/', ctrl.getAll)

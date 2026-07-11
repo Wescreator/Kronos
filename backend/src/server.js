@@ -12,6 +12,14 @@ const server = app.listen(PORT, () => {
   console.log(`✓ CORS liberado para: ${app.allowedOrigins.join(', ')}`)
 })
 
+// Timeouts do servidor HTTP (anti slowloris / conexões penduradas):
+//  - requestTimeout: tempo máximo para receber a requisição inteira (30s).
+//  - headersTimeout: tempo máximo só para os headers (20s).
+// O default do Node para requestTimeout mudou ao longo das versões; fixar
+// aqui garante que um cliente lento não segure um socket indefinidamente.
+server.requestTimeout = parseInt(process.env.HTTP_REQUEST_TIMEOUT_MS) || 30000
+server.headersTimeout = parseInt(process.env.HTTP_HEADERS_TIMEOUT_MS) || 20000
+
 require('./config/websocket')(server)
 require('./jobs/notification.cron').start()
 

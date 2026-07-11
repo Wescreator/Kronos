@@ -3,6 +3,7 @@ const AppError = require('../utils/AppError')
 const { PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3')
 const r2       = require('../config/r2')
 const fileRepo = require('../repositories/project-file.repository')
+const { validateFileSignature } = require('../utils/fileSignature')
 
 const BUCKET      = process.env.R2_BUCKET_NAME
 const PUBLIC_URL  = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '') // sem barra final
@@ -14,6 +15,10 @@ const generateObjectKey = (folder, filename) => {
 }
 
 const putToR2 = async (objectKey, buffer, mimeType) => {
+  // Confere a assinatura real antes de persistir: barra arquivo disfarçado
+  // (ex.: HTML/SVG/exe com Content-Type de imagem). Chokepoint único de
+  // todos os uploads ao R2 (upload e uploadForProject passam por aqui).
+  validateFileSignature(buffer, mimeType)
   await r2.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: objectKey,

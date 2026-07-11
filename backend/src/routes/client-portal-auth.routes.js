@@ -1,12 +1,18 @@
 const router = require('express').Router()
 const R = require('../utils/response')
 const clientPortalAuthService = require('../services/client-portal-auth.service')
+const rateLimit = require('../middlewares/rateLimit.middleware')
 
 // Rotas públicas — não passam por authenticate (o cliente ainda não tem
 // token). Mesmo padrão de auth.routes.js (login/register/forgot-password
 // também são públicos lá).
+//
+// Anti brute force: estas rotas eram as ÚNICAS de autenticação sem limite
+// (auth.routes.js já protegia o login interno). Mesmos limites do login
+// interno — por IP, janela de 15 min.
+const portalAuthLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Muitas tentativas. Aguarde alguns minutos.' })
 
-router.post('/login', async (req, res) => {
+router.post('/login', portalAuthLimiter, async (req, res) => {
   try {
     const { email, password } = req.body
     const result = await clientPortalAuthService.login(email, password)
@@ -16,7 +22,7 @@ router.post('/login', async (req, res) => {
   }
 })
 
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', portalAuthLimiter, async (req, res) => {
   try {
     const { refreshToken } = req.body
     const result = await clientPortalAuthService.refreshToken(refreshToken)

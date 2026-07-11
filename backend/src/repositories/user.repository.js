@@ -119,6 +119,38 @@ const updatePassword = async (id, passwordHash) => {
   )
 }
 
+/* ─── Invalidação de sessão (token_version) ─── */
+
+// Lê a versão atual do token do usuário. Retorna null quando a coluna
+// token_version ainda não existe (migração não aplicada) — nesse caso a
+// invalidação de sessão fica INATIVA, sem quebrar login/refresh. Assim o
+// código pode ser publicado antes da migração e passa a valer quando ela
+// rodar.
+const getTokenVersion = async (id) => {
+  try {
+    const { rows } = await pool.query('SELECT token_version FROM users WHERE id = $1', [id])
+    return rows[0] ? Number(rows[0].token_version) : 0
+  } catch (err) {
+    if (err.code === '42703') return null // undefined_column: feature inativa
+    throw err
+  }
+}
+
+// Incrementa token_version → invalida todos os refresh tokens já emitidos
+// (usado no reset de senha e no logout "de todos os dispositivos"). No-op
+// silencioso se a coluna ainda não existir.
+const incrementTokenVersion = async (id) => {
+  try {
+    await pool.query(
+      'UPDATE users SET token_version = token_version + 1, updated_at = NOW() WHERE id = $1',
+      [id]
+    )
+  } catch (err) {
+    if (err.code === '42703') return
+    throw err
+  }
+}
+
 module.exports = {
   findByEmail,
   findById,
@@ -131,4 +163,7 @@ module.exports = {
   setResetToken,
   clearResetToken,
   updatePassword,
+  // Invalidação de sessão
+  getTokenVersion,
+  incrementTokenVersion,
 }

@@ -18,7 +18,13 @@ const GLOBAL_ROLES = ['developer', 'support']
  * Demais usuários → busca o vínculo ativo em company_users e usa
  * o role e company_id de lá (fonte de verdade para usuários de empresa).
  */
-async function buildAuthPayload(user) {
+async function buildAuthPayload(user, tokenVersion = 0) {
+  // token_version entra no payload para permitir invalidação de sessão:
+  // reset de senha / logout incrementam a versão no banco e os tokens
+  // antigos deixam de casar no refresh. Default 0 (compat com tokens
+  // legados e ambientes sem a coluna).
+  const tv = tokenVersion ?? 0
+
   // 🔴 USUÁRIOS GLOBAIS (DEV / SUPORTE)
   if (GLOBAL_ROLES.includes(user.role)) {
     return {
@@ -26,6 +32,7 @@ async function buildAuthPayload(user) {
       company_id: null,
       scope: 'global',
       role: user.role,
+      token_version: tv,
     }
   }
 
@@ -50,6 +57,7 @@ async function buildAuthPayload(user) {
     company_id: companyId,
     scope: 'company',
     role: companyUser?.role || user.role,
+    token_version: tv,
   }
 }
 
@@ -63,7 +71,9 @@ const login = async (email, password) => {
 
   await userRepo.updateLastLogin(user.id)
 
-  const payload = await buildAuthPayload(user)
+  // token_version vem do próprio SELECT * (findByEmail) quando a coluna
+  // existe; ausente → 0 (feature inativa).
+  const payload = await buildAuthPayload(user, user.token_version ?? 0)
 
   const accessToken = jwt.sign(payload, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn })
   const refreshToken = jwt.sign(payload, jwtConfig.refreshSecret, { expiresIn: jwtConfig.refreshExpiresIn })
@@ -128,7 +138,15 @@ const refreshToken = async (token) => {
 
     if (!user) throw new AppError(401, 'Usuário não encontrado')
 
-    const payload = await buildAuthPayload(user)
+    // Invalidação de sessão: se a versão do token no banco avançou (reset de
+    // senha / logout), o refresh token antigo é recusado. getTokenVersion
+    // retorna null quando a coluna não existe → enforcement inativo.
+    const currentTv = await userRepo.getTokenVersion(user.id)
+    if (currentTv !== null && (decoded.token_version || 0) !== currentTv) {
+      throw new AppError(401, 'Sessão expirada. Faça login novamente.')
+    }
+
+    const payload = await buildAuthPayload(user, currentTv ?? (decoded.token_version || 0))
     const accessToken = jwt.sign(payload, jwtConfig.secret, { expiresIn: jwtConfig.expiresIn })
 
     return { accessToken }
@@ -184,8 +202,21 @@ const resetPassword = async (token, newPassword) => {
   const passwordHash = await bcrypt.hash(newPassword, 12)
   await userRepo.updatePassword(user.id, passwordHash)
   await userRepo.clearResetToken(user.id)
+  // Invalida qualquer sessão/refresh token ainda ativo com a senha antiga.
+  await userRepo.incrementTokenVersion(user.id)
 
   return { message: 'Senha redefinida com sucesso. Você já pode fazer login.' }
 }
 
-module.exports = { login, register, refreshToken, forgotPassword, resetPassword }
+/* ───────────────── Logout (todos os dispositivos) ───────────────── */
+
+// Incrementa token_version → os refresh tokens emitidos deixam de renovar
+// o acesso. O access token atual continua válido até expirar (≤8h); para
+// revogação imediata seria necessário checar token_version a cada request
+// (custo de uma query por requisição) — decisão deixada para depois.
+const logout = async (userId) => {
+  await userRepo.incrementTokenVersion(userId)
+  return { message: 'Sessão encerrada.' }
+}
+
+module.exports = { login, register, refreshToken, forgotPassword, resetPassword, logout }

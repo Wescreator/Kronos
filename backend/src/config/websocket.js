@@ -10,6 +10,20 @@ const pool = require('./database')
 // e parava de receber mensagens mesmo com uma aba aberta.
 const clients = new Map()
 
+// Escopos internos aceitos no WS. O portal do cliente (scope 'client') usa
+// apenas REST (/api/posts); chat e presença são internos. Sem esta checagem
+// um token de portal abriria conexão WS e apareceria na presença da empresa.
+const WS_ALLOWED_SCOPES = new Set(['company', 'global'])
+
+// Teto de conexões simultâneas por usuário (abas/dispositivos). Impede que
+// um cliente abra sockets sem limite e esgote memória do processo.
+const MAX_CONNECTIONS_PER_USER = parseInt(process.env.WS_MAX_CONN_PER_USER) || 10
+
+// Rate limit de mensagens recebidas por socket (anti-flood): máx. de
+// mensagens por janela; ao exceder, o socket é encerrado.
+const WS_MSG_MAX = parseInt(process.env.WS_MSG_MAX_PER_WINDOW) || 30
+const WS_MSG_WINDOW_MS = parseInt(process.env.WS_MSG_WINDOW_MS) || 10000
+
 function initWebSocket(server) {
   const wss = new WebSocketServer({ server, path: '/ws' })
 
@@ -18,6 +32,11 @@ function initWebSocket(server) {
 
     try {
       const decoded = jwt.verify(token, jwtConfig.secret)
+      // Rejeita escopos não-internos (ex.: portal do cliente).
+      if (!WS_ALLOWED_SCOPES.has(decoded.scope)) {
+        ws.close(1008, 'Escopo não autorizado')
+        return
+      }
       ws.userId = decoded.user_id
       // Empresa do token: presença e broadcasts são isolados por tenant.
       // Usuários globais (developer, sem company_id) ficam agrupados sob
@@ -35,7 +54,16 @@ function initWebSocket(server) {
       clients.set(ws.userId, sockets)
       console.log(`WS conectado: ${ws.userId}`)
     }
+    // Barra novas conexões acima do teto por usuário.
+    if (sockets.size >= MAX_CONNECTIONS_PER_USER) {
+      ws.close(1013, 'Limite de conexões atingido')
+      return
+    }
     sockets.add(ws)
+
+    // Estado do rate limit de mensagens deste socket.
+    ws.msgCount = 0
+    ws.msgWindowStart = Date.now()
 
     // Manda pro recém-conectado quem DA EMPRESA DELE está online, e avisa
     // só os colegas de empresa que ele entrou (apenas na primeira conexão
@@ -45,6 +73,19 @@ function initWebSocket(server) {
     if (firstConnection) broadcastPresence(ws.userId, ws.companyId, 'online')
 
     ws.on('message', (raw) => {
+      // Rate limit por socket: janela deslizante simples. Ao estourar,
+      // encerra a conexão (flood proposital ou client em loop).
+      const now = Date.now()
+      if (now - ws.msgWindowStart > WS_MSG_WINDOW_MS) {
+        ws.msgWindowStart = now
+        ws.msgCount = 0
+      }
+      ws.msgCount += 1
+      if (ws.msgCount > WS_MSG_MAX) {
+        ws.close(1013, 'Muitas mensagens')
+        return
+      }
+
       let msg
       try {
         msg = JSON.parse(raw)

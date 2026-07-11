@@ -5,10 +5,11 @@ const fileCtrl = require('../controllers/proposal.file.controller')
 
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
+const logger = require('../middlewares/logger.middleware')
 const { uploadDriveFile } = require('../config/multer')
 
 // Todas as rotas exigem autenticação e escopo de empresa
-router.use(authenticate, tenantMiddleware)
+router.use(authenticate, tenantMiddleware, logger)
 
 // Listagem e criação. authorize() não tem hierarquia de roles ('owner'
 // não é implícito) — as listas abaixo espelham utils/permissions.js do

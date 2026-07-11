@@ -49,9 +49,36 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.options('*', cors(corsOptions))
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }))
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+// Helmet com política explícita (antes ficava no default do Helmet):
+//  - CSP restritiva: a API só devolve JSON (e imagens legadas em /uploads);
+//    'none' por padrão elimina qualquer superfície de execução de script
+//    caso alguma resposta HTML vaze. frame-ancestors/base-uri 'none'
+//    reforçam anti-clickjacking e anti base-tag injection.
+//  - HSTS 180 dias: força HTTPS no host da API (Render já serve por TLS).
+//  - referrerPolicy no-referrer: não vaza a URL da API em navegações.
+// crossOriginResourcePolicy segue 'cross-origin' para o front (outra origem)
+// conseguir consumir os recursos servidos por /uploads.
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    useDefaults: false,
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+      baseUri: ["'none'"],
+      imgSrc: ["'self'", 'data:'],
+    },
+  },
+  hsts: { maxAge: 15552000, includeSubDomains: true },
+  referrerPolicy: { policy: 'no-referrer' },
+}))
+
+// Limite de payload reduzido para 1mb: os uploads reais são multipart
+// (multer, até 10mb), que NÃO passam por express.json. Nenhum endpoint
+// JSON legítimo recebe payloads grandes — 1mb corta abuso de memória por
+// corpos JSON/urlencoded gigantes.
+app.use(express.json({ limit: '1mb' }))
+app.use(express.urlencoded({ extended: true, limit: '1mb' }))
 
 // ── Uploads estáticos ─────────────────────────────────────────────────────────
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
@@ -60,6 +87,15 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')))
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', ts: new Date().toISOString() })
 })
+
+// ── Rate limit global (Token Bucket) ──────────────────────────────────────────
+// Rede de proteção ampla contra exaustão da API / DoS por excesso de
+// requisições, aplicada DEPOIS do health check (que fica de fora, para não
+// interferir com os health checks do Render). As rotas de auth mantêm seus
+// limitadores próprios, mais agressivos (anti brute force) — as duas camadas
+// se somam. Chaveado por IP aqui (req.user ainda não existe neste ponto).
+const tokenBucket = require('./middlewares/tokenBucket.middleware')
+app.use('/api', tokenBucket())
 
 // ── Rotas ─────────────────────────────────────────────────────────────────────
 app.use('/api/auth',        require('./routes/auth.routes'))

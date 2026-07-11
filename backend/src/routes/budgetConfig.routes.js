@@ -4,8 +4,9 @@ const router = require('express').Router()
 const ctrl = require('../controllers/budgetConfig.controller')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
+const logger = require('../middlewares/logger.middleware')
 
-router.use(authenticate, tenantMiddleware)
+router.use(authenticate, tenantMiddleware, logger)
 
 // Estrutura completa (títulos -> níveis -> taxa vigente)
 router.get('/', ctrl.getStructure)

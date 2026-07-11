@@ -1,5 +1,6 @@
 const { Readable } = require('stream')
 const drive = require('../config/google-drive')
+const { validateFileSignature } = require('../utils/fileSignature')
 
 /**
  * Cria uma pasta no Google Drive.
@@ -77,6 +78,9 @@ async function createProjectFolder(projectName, companyName = 'Empresa Principal
  */
 async function uploadFile(buffer, originalName, mimeType, folderId) {
   if (!folderId) throw new Error('folderId é obrigatório para upload no Drive')
+
+  // Barra arquivo disfarçado (MIME falsificável do multer) antes de subir.
+  validateFileSignature(buffer, mimeType)
 
   console.log(`[Drive] Upload iniciado: "${originalName}" | destino: ${folderId}`)
 

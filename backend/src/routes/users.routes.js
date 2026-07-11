@@ -3,12 +3,13 @@ const userRepo = require('../repositories/user.repository')
 const companyRepo = require('../repositories/company.repository')
 const { authenticate, authorize, BYPASS_ROLES } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
+const logger   = require('../middlewares/logger.middleware')
 const { paginate, paginatedResponse } = require('../utils/pagination')
 const R        = require('../utils/response')
 const { uploadImageMemory } = require('../config/multer')
 const fileService = require('../services/file.service')
 
-router.use(authenticate, tenantMiddleware)
+router.use(authenticate, tenantMiddleware, logger)
 
 /**
  * Pode acessar o usuario alvo?

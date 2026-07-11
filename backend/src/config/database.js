@@ -47,11 +47,28 @@ const pool = new Pool({
     : false,
   max: 5,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 30000
+  connectionTimeoutMillis: 30000,
+  // Mata no servidor qualquer query que passe de 15s: com pool max=5, uma
+  // consulta travada (lenta ou maliciosa) poderia reter conexões e degradar
+  // toda a API. Configurável via DB_STATEMENT_TIMEOUT_MS.
+  statement_timeout: parseInt(process.env.DB_STATEMENT_TIMEOUT_MS) || 15000,
 })
 
 pool.on('error', (err) => {
   console.error('PostgreSQL pool error:', err.message)
 })
+
+// Aviso de segurança (não altera comportamento): em produção, se o TLS
+// estiver ativo mas sem validar a cadeia da CA e sem CA fornecida, a
+// conexão é criptografada porém vulnerável a MITM. Para eliminar, defina
+// DB_SSL_REJECT_UNAUTHORIZED=true e forneça DB_SSL_CA (conexão direta
+// db.xxx.supabase.co, não o pooler self-signed).
+if (process.env.NODE_ENV === 'production' && useSsl && !rejectUnauthorized && !sslCa) {
+  console.warn(
+    '[database] AVISO: conexão TLS com o banco SEM validação de CA ' +
+    '(rejectUnauthorized=false). Susceptível a MITM. Configure ' +
+    'DB_SSL_REJECT_UNAUTHORIZED=true + DB_SSL_CA para produção.'
+  )
+}
 
 module.exports = pool

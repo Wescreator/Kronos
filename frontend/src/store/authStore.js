@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { clearAuthStorage, persistTheme, applyTheme } from '../utils/theme'
+import { logout as logoutRequest } from '../services/auth.service'
 
 /* ─── Helpers de storage ──────────────────────────────────────────
  * "Lembrar-me" marcado    → localStorage  (persiste ao fechar)
@@ -74,6 +75,18 @@ const useAuthStore = create((set) => ({
   })),
 
   logout: () => {
+    // Revoga os refresh tokens no servidor (best-effort): o backend
+    // incrementa token_version, invalidando qualquer sessão ainda ativa.
+    // Só para usuários internos — o endpoint /auth/logout usa `authenticate`,
+    // que recusa tokens do portal (scope 'client'). O token vai explícito
+    // porque o clearAuthStorage() abaixo roda antes do import assíncrono
+    // resolver; se a chamada falhar (offline/erro), o logout local segue.
+    const token = getStoredToken('accessToken')
+    const scope = getStoredToken('authScope')
+    if (token && scope !== 'client') {
+      logoutRequest({ headers: { Authorization: `Bearer ${token}` } }).catch(() => {})
+    }
+
     // Import dinâmico para evitar dependência circular estática
     // (socketStore importa useAuthStore para ler token/userId).
     import('./socketStore').then((m) => m.default.getState().disconnect())
