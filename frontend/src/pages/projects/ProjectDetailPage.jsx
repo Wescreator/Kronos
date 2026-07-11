@@ -16,6 +16,7 @@ import {
   uploadPhaseAttachment, deletePhaseAttachment,
 } from '../../services/projects.service'
 import { getUsers }        from '../../services/team.service'
+import { getAllClients, updateClient } from '../../services/clients.service'
 import Spinner              from '../../components/ui/Spinner'
 import Badge                from '../../components/ui/Badge'
 import Avatar                from '../../components/ui/Avatar'
@@ -566,6 +567,8 @@ export default function ProjectDetailPage() {
   const [tab,           setTab]          = useState(0)
   const [editing,       setEditing]      = useState(false)
   const [form,          setForm]         = useState({})
+  const [clients,       setClients]      = useState([])
+  const [clientId,      setClientId]     = useState('')   // cliente cadastrado vinculado a este projeto
   const [showAddMember, setShowAddMember]= useState(false)
   const [removingId,    setRemovingId]   = useState(null)
   const [files,         setFiles]        = useState([])
@@ -580,16 +583,22 @@ export default function ProjectDetailPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const [p, h, u, s] = await Promise.all([
+      const [p, h, u, s, c] = await Promise.all([
         getProject(id),
         getProjectHistory(id),
         getUsers({ limit: 200 }),
-        getStages(id)
+        getStages(id),
+        getAllClients().catch(() => ({ data: { data: [] } })),
       ])
       setProject(p.data.project)
       setHistory(h.data.history || [])
       setAllUsers(u.data.data || [])
       setStages(s.data.stages || [])
+      const clientList = [...(c.data?.data || [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+      setClients(clientList)
+      // Pré-seleciona o cliente já vinculado a este projeto (clients_leads.project_id).
+      const linked = clientList.find(cl => String(cl.project_id) === String(id))
+      setClientId(linked ? linked.id : '')
       setForm({
         title:         p.data.project.title,
         client:        p.data.project.client        || '',
@@ -620,10 +629,37 @@ export default function ProjectDetailPage() {
 
   useEffect(() => { load() }, [id])
 
+  // Seleciona um cliente cadastrado e reflete o nome no campo do projeto.
+  const handleClientSelect = (selectedId) => {
+    setClientId(selectedId)
+    const c = clients.find(cl => cl.id === selectedId)
+    if (c) setForm(f => ({ ...f, client: c.name }))
+  }
+
   const handleSave = async () => {
     try {
       const { data } = await updateProject(id, form)
+
+      // Back-link Projeto→Cliente (clients_leads.project_id), espelhando a criação.
+      const originalLinkedId = clients.find(cl => String(cl.project_id) === String(id))?.id || ''
+      try {
+        if (originalLinkedId && originalLinkedId !== clientId) {
+          await updateClient(originalLinkedId, { projectId: null })   // desvincula o anterior
+        }
+        if (clientId && clientId !== originalLinkedId) {
+          await updateClient(clientId, { projectId: id })             // vincula o novo
+        }
+      } catch {
+        toast.error('Projeto salvo, mas não foi possível atualizar o vínculo do cliente.')
+      }
+
       setProject({ ...project, ...data.project })
+      // Mantém o estado local de clientes coerente com o novo vínculo.
+      setClients(prev => prev.map(cl =>
+        cl.id === clientId
+          ? { ...cl, project_id: id }
+          : (String(cl.project_id) === String(id) ? { ...cl, project_id: null } : cl)
+      ))
       setEditing(false)
       toast.success('Projeto atualizado')
     } catch { toast.error('Erro ao salvar') }
@@ -785,7 +821,22 @@ export default function ProjectDetailPage() {
             ? <input className="input text-xl font-bold mb-2" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             : <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{project.title}</h1>
           }
-          <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{project.client || 'Sem cliente'}</p>
+          {editing ? (
+            <div className="space-y-2 max-w-md">
+              <select className="input py-1.5 text-sm" value={clientId}
+                onChange={e => handleClientSelect(e.target.value)}>
+                <option value="">— Cliente cadastrado (ou digite abaixo) —</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}{c.email ? ` — ${c.email}` : ''}</option>
+                ))}
+              </select>
+              <input className="input py-1.5 text-sm" placeholder="Nome do cliente"
+                value={form.client}
+                onChange={e => { setForm({ ...form, client: e.target.value }); if (clientId) setClientId('') }} />
+            </div>
+          ) : (
+            <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{project.client || 'Sem cliente'}</p>
+          )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Badge className={statusColors[project.status]}>{statusLabel[project.status]}</Badge>

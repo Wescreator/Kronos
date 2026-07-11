@@ -18,6 +18,27 @@ const FIELD_LABELS = {
   financial_status: 'Situação financeira',
   financial_due_date: 'Vencimento',
   contracted_at:    'Data de contratação',
+  last_payment_date: 'Último pagamento',
+}
+
+// Deriva a situação de adimplência a partir da data do último pagamento.
+// Regra (definida com o usuário): a empresa fica "adimplente" enquanto o
+// pagamento for do mês/ano corrente; assim que o mês vira, passa a
+// "inadimplente" automaticamente. Sem pagamento registrado → null.
+// É puramente gerencial (Developer) e NÃO bloqueia o acesso ao sistema.
+const ymKey = (d) => {
+  const dt = new Date(d)
+  // Colunas @db.Date voltam como UTC-midnight; usar componentes UTC evita
+  // que o fuso local jogue o mês para o dia anterior na virada.
+  return `${dt.getUTCFullYear()}-${dt.getUTCMonth()}`
+}
+
+const computeFinancialSituacao = (lastPaymentDate) => {
+  if (!lastPaymentDate) return null
+  const now = new Date()
+  return ymKey(lastPaymentDate) === `${now.getFullYear()}-${now.getMonth()}`
+    ? 'adimplente'
+    : 'inadimplente'
 }
 
 // Entity types que compõem o "histórico de alterações" da empresa no Admin
@@ -54,6 +75,9 @@ const toCompanyDTO = (c) => ({
   financial_status:   c.financial_status ?? null,
   financial_due_date: c.financial_due_date ?? null,
   contracted_at:      c.contracted_at ?? null,
+  last_payment_date:  c.last_payment_date ?? null,
+  // Situação derivada (adimplente/inadimplente) — recalculada a cada leitura.
+  financial_situacao: computeFinancialSituacao(c.last_payment_date),
 })
 
 /**
@@ -175,9 +199,12 @@ const getCompanyStats = async (companyId) => {
     files,
     lastAccess: last ? new Date(last).toLocaleString('pt-BR') : null,
     financial: {
-      situacao:     company.financial_status ?? null,
-      vencimento:   fmtDate(company.financial_due_date),
-      contratadoEm: fmtDate(company.contracted_at) || fmtDate(company.createdAt),
+      situacao:      company.financial_status ?? null,
+      vencimento:    fmtDate(company.financial_due_date),
+      contratadoEm:  fmtDate(company.contracted_at) || fmtDate(company.createdAt),
+      ultimoPagamento: fmtDate(company.last_payment_date),
+      // Situação derivada da data de pagamento (adimplente/inadimplente).
+      adimplencia:   computeFinancialSituacao(company.last_payment_date),
     },
   }
 }
@@ -296,6 +323,9 @@ const updateCompany = async (companyId, fields) => {
   }
   if (fields.contracted_at !== undefined) {
     data.contracted_at = fields.contracted_at ? new Date(fields.contracted_at) : null
+  }
+  if (fields.last_payment_date !== undefined) {
+    data.last_payment_date = fields.last_payment_date ? new Date(fields.last_payment_date) : null
   }
   data.updated_at = new Date()
 

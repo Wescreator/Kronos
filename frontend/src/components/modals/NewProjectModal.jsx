@@ -3,6 +3,7 @@ import { toast }               from 'react-hot-toast'
 import { AlertTriangle }       from 'lucide-react'
 import PortalModal from '../ui/PortalModal'
 import { createProject, uploadCover, getProjects } from '../../services/projects.service'
+import { getAllClients, updateClient } from '../../services/clients.service'
 import { addDays, format, startOfMonth, endOfMonth } from 'date-fns'
 
 const BLOCKING_STATUSES = ['in_progress', 'paused']
@@ -34,6 +35,8 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
   const [loading,      setLoading]      = useState(false)
   const [blockedUntil, setBlockedUntil] = useState(null)
   const [activeCount,  setActiveCount]  = useState(0)
+  const [clients,      setClients]      = useState([])
+  const [clientId,     setClientId]     = useState('')   // cliente existente a vincular
 
   useEffect(() => {
     if (!open) return
@@ -44,7 +47,20 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
       setBlockedUntil(until)
       setActiveCount(count)
     })
+    getAllClients()
+      .then(({ data }) => {
+        const list = [...(data.data || [])].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+        setClients(list)
+      })
+      .catch(() => setClients([]))
   }, [open])
+
+  // Ao escolher um cliente já cadastrado, preenche o nome no projeto.
+  const handleClientSelect = (id) => {
+    setClientId(id)
+    const c = clients.find(cl => cl.id === id)
+    if (c) setForm(f => ({ ...f, client: c.name }))
+  }
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
@@ -70,8 +86,17 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
     try {
       const { data } = await createProject({ ...form, budget: parseFloat(form.budget) || 0 })
       if (cover) await uploadCover(data.project.id, cover)
+      // Vincula o cliente existente ao novo projeto (back-link: clients_leads.project_id).
+      if (clientId) {
+        try {
+          await updateClient(clientId, { projectId: data.project.id })
+        } catch {
+          toast.error('Projeto criado, mas não foi possível vincular o cliente.')
+        }
+      }
       toast.success('Projeto criado! Acesse a aba Etapas para criar as etapas do projeto.')
       setForm({ title:'', client:'', description:'', budget:'', start_date:'', expected_date:'' })
+      setClientId('')
       setCover(null)
       onSuccess()
     } catch (err) {
@@ -109,9 +134,25 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
         <div>
           <label
             className="block mb-1 text-sm font-semibold"
-            style={{ color: "var(--text-primary)" }}>Cliente</label>
+            style={{ color: "var(--text-primary)" }}>Cliente existente</label>
+          <select className="input" value={clientId}
+            onChange={e => handleClientSelect(e.target.value)}>
+            <option value="">— Nenhum (ou digite abaixo) —</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.id}>{c.name}{c.email ? ` — ${c.email}` : ''}</option>
+            ))}
+          </select>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            Selecione um cliente cadastrado para vinculá-lo a este projeto, ou digite um nome livre abaixo.
+          </p>
+        </div>
+        <div>
+          <label
+            className="block mb-1 text-sm font-semibold"
+            style={{ color: "var(--text-primary)" }}>Nome do cliente</label>
           <input className="input" placeholder="Nome do cliente"
-            value={form.client} onChange={e => set('client', e.target.value)} />
+            value={form.client}
+            onChange={e => { set('client', e.target.value); if (clientId) setClientId('') }} />
         </div>
         <div>
           <label

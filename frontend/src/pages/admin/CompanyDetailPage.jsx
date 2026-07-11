@@ -600,30 +600,66 @@ function HistoryTab({ history }) {
   )
 }
 
-const FINANCIAL_STATUS_OPTIONS = ['Em dia', 'Inadimplente', 'Trial', 'Cancelado', 'Isento']
+const FINANCIAL_STATUS_OPTIONS = ['Trial', 'Cancelado', 'Isento']
+
+// Deriva adimplente/inadimplente a partir da data do último pagamento.
+// Espelha computeFinancialSituacao no backend (platform.service.js): a empresa
+// fica adimplente enquanto o pagamento for do mês/ano corrente e passa a
+// inadimplente assim que o mês vira. Comparação por componentes YYYY-MM da
+// string evita distorções de fuso horário. É apenas gerencial — não bloqueia
+// o acesso da empresa ao sistema.
+const deriveAdimplencia = (dateStr) => {
+  if (!dateStr) return null
+  const [y, m] = String(dateStr).substring(0, 10).split('-').map(Number)
+  const now = new Date()
+  return y === now.getFullYear() && m - 1 === now.getMonth() ? 'adimplente' : 'inadimplente'
+}
+
+function AdimplenciaBadge({ situacao }) {
+  const config = {
+    adimplente:   { label: 'Adimplente',   color: '#34D399', bg: 'rgba(52,211,153,0.10)', border: 'rgba(52,211,153,0.25)' },
+    inadimplente: { label: 'Inadimplente', color: '#FB7185', bg: 'rgba(251,113,133,0.10)', border: 'rgba(251,113,133,0.25)' },
+  }[situacao] || { label: 'Sem pagamento registrado', color: 'var(--text-muted)', bg: 'rgba(107,114,128,0.08)', border: 'rgba(107,114,128,0.20)' }
+
+  return (
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+      style={{ color: config.color, background: config.bg, border: `1px solid ${config.border}` }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: config.color }} />
+      {config.label}
+    </span>
+  )
+}
 
 function FinancialTab({ company, companyId, onUpdated }) {
   const toDateInput = (v) => (v ? String(v).substring(0, 10) : '')
+  const todayInput  = () => new Date().toISOString().substring(0, 10)
 
   const [situacao,     setSituacao]     = useState(company.financial_status || '')
   const [vencimento,   setVencimento]   = useState(toDateInput(company.financial_due_date))
   const [contratadoEm, setContratadoEm] = useState(toDateInput(company.contracted_at))
+  const [pagamento,    setPagamento]    = useState(toDateInput(company.last_payment_date))
   const [saving,       setSaving]       = useState(false)
 
   useEffect(() => {
     setSituacao(company.financial_status || '')
     setVencimento(toDateInput(company.financial_due_date))
     setContratadoEm(toDateInput(company.contracted_at))
+    setPagamento(toDateInput(company.last_payment_date))
   }, [company])
 
-  const handleSave = async () => {
+  const adimplencia = deriveAdimplencia(pagamento)
+
+  const save = async (overrides = {}) => {
     setSaving(true)
     try {
-      const updated = await platformService.updateCompany(companyId, {
+      const payload = {
         financial_status:   situacao || null,
         financial_due_date: vencimento || null,
         contracted_at:      contratadoEm || null,
-      })
+        last_payment_date:  pagamento || null,
+        ...overrides,
+      }
+      const updated = await platformService.updateCompany(companyId, payload)
       toast.success('Situação financeira atualizada')
       onUpdated(updated)
     } catch (err) {
@@ -633,12 +669,39 @@ function FinancialTab({ company, companyId, onUpdated }) {
     }
   }
 
+  const registrarPagamentoHoje = () => {
+    const hoje = todayInput()
+    setPagamento(hoje)
+    save({ last_payment_date: hoje })
+  }
+
   return (
     <div className="card p-6">
+      {/* Adimplência — derivada da data do último pagamento */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6 pb-5"
+        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-muted)' }}>
+            Adimplência
+          </p>
+          <AdimplenciaBadge situacao={adimplencia} />
+          <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+            Calculada pela data do último pagamento. Vira inadimplente automaticamente na mudança de mês. Não bloqueia o acesso da empresa.
+          </p>
+        </div>
+        <button onClick={registrarPagamentoHoje} disabled={saving} className="btn-primary">
+          Registrar pagamento hoje
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <Field label="Plano contratado" value={company.plan} />
         <div>
-          <label className="block mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Situação</label>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Data do último pagamento</label>
+          <input className="input" type="date" value={pagamento} onChange={e => setPagamento(e.target.value)} />
+        </div>
+        <div>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Situação (manual)</label>
           <select className="input" value={situacao} onChange={e => setSituacao(e.target.value)}>
             <option value="">— Não definida —</option>
             {FINANCIAL_STATUS_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
@@ -654,7 +717,7 @@ function FinancialTab({ company, companyId, onUpdated }) {
         </div>
       </div>
       <div className="mt-5 pt-5" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-        <button onClick={handleSave} disabled={saving} className="btn-primary">
+        <button onClick={() => save()} disabled={saving} className="btn-primary">
           {saving ? 'Salvando...' : 'Salvar situação financeira'}
         </button>
       </div>

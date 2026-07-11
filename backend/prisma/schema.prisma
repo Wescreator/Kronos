@@ -84,6 +84,7 @@ model Company {
   contracted_at          DateTime?                @db.Date
   financial_due_date     DateTime?                @db.Date
   financial_status       String?                  @db.VarChar(30)
+  last_payment_date      DateTime?                @db.Date
   activity_logs          activity_logs[]
   budget_configs         BudgetConfig?
   budget_items           BudgetItem[]

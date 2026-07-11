@@ -658,20 +658,33 @@ const getDRE = async (companyId, startDate, endDate) => {
 }
 
 const getProjectFinancials = async (companyId) => {
+  // Custos e receitas são agregados em subqueries SEPARADAS por projeto antes
+  // do JOIN. Um único FROM com os dois LEFT JOIN (expenses × revenue_installments)
+  // produz um produto cartesiano: cada despesa é repetida por parcela e vice-versa.
+  // O código antigo mascarava isso com SUM(DISTINCT amount), que colapsava
+  // despesas/parcelas de MESMO valor — subestimando o custo/receita do projeto.
+  // Pré-agregar elimina a duplicação e dá o total correto sem DISTINCT.
   const { rows } = await pool.query(`
     SELECT
       p.id, p.title, p.budget,
-      COALESCE(SUM(DISTINCT e.amount)  FILTER (WHERE e.status='paid'),     0) AS costs,
-      COALESCE(SUM(DISTINCT ri.amount) FILTER (WHERE ri.status='received'), 0) AS revenues
+      COALESCE(e.costs, 0)    AS costs,
+      COALESCE(r.revenues, 0) AS revenues
     FROM projects p
-    LEFT JOIN expenses e
-      ON e.project_id=p.id AND e.company_id=p.company_id
-    LEFT JOIN revenues rv
-      ON rv.project_id=p.id AND rv.company_id=p.company_id
-    LEFT JOIN revenue_installments ri
-      ON ri.revenue_id=rv.id AND ri.company_id=rv.company_id
+    LEFT JOIN (
+      SELECT project_id, SUM(amount) AS costs
+      FROM expenses
+      WHERE company_id=$1 AND status='paid'
+      GROUP BY project_id
+    ) e ON e.project_id = p.id
+    LEFT JOIN (
+      SELECT rv.project_id, SUM(ri.amount) AS revenues
+      FROM revenues rv
+      JOIN revenue_installments ri
+        ON ri.revenue_id = rv.id AND ri.company_id = rv.company_id
+      WHERE rv.company_id=$1 AND ri.status='received'
+      GROUP BY rv.project_id
+    ) r ON r.project_id = p.id
     WHERE p.company_id=$1
-    GROUP BY p.id, p.title, p.budget
     ORDER BY p.title
   `, [companyId])
 

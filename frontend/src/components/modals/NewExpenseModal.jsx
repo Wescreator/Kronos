@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast'
 import { Tag, Repeat } from 'lucide-react'
 import PortalModal from '../ui/PortalModal'
 import { createExpense, updateExpense, getCategories, createCategory } from '../../services/financial.service'
+import { getProjects } from '../../services/projects.service'
 
 // ── Seletor de categoria com criação inline ───────────────────────
 function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
@@ -115,6 +116,7 @@ const EMPTY_FORM = {
   title:        '',
   amount:       '',
   due_date:     '',
+  project_id:   '',
   category_id:  '',
   description:  '',
   is_recurring: false,
@@ -127,6 +129,7 @@ const EMPTY_FORM = {
 export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
   const [form,       setForm]       = useState(EMPTY_FORM)
   const [categories, setCategories] = useState([])
+  const [projects,   setProjects]   = useState([])
 
   const isEdit = !!expense
 
@@ -138,9 +141,17 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
     } catch { /* silencioso */ }
   }, [])
 
+  const loadProjects = useCallback(async () => {
+    try {
+      const { data } = await getProjects({ limit: 200 })
+      const sorted = [...(data.data || [])].sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'))
+      setProjects(sorted)
+    } catch { /* silencioso */ }
+  }, [])
+
   useEffect(() => {
-    if (open) loadCategories()
-  }, [open, loadCategories])
+    if (open) { loadCategories(); loadProjects() }
+  }, [open, loadCategories, loadProjects])
 
   useEffect(() => {
     if (open && expense) {
@@ -148,6 +159,7 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
         title:        expense.title,
         amount:       expense.amount,
         due_date:     expense.due_date?.slice(0, 10) || '',
+        project_id:   expense.project_id || '',
         category_id:  expense.category_id || '',
         description:  expense.description || '',
         is_recurring: expense.is_recurring || false,
@@ -161,12 +173,17 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
     e.preventDefault()
     try {
       if (isEdit) {
-        await updateExpense(expense.id, { ...form, amount: parseFloat(form.amount) })
+        await updateExpense(expense.id, {
+          ...form,
+          amount:     parseFloat(form.amount),
+          project_id: form.project_id || null,
+        })
         toast.success('Despesa atualizada!')
       } else {
         await createExpense({
           ...form,
           amount:       parseFloat(form.amount),
+          project_id:   form.project_id || null,
           is_recurring: form.is_recurring,
         })
         toast.success(form.is_recurring ? 'Despesa recorrente criada para os próximos 24 meses!' : 'Despesa criada!')
@@ -225,6 +242,25 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
               onChange={e => setForm({ ...form, due_date: e.target.value })}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block mb-1 text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+            Projeto vinculado
+          </label>
+          <select
+            className="input"
+            value={form.project_id}
+            onChange={e => setForm({ ...form, project_id: e.target.value })}
+          >
+            <option value="">Sem projeto</option>
+            {projects.map(p => (
+              <option key={p.id} value={p.id}>{p.title}{p.client ? ` — ${p.client}` : ''}</option>
+            ))}
+          </select>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            Vincule a um projeto para que esta despesa entre como custo no DRE por projeto.
+          </p>
         </div>
 
         <CategorySelect
