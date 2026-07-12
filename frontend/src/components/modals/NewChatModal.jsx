@@ -71,12 +71,14 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
 
   return (
     <Modal open={open} onClose={onClose} title="Nova conversa" size="md">
-      {/* Container principal forçando estilo branco e texto preto por cima do Modal original */}
-      <div className="flex flex-col gap-4 p-5 rounded-2xl w-full" style={{ backgroundcolor: 'var(--text-onbrand)', color: 'var(--text-primary)', minWidth: '100%' }}>
+      {/* O fundo vem do <Modal> (já tokenizado). Aqui havia um `backgroundcolor`
+          (minúsculo, propriedade inexistente) que o browser ignorava — removido
+          para ninguém "consertar" o typo e fixar um fundo branco no tema escuro. */}
+      <div className="flex flex-col gap-4 p-5 rounded-2xl w-full" style={{ color: 'var(--text-primary)', minWidth: '100%' }}>
         
         {/* Tipo de Conversa */}
         <div>
-          <label className="text-xs font-bold mb-1.5 block" style={{ color: '#4b5563' }}>
+          <label className="text-xs font-bold mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
             Tipo de Conversa
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -94,7 +96,7 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
                     color: active ? '#2563EB' : 'var(--text-primary)',
                   }}
                 >
-                  <Icon size={16} style={{ color: active ? '#2563EB' : '#4b5563' }} />
+                  <Icon size={16} style={{ color: active ? '#2563EB' : 'var(--text-secondary)' }} />
                   {t.label}
                 </button>
               )
@@ -105,7 +107,7 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
         {/* Nome do Grupo */}
         {roomType === 'group' && (
           <div className="fade-in">
-            <label className="text-xs font-bold mb-1.5 block" style={{ color: '#4b5563' }}>
+            <label className="text-xs font-bold mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
               Nome do Grupo
             </label>
             <input
@@ -120,7 +122,7 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
 
         {/* Seleção de Usuários */}
         <div className="flex flex-col flex-1 min-h-[240px]">
-          <label className="text-xs font-bold mb-1.5 block" style={{ color: '#4b5563' }}>
+          <label className="text-xs font-bold mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
             {roomType === 'group' ? 'Selecionar Participantes' : 'Selecionar Usuário'}
           </label>
           
@@ -174,7 +176,7 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
           <button 
             onClick={onClose} 
             className="px-4 py-2 text-sm font-medium rounded-xl transition-all border hover:bg-hover" 
-            style={{ color: '#4b5563', borderColor: 'var(--border-medium)', background: 'var(--bg-surface)' }}
+            style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-medium)', background: 'var(--bg-surface)' }}
             disabled={submitting}
           >
             Cancelar

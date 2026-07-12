@@ -51,6 +51,41 @@
   --glow-blue:      0 0 40px rgba(2,132,199,0.10);
   --glow-green:     0 0 40px rgba(22,163,74,0.10);
 
+  /* ── Chat (paleta própria, estilo WhatsApp iOS) ──────────────────────────
+     O chat NÃO usa os neutros do sistema de propósito: ele imita o WhatsApp,
+     que tem identidade própria (papel de parede bege, balão verde, barras
+     claras). São tokens à parte, mas com a MESMA mecânica dos demais — claro
+     aqui, escuro no bloco [data-theme="dark"]. Nada de hex solto na ChatPage. */
+  --chat-shell-bg:        #E9EDEF;   /* moldura por trás dos dois painéis */
+  --chat-shell-border:    #D1D7DB;
+  --chat-panel-bg:        #F6F6F6;   /* barras: topo do sidebar, header, input */
+  --chat-list-bg:         #FFFFFF;   /* lista de conversas */
+  --chat-list-divider:    #F0F2F5;
+  --chat-list-hover:      #F5F6F6;
+  --chat-list-active:     #E9EDEF;   /* conversa aberta */
+  --chat-surface:         #FFFFFF;   /* menus, pílula do separador de data */
+  --chat-wallpaper:       #E4DDD6;   /* fundo da conversa (bege iOS) */
+  --chat-wallpaper-dot:   rgba(0,0,0,0.06);
+  --chat-bubble-in:       #FFFFFF;
+  --chat-bubble-out:      #DCF8C6;   /* verde-claro do iOS */
+  --chat-bubble-text:     #111B21;
+  --chat-bubble-meta:     #667781;   /* hora + check dentro do balão */
+  --chat-text-primary:    #111B21;
+  --chat-text-secondary:  #667781;
+  --chat-icon:            #54656F;
+  --chat-border:          #D1D7DB;
+  --chat-search-bg:       #F0F2F5;
+  --chat-input-bg:        #FFFFFF;
+  --chat-accent:          #25D366;   /* verde do botão enviar / status online */
+  --chat-accent-fg:       #FFFFFF;
+  --chat-send-off-bg:     #DFE5E7;   /* botão enviar desabilitado */
+  --chat-send-off-fg:     #9AA7B0;
+  --chat-empty-bg:        #F8F9FA;   /* tela "nenhuma conversa aberta" */
+  --chat-danger:          #EF4444;
+  --chat-scroll-thumb:    rgba(17,27,33,0.16);
+  --chat-scroll-thumb-hv: rgba(17,27,33,0.24);
+  --chat-typing-dot:      #25D366;
+
   color-scheme: light;
 }
 
@@ -91,6 +126,40 @@
   --glow-purple:    0 0 40px rgba(124,92,252,0.14);
   --glow-blue:      0 0 40px rgba(56,189,248,0.12);
   --glow-green:     0 0 40px rgba(52,211,153,0.12);
+
+  /* ── Chat escuro (WhatsApp iOS dark) ──────────────────────────────────────
+     No escuro o WhatsApp abandona o papel de parede bege: a conversa fica sobre
+     um azul-petróleo quase preto, o balão recebido vira cinza-azulado e o
+     enviado, verde-escuro. É essa a troca que estes tokens fazem. */
+  --chat-shell-bg:        #0B141A;
+  --chat-shell-border:    #2A3942;
+  --chat-panel-bg:        #202C33;
+  --chat-list-bg:         #111B21;
+  --chat-list-divider:    #222D34;
+  --chat-list-hover:      #202C33;
+  --chat-list-active:     #2A3942;
+  --chat-surface:         #233138;
+  --chat-wallpaper:       #0B141A;
+  --chat-wallpaper-dot:   rgba(255,255,255,0.05);
+  --chat-bubble-in:       #202C33;
+  --chat-bubble-out:      #005C4B;
+  --chat-bubble-text:     #E9EDEF;
+  --chat-bubble-meta:     rgba(233,237,239,0.60);
+  --chat-text-primary:    #E9EDEF;
+  --chat-text-secondary:  #8696A0;
+  --chat-icon:            #AEBAC1;
+  --chat-border:          #2A3942;
+  --chat-search-bg:       #202C33;
+  --chat-input-bg:        #2A3942;
+  --chat-accent:          #00A884;
+  --chat-accent-fg:       #FFFFFF;
+  --chat-send-off-bg:     #2A3942;
+  --chat-send-off-fg:     #667781;
+  --chat-empty-bg:        #222E35;
+  --chat-danger:          #F87171;
+  --chat-scroll-thumb:    rgba(233,237,239,0.16);
+  --chat-scroll-thumb-hv: rgba(233,237,239,0.26);
+  --chat-typing-dot:      #00A884;
 
   color-scheme: dark;
 }

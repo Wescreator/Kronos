@@ -6,6 +6,8 @@ import { getRooms, getMessages, sendMessage, createRoom } from '../../services/c
 import { getUsers } from '../../services/team.service'
 import useAuthStore from '../../store/authStore'
 import useSocketStore from '../../store/socketStore'
+import useUIStore from '../../store/uiStore'
+import { resolveTheme } from '../../utils/theme'
 import Avatar from '../../components/ui/Avatar'
 import NewChatModal from '../../components/modals/NewChatModal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
@@ -20,14 +22,13 @@ const StatusIcon = ({ icon: Icon, label }) => (
     <div
       className="p-4 rounded-3xl mb-4"
       style={{
-        backgroundColor: '#9CA3AF',
-        border: '1px solid #D1D5DB',
-        opacity: '1'
+        backgroundColor: 'var(--chat-list-active)',
+        border: '1px solid var(--chat-border)',
       }}
     >
-      <Icon size={24} style={{ color: '#ffffff', opacity: '1' }} />
+      <Icon size={24} style={{ color: 'var(--chat-icon)' }} />
     </div>
-    <p className="text-xs" style={{ color: '#374151', opacity: '1' }}>{label}</p>
+    <p className="text-xs" style={{ color: 'var(--chat-text-secondary)' }}>{label}</p>
   </div>
 )
 
@@ -82,14 +83,19 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
     <div className="relative group/room">
       <button
         onClick={onClick}
-        className={`w-full text-left px-3 md:px-4 py-3 flex gap-3 border-b border-[#f0f2f5] transition ${
-          active ? 'bg-[#e3e5e8]' : 'bg-white hover:bg-[#f5f6f6]'
+        className={`w-full text-left px-3 md:px-4 py-3 flex gap-3 border-b border-[var(--chat-list-divider)] transition ${
+          active
+            ? 'bg-[var(--chat-list-active)]'
+            : 'bg-[var(--chat-list-bg)] hover:bg-[var(--chat-list-hover)]'
         }`}
       >
         <div className="shrink-0">
           {isGroup ? (
-            <div className="w-11 h-11 md:w-12 md:h-12 rounded-full bg-[#e9edef] flex items-center justify-center">
-              <Hash size={18} className="text-[#54656f]" />
+            <div
+              className="w-11 h-11 md:w-12 md:h-12 rounded-full flex items-center justify-center"
+              style={{ background: 'var(--chat-list-active)' }}
+            >
+              <Hash size={18} style={{ color: 'var(--chat-icon)' }} />
             </div>
           ) : (
             <Avatar name={name} src={avatarSrc} size="md" />
@@ -98,19 +104,25 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-3">
-            <span className="text-[14px] md:text-[15px] font-medium text-[#111b21] truncate">
+            <span
+              className="text-[14px] md:text-[15px] font-medium truncate"
+              style={{ color: 'var(--chat-text-primary)' }}
+            >
               {name}
             </span>
 
             {room.last_message_at && (
-              <span className="text-[11px] shrink-0 text-[#667781]">
+              <span className="text-[11px] shrink-0" style={{ color: 'var(--chat-text-secondary)' }}>
                 {formatRoomTime(room.last_message_at)}
               </span>
             )}
           </div>
 
           <div className="flex items-center justify-between gap-3 mt-1">
-            <p className="text-[12px] md:text-[13px] text-[#667781] truncate">
+            <p
+              className="text-[12px] md:text-[13px] truncate"
+              style={{ color: 'var(--chat-text-secondary)' }}
+            >
               {room.last_message || (isGroup ? 'Grupo' : 'Conversa privada')}
             </p>
           </div>
@@ -127,14 +139,14 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
             e.stopPropagation()
             setShowMenu(v => !v)
           }}
-          className="w-8 h-8 rounded-full flex items-center justify-center bg-white hover:bg-[#f0f2f5] text-[#54656f] shadow-sm"
+          className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--chat-surface)] hover:bg-[var(--chat-list-hover)] text-[var(--chat-icon)] shadow-sm"
         >
           <MoreHorizontal size={16} />
         </button>
 
         {showMenu && (
           <div
-            className="absolute right-0 top-full mt-1 py-1 rounded-xl overflow-hidden bg-white border border-[#e9edef] shadow-lg"
+            className="absolute right-0 top-full mt-1 py-1 rounded-xl overflow-hidden bg-[var(--chat-surface)] border border-[var(--chat-border)] shadow-lg"
             style={{ minWidth: 150, zIndex: 50 }}
           >
             <button
@@ -143,7 +155,7 @@ function RoomItem({ room, active, onClick, currentUserId, onDelete }) {
                 setShowMenu(false)
                 onDelete(room)
               }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-red-500 hover:bg-[#f8f9fa]"
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-[var(--chat-danger)] hover:bg-[var(--chat-list-hover)]"
             >
               <Trash2 size={14} />
               {isGroup ? 'Excluir grupo' : 'Excluir conversa'}
@@ -164,11 +176,20 @@ function DateSeparator({ dateStr }) {
 
   return (
     <div className="flex items-center gap-3 my-5">
-      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
-      <span className="text-[10px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full" style={{ color: 'rgba(255,255,255,0.6)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', letterSpacing: '0.10em' }}>
+      <div style={{ flex: 1, height: 1, background: 'var(--chat-wallpaper-dot)' }} />
+      <span
+        className="text-[10px] font-semibold uppercase tracking-widest px-3 py-1 rounded-full"
+        style={{
+          color: 'var(--chat-text-secondary)',
+          background: 'var(--chat-surface)',
+          border: '1px solid var(--chat-border)',
+          letterSpacing: '0.10em',
+          boxShadow: '0 1px 1px rgba(11,20,26,0.06)',
+        }}
+      >
         {label}
       </span>
-      <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.1)' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--chat-wallpaper-dot)' }} />
     </div>
   )
 }
@@ -192,16 +213,19 @@ function MessageBubble({ msg, isMe, showAvatar, prevIsMe }) {
         style={{ maxWidth: window.innerWidth < 768 ? '88%' : '72%' }}
       >
         {showAvatar && !isMe && (
-          <span className="text-[11px] font-semibold mb-1 px-1 text-[#667781] hidden sm:block">
+          <span
+            className="text-[11px] font-semibold mb-1 px-1 hidden sm:block"
+            style={{ color: 'var(--chat-text-secondary)' }}
+          >
             {msg.user_name}
           </span>
         )}
 
         <div
-          className={`relative px-4 py-2.5 shadow-sm ${
-            isMe ? 'bg-[#d9fdd3] text-[#111b21]' : 'bg-white text-[#111b21]'
-          }`}
+          className="relative px-4 py-2.5 shadow-sm"
           style={{
+            background: isMe ? 'var(--chat-bubble-out)' : 'var(--chat-bubble-in)',
+            color: 'var(--chat-bubble-text)',
             borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
             minWidth: 90
           }}
@@ -211,8 +235,10 @@ function MessageBubble({ msg, isMe, showAvatar, prevIsMe }) {
           </p>
 
           <div className="absolute right-3 bottom-2 flex items-center gap-1">
-            <span className="text-[11px] text-[#667781]">{time}</span>
-            {isMe && <CheckCheck size={13} className="text-[#8696a0]" />}
+            <span className="text-[11px]" style={{ color: 'var(--chat-bubble-meta)' }}>{time}</span>
+            {/* Cinza, não o azul de "lido": não há confirmação de leitura no
+                sistema — o azul afirmaria algo que não sabemos. */}
+            {isMe && <CheckCheck size={13} style={{ color: 'var(--chat-bubble-meta)' }} />}
           </div>
         </div>
       </div>
@@ -224,13 +250,21 @@ function TypingIndicator({ names }) {
   const label = names.length === 1 ? `${names[0]} está digitando` : `${names.join(', ')} estão digitando`
 
   return (
-    <div className="flex items-center gap-2.5 px-4 py-2 mx-4 mb-1 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', width: 'fit-content', maxWidth: 280 }}>
+    <div
+      className="flex items-center gap-2.5 px-4 py-2 mx-4 mb-1 rounded-xl"
+      style={{
+        background: 'var(--chat-bubble-in)',
+        border: '1px solid var(--chat-border)',
+        width: 'fit-content',
+        maxWidth: 280,
+      }}
+    >
       <div className="flex gap-1 items-center">
         {[0, 1, 2].map(i => (
-          <div key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: '#A78BFA', animation: `typingBounce 1.2s ease-in-out ${i * 0.15}s infinite` }} />
+          <div key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--chat-typing-dot)', animation: `typingBounce 1.2s ease-in-out ${i * 0.15}s infinite` }} />
         ))}
       </div>
-      <span className="text-xs" style={{ color: '#ffffff' }}>{label}...</span>
+      <span className="text-xs" style={{ color: 'var(--chat-text-secondary)' }}>{label}...</span>
     </div>
   )
 }
@@ -238,22 +272,29 @@ function TypingIndicator({ names }) {
 // Substitua a função EmptyConversation atual por esta:
 function EmptyConversation({ onNewChat }) {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center px-8 bg-[#f8f9fa]">
-      <div className="w-24 h-24 rounded-full bg-[#e9edef] flex items-center justify-center mb-6">
-        <MessageSquare size={34} className="text-[#54656f]" />
+    <div
+      className="flex flex-col items-center justify-center h-full text-center px-8"
+      style={{ background: 'var(--chat-empty-bg)' }}
+    >
+      <div
+        className="w-24 h-24 rounded-full flex items-center justify-center mb-6"
+        style={{ background: 'var(--chat-list-active)' }}
+      >
+        <MessageSquare size={34} style={{ color: 'var(--chat-icon)' }} />
       </div>
 
-      <h3 className="text-[28px] font-light text-[#41525d] mb-3">
+      <h3 className="text-[28px] font-light mb-3" style={{ color: 'var(--chat-text-primary)' }}>
         Kronos Chat
       </h3>
 
-      <p className="text-sm text-[#667781] max-w-[420px] leading-7 mb-8">
+      <p className="text-sm max-w-[420px] leading-7 mb-8" style={{ color: 'var(--chat-text-secondary)' }}>
         Envie mensagens privadas, acompanhe grupos de projeto e centralize a comunicação da equipe em um único lugar.
       </p>
 
       <button
         onClick={onNewChat}
-        className="h-11 px-5 rounded-lg bg-[#374151] text-white text-sm font-medium hover:brightness-95 transition"
+        className="h-11 px-5 rounded-lg text-sm font-medium hover:brightness-95 transition"
+        style={{ background: 'var(--chat-accent)', color: 'var(--chat-accent-fg)' }}
       >
         Nova conversa
       </button>
@@ -266,6 +307,11 @@ export default function ChatPage() {
   const { roomId } = useParams()
   const socketConnected = useSocketStore((s) => s.connected)
   const role = user?.role || 'member'
+
+  // Toda a paleta do chat vive nos tokens --chat-* (index.css) e troca sozinha
+  // com o data-theme. O EmojiPicker é a exceção: é de terceiros e recebe o tema
+  // por prop, então aqui precisamos do valor em JS.
+  const isDark = useUIStore((s) => resolveTheme(s.theme) === 'dark')
 
   const [rooms, setRooms] = useState([])
   const [activeRoom, setActiveRoom] = useState(null)
@@ -552,6 +598,14 @@ export default function ChatPage() {
     animation: fadeInMsg 0.18s ease forwards;
   }
 
+  /* Placeholder da busca e do campo de mensagem: sem isto ficam no cinza
+     padrão do browser, ilegível sobre o fundo escuro. */
+  .chat-search-input::placeholder,
+  .chat-message-input::placeholder {
+    color: var(--chat-text-secondary);
+    opacity: 1;
+  }
+
   .chat-scroll::-webkit-scrollbar {
     width: 6px;
   }
@@ -561,12 +615,12 @@ export default function ChatPage() {
   }
 
   .chat-scroll::-webkit-scrollbar-thumb {
-    background: rgba(17, 27, 33, 0.16);
+    background: var(--chat-scroll-thumb);
     border-radius: 999px;
   }
 
   .chat-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(17, 27, 33, 0.24);
+    background: var(--chat-scroll-thumb-hv);
   }
 
   @media (max-width: 767px) {
@@ -580,9 +634,9 @@ export default function ChatPage() {
   className="fade-in flex overflow-hidden w-full h-full rounded-none md:rounded-2xl"
   style={{
     height: 'calc(100vh - 5rem)',
-    background: '#e9edef',
+    background: 'var(--chat-shell-bg)',
     position: 'relative',
-    border: '1px solid #d1d7db'
+    border: '1px solid var(--chat-shell-border)'
   }}
 >
   {/* SIDEBAR */}
@@ -591,11 +645,11 @@ export default function ChatPage() {
       ${activeRoom && !showSidebar ? 'hidden' : 'flex'}
       md:flex flex-col shrink-0
       w-full md:w-[360px] lg:w-[380px]
-      bg-white
+      bg-[var(--chat-list-bg)]
       relative z-[2]
     `}
     style={{
-      borderRight: '1px solid #d1d7db'
+      borderRight: '1px solid var(--chat-border)'
     }}
   >
     {/* topo sidebar */}
@@ -603,15 +657,20 @@ export default function ChatPage() {
       className="px-4 shrink-0 flex items-center justify-between"
       style={{
         height: 72,
-        background: '#f0f2f5',
-        borderBottom: '1px solid #e9edef'
+        background: 'var(--chat-panel-bg)',
+        borderBottom: '1px solid var(--chat-border)'
       }}
     >
       <div className="flex items-center gap-3 min-w-0">
         <Avatar name={user?.name || ''} src={user?.avatar_url} size="md" />
         <div className="min-w-0">
-          <p className="text-[14px] font-semibold text-[#111b21] truncate">{user?.name}</p>
-          <p className="text-[12px]" style={{ color: socketConnected ? '#00a884' : '#667781' }}>
+          <p className="text-[14px] font-semibold truncate" style={{ color: 'var(--chat-text-primary)' }}>
+            {user?.name}
+          </p>
+          <p
+            className="text-[12px]"
+            style={{ color: socketConnected ? 'var(--chat-accent)' : 'var(--chat-text-secondary)' }}
+          >
             {socketConnected ? 'Online' : 'Conectando...'}
           </p>
         </div>
@@ -619,7 +678,7 @@ export default function ChatPage() {
 
       <button
         onClick={() => setShowNew(true)}
-        className="w-10 h-10 rounded-full hover:bg-black/5 flex items-center justify-center text-[#54656f]"
+        className="w-10 h-10 rounded-full hover:bg-[var(--chat-list-hover)] flex items-center justify-center text-[var(--chat-icon)]"
         title="Nova conversa"
       >
         <Plus size={18} />
@@ -627,11 +686,11 @@ export default function ChatPage() {
     </div>
 
     {/* busca */}
-    <div className="p-3 border-b border-[#e9edef] bg-white">
-      <div className="h-11 rounded-xl bg-[#f0f2f5] flex items-center gap-3 px-4 text-[#667781]">
+    <div className="p-3 border-b border-[var(--chat-list-divider)] bg-[var(--chat-list-bg)]">
+      <div className="h-11 rounded-xl bg-[var(--chat-search-bg)] flex items-center gap-3 px-4 text-[var(--chat-text-secondary)]">
         <Search size={16} />
         <input
-          className="bg-transparent outline-none border-none w-full text-sm text-[#111b21]"
+          className="chat-search-input bg-transparent outline-none border-none w-full text-sm text-[var(--chat-text-primary)]"
           placeholder="Pesquisar ou começar uma nova conversa"
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -640,7 +699,7 @@ export default function ChatPage() {
     </div>
 
     {/* lista */}
-    <div className="flex-1 overflow-y-auto chat-scroll bg-white">
+    <div className="flex-1 overflow-y-auto chat-scroll bg-[var(--chat-list-bg)]">
       {loadingRooms ? (
         <div className="flex justify-center py-10">
           <Spinner />
@@ -668,7 +727,7 @@ export default function ChatPage() {
           )}
 
           {groupRooms.length > 0 && (
-            <div className="border-t border-[#f0f2f5]">
+            <div className="border-t border-[var(--chat-list-divider)]">
               {groupRooms.map(room => (
                 <RoomItem
                   key={room.id}
@@ -698,7 +757,7 @@ export default function ChatPage() {
     style={{
       position: 'relative',
       zIndex: 1,
-      background: '#efeae2'
+      background: 'var(--chat-wallpaper)'
     }}
   >
     {!activeRoom ? (
@@ -709,22 +768,25 @@ export default function ChatPage() {
         <div
           className="flex items-center gap-3 px-3 md:px-4 shrink-0"
           style={{
-            borderBottom: '1px solid #d1d7db',
+            borderBottom: '1px solid var(--chat-border)',
             minHeight: 64,
-            background: '#f0f2f5'
+            background: 'var(--chat-panel-bg)'
           }}
         >
           <button
             onClick={() => setShowSidebar(true)}
-            className="md:hidden w-10 h-10 rounded-full hover:bg-black/5 flex items-center justify-center text-[#54656f] shrink-0"
+            className="md:hidden w-10 h-10 rounded-full hover:bg-[var(--chat-list-hover)] flex items-center justify-center text-[var(--chat-icon)] shrink-0"
           >
             <ArrowLeft size={18} />
           </button>
 
           <div className="relative shrink-0">
             {activeIsGroup ? (
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-[#e9edef] flex items-center justify-center">
-                <Hash size={18} className="text-[#54656f]" />
+              <div
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center"
+                style={{ background: 'var(--chat-list-active)' }}
+              >
+                <Hash size={18} style={{ color: 'var(--chat-icon)' }} />
               </div>
             ) : (
               <Avatar name={activeRoomName} src={activeRoomAvatar} size="md" />
@@ -732,12 +794,15 @@ export default function ChatPage() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-[14px] md:text-[15px] font-medium truncate text-[#111b21]">
+            <p
+              className="text-[14px] md:text-[15px] font-medium truncate"
+              style={{ color: 'var(--chat-text-primary)' }}
+            >
               {activeRoomName}
             </p>
             <p
               className="text-[11px] md:text-[12px]"
-              style={{ color: activeIsGroup ? '#667781' : (isOtherOnline ? '#00a884' : '#667781') }}
+              style={{ color: (!activeIsGroup && isOtherOnline) ? 'var(--chat-accent)' : 'var(--chat-text-secondary)' }}
             >
               {activeIsGroup ? 'Grupo' : (isOtherOnline ? 'online' : 'offline')}
             </p>
@@ -750,7 +815,7 @@ export default function ChatPage() {
           style={{
             padding: window.innerWidth < 768 ? '14px 12px 10px' : '24px 32px 12px',
             position: 'relative',
-            background: '#efeae2'
+            background: 'var(--chat-wallpaper)'
           }}
         >
           <div
@@ -760,7 +825,7 @@ export default function ChatPage() {
               opacity: 0.12,
               pointerEvents: 'none',
               backgroundImage:
-                'radial-gradient(circle, rgba(0,0,0,0.06) 1px, transparent 1px)',
+                'radial-gradient(circle, var(--chat-wallpaper-dot) 1px, transparent 1px)',
               backgroundSize: '22px 22px'
             }}
           />
@@ -772,8 +837,12 @@ export default function ChatPage() {
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
-                <p className="text-sm font-semibold mb-1 text-[#41525d]">Início da conversa</p>
-                <p className="text-xs text-[#667781]">Diga olá para {activeRoomName} 👋</p>
+                <p className="text-sm font-semibold mb-1" style={{ color: 'var(--chat-text-primary)' }}>
+                  Início da conversa
+                </p>
+                <p className="text-xs" style={{ color: 'var(--chat-text-secondary)' }}>
+                  Diga olá para {activeRoomName} 👋
+                </p>
               </div>
             ) : (
               messages.map((msg, i) => {
@@ -814,8 +883,8 @@ export default function ChatPage() {
         <div
           className="shrink-0 relative"
           style={{
-            borderTop: '1px solid #d1d7db',
-            background: '#f0f2f5',
+            borderTop: '1px solid var(--chat-border)',
+            background: 'var(--chat-panel-bg)',
             padding: window.innerWidth < 768 ? '10px 10px 12px' : '12px 20px 16px'
           }}
         >
@@ -832,7 +901,7 @@ export default function ChatPage() {
               >
                 <EmojiPicker
                   onEmojiClick={handleEmojiClick}
-                  theme="light"
+                  theme={isDark ? 'dark' : 'light'}
                   width={window.innerWidth < 768 ? 290 : 300}
                   height={360}
                   searchPlaceholder="Pesquisar emoji..."
@@ -846,15 +915,15 @@ export default function ChatPage() {
               <button
                 type="button"
                 onClick={() => setShowEmoji(v => !v)}
-                className="w-10 h-10 rounded-full hover:bg-black/5 flex items-center justify-center text-[#54656f] shrink-0"
+                className="w-10 h-10 rounded-full hover:bg-[var(--chat-list-hover)] flex items-center justify-center text-[var(--chat-icon)] shrink-0"
               >
                 <Smile size={20} />
               </button>
 
-              <div className="flex-1 flex items-end rounded-2xl px-4 py-3 bg-white border border-[#d1d7db]">
+              <div className="flex-1 flex items-end rounded-2xl px-4 py-3 bg-[var(--chat-input-bg)] border border-[var(--chat-border)]">
                 <textarea
                   ref={inputRef}
-                  className="flex-1 bg-transparent outline-none resize-none text-sm leading-relaxed text-[#111b21]"
+                  className="chat-message-input flex-1 bg-transparent outline-none resize-none text-sm leading-relaxed text-[var(--chat-text-primary)]"
                   style={{ maxHeight: 120, minHeight: 24 }}
                   placeholder={`Mensagem para ${activeRoomName}...`}
                   value={content}
@@ -871,8 +940,8 @@ export default function ChatPage() {
                 className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition"
                 style={
                   content.trim()
-                    ? { background: '#00a884', color: '#fff' }
-                    : { background: '#dfe5e7', color: '#9aa7b0', cursor: 'not-allowed' }
+                    ? { background: 'var(--chat-accent)', color: 'var(--chat-accent-fg)' }
+                    : { background: 'var(--chat-send-off-bg)', color: 'var(--chat-send-off-fg)', cursor: 'not-allowed' }
                 }
               >
                 <Send size={18} />
