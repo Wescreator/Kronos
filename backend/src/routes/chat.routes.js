@@ -1,6 +1,7 @@
 const router      = require('express').Router()
 const chatService = require('../services/chat.service')
 const { authenticate } = require('../middlewares/auth.middleware')
+const idempotency = require('../middlewares/idempotency.middleware')
 const R           = require('../utils/response')
 
 router.use(authenticate)
@@ -14,7 +15,7 @@ router.get('/rooms', async (req, res) => {
 })
 
 // ── POST /chat/rooms ────────────────────────────────────────────
-router.post('/rooms', async (req, res) => {
+router.post('/rooms', idempotency(), async (req, res) => {
   try {
     const room = await chatService.createRoom(req.body, req.user.user_id, req.user.company_id)
     return R.created(res, { room })
@@ -40,7 +41,7 @@ router.get('/rooms/:id/messages', async (req, res) => {
 })
 
 // ── POST /chat/rooms/:id/messages ───────────────────────────────
-router.post('/rooms/:id/messages', async (req, res) => {
+router.post('/rooms/:id/messages', idempotency(), async (req, res) => {
   try {
     const message = await chatService.createMessage({
       roomId:  req.params.id,

@@ -47,7 +47,9 @@ export const getAllClients = (filters = {}) => {
 export const getClientById = (id) => api.get(`${BASE_URL}/${id}`)
 
 // Cria cliente/lead. Payload esperado: { name, email, phone?, status?, projectId?, userId? }
-export const createClient = (payload) => api.post(BASE_URL, buildPayload(payload))
+// `idempotencyKey` (opcional) — ver hooks/useIdempotencyKey.
+export const createClient = (payload, idempotencyKey) =>
+  api.post(BASE_URL, buildPayload(payload), idempotencyKey ? { idempotencyKey } : {})
 
 // Atualiza cliente/lead. Envia somente os campos definidos no payload.
 export const updateClient = (id, payload) => {

@@ -4,6 +4,7 @@ const postController = require('../controllers/post.controller')
 const { authenticateAllowClient } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const logger = require('../middlewares/logger.middleware')
+const idempotency = require('../middlewares/idempotency.middleware')
 const { uploadDriveFile } = require('../config/multer')
 
 // authenticateAllowClient decodifica o JWT aceitando scope 'company',
@@ -22,14 +23,14 @@ router.use(logger)
 
 router.get('/',                          postController.getFeed)
 router.get('/:id',                       postController.getById)
-router.post('/',                         uploadDriveFile.array('files', 10), postController.create)
+router.post('/',                         uploadDriveFile.array('files', 10), idempotency(), postController.create)
 router.patch('/:id',                     postController.update)
 router.delete('/:id',                    postController.remove)
 
-router.post('/:id/attachments',          uploadDriveFile.array('files', 10), postController.addAttachments)
+router.post('/:id/attachments',          uploadDriveFile.array('files', 10), idempotency(), postController.addAttachments)
 router.delete('/:id/attachments/:attachmentId', postController.removeAttachment)
 
-router.post('/:id/comments',             uploadDriveFile.array('files', 10), postController.addComment)
+router.post('/:id/comments',             uploadDriveFile.array('files', 10), idempotency(), postController.addComment)
 router.delete('/:id/comments/:commentId', postController.removeComment)
 
 module.exports = router

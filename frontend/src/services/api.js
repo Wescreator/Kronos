@@ -42,6 +42,18 @@ api.interceptors.request.use((config) => {
     config.headers['X-Impersonate-Company'] = impersonateCompany
   }
 
+  /* Idempotência: quem chama passa `idempotencyKey` nas opções da requisição
+   * (ver hooks/useIdempotencyKey). A chave representa UMA INTENÇÃO do usuário
+   * — é gerada ao ABRIR o formulário, não a cada clique — então repetições da
+   * mesma requisição (duplo clique, outra aba, retry) são reconhecidas pelo
+   * backend e não criam um segundo registro.
+   *
+   * Não é gerada aqui de propósito: uma chave criada por requisição seria
+   * diferente a cada envio e não protegeria absolutamente nada. */
+  if (config.idempotencyKey) {
+    config.headers['Idempotency-Key'] = config.idempotencyKey
+  }
+
   return config
 })
 

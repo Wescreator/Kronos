@@ -83,11 +83,9 @@ const create = async (data, userId, companyId) => {
     items, companyId, data.project_area || 0
   )
 
-  const budgetNumber = await budgetRepo.nextBudgetNumber(companyId)
-
-  const budget = await budgetRepo.create({
+  // Número + cabeçalho + itens numa única transação (ver createWithItems).
+  const budget = await budgetRepo.createWithItems({
     companyId,
-    budgetNumber,
     title: data.title.trim(),
     clientId: data.client_id || null,
     clientName: data.client_name || null,
@@ -95,16 +93,15 @@ const create = async (data, userId, companyId) => {
     fixedFeesTotal: data.fixed_fees_total || 0,
     finalNotes: data.final_notes || null,
     createdBy: userId,
+    items: resolvedItems.map(it => ({
+      customLabel: it.customLabel,
+      budgetLevelId: it.budgetLevelId || null,
+      areaUsed: it.areaUsed ?? null,
+      rateSnapshotValue: it.rateValue,
+      rateType: it.rateType,
+      lineTotal: it.lineTotal,
+    })),
   })
-
-  await budgetRepo.replaceItems(budget.id, companyId, resolvedItems.map(it => ({
-    customLabel: it.customLabel,
-    budgetLevelId: it.budgetLevelId || null,
-    areaUsed: it.areaUsed ?? null,
-    rateSnapshotValue: it.rateValue,
-    rateType: it.rateType,
-    lineTotal: it.lineTotal,
-  })))
 
   return budgetRepo.findById(budget.id, companyId)
 }
@@ -146,6 +143,14 @@ const update = async (id, data, companyId) => {
 const finalize = async (id, companyId, userId) => {
   const budget = await budgetRepo.findById(id, companyId)
   if (!budget) throw new AppError(404, 'Orçamento não encontrado')
+
+  // Finalizar é uma transição de estado única (draft → finalized), não uma
+  // ação repetível: sem esta guarda, chamar finalize duas vezes (duas abas,
+  // retry após timeout aparente) gravava DOIS snapshots imutáveis para a
+  // mesma intenção, corrompendo o histórico de versões.
+  if (budget.status === 'finalized') {
+    throw new AppError(400, 'Orçamento já finalizado. Use o recálculo para gerar uma nova versão.')
+  }
 
   const payload = buildSnapshotPayload(budget)
 

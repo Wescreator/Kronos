@@ -6,6 +6,7 @@ const { runWithTenant } = require('../config/tenantContext')
 // (confirmado pelo uso em project.routes.js). uploadImageMemory usa
 // memoryStorage — necessario para o upload direto ao R2 (sem disco).
 const { uploadImageMemory } = require('../config/multer')
+const idempotency = require('../middlewares/idempotency.middleware')
 
 /**
  * Rotas de plataforma (super admin).
@@ -48,7 +49,7 @@ router.param('id', (req, res, next, companyId) => {
 
 // Empresas
 router.get('/companies',              ctrl.listCompanies)
-router.post('/companies',             ctrl.createCompany)
+router.post('/companies',             idempotency(), ctrl.createCompany)
 router.patch('/companies/:id/active', ctrl.setCompanyActive)
 router.patch('/companies/:id',        ctrl.updateCompany)
 router.post('/companies/:id/logo',    uploadImageMemory.single('logo'), ctrl.uploadCompanyLogo)
@@ -57,7 +58,7 @@ router.get('/companies/:id/stats',   ctrl.getCompanyStats)
 
 // Usuarios de uma empresa
 router.get('/companies/:id/users',             ctrl.listCompanyUsers)
-router.post('/companies/:id/users',            ctrl.createCompanyUser)
+router.post('/companies/:id/users',            idempotency(), ctrl.createCompanyUser)
 router.patch('/companies/:id/users/:userId',   ctrl.updateCompanyUser)
 router.delete('/companies/:id/users/:userId',  ctrl.deleteCompanyUser)
 
@@ -67,7 +68,7 @@ router.get('/companies/:id/projects', ctrl.listCompanyProjects)
 
 // NOVO — Clientes com acesso ao portal de postagens
 router.get('/companies/:id/clients',                     ctrl.listCompanyClients)
-router.post('/companies/:id/clients/:clientId/access',   ctrl.createClientPortalAccess)
+router.post('/companies/:id/clients/:clientId/access',   idempotency(), ctrl.createClientPortalAccess)
 router.patch('/companies/:id/clients/:clientId/access',  ctrl.updateClientPortalAccess)
 router.delete('/companies/:id/clients/:clientId/access', ctrl.revokeClientPortalAccess)
 

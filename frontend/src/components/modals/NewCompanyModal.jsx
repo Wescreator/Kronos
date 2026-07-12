@@ -2,6 +2,7 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import PortalModal from '../ui/PortalModal'
 import platformService from '../../services/platform.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 // ⚠️ Valores de plano assumidos — ajuste para os planos reais do Kronos.
 const PLAN_OPTIONS = [
@@ -17,6 +18,9 @@ export default function NewCompanyModal({ open, onClose, onCreated }) {
   const [form,   setForm]   = useState(EMPTY)
   const [saving, setSaving] = useState(false)
 
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
+
   const set = (key, val) => setForm(prev => ({ ...prev, [key]: val }))
 
   const handleSubmit = async (e) => {
@@ -24,9 +28,10 @@ export default function NewCompanyModal({ open, onClose, onCreated }) {
     if (!form.name.trim()) return toast.error('Informe o nome da empresa')
     setSaving(true)
     try {
-      const created = await platformService.createCompany(form)
+      const created = await platformService.createCompany(form, idemKey)
       toast.success('Empresa criada')
       setForm(EMPTY)
+      renewIdemKey() // intenção concluída
       onCreated(created)
       onClose()
     } catch (err) {

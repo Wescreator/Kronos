@@ -8,6 +8,8 @@ const {
   authorize
 } = require('../middlewares/auth.middleware')
 
+const idempotency = require('../middlewares/idempotency.middleware')
+
 // Rotas especiais
 router.get(
   '/month',
@@ -49,6 +51,7 @@ router.post(
   '/',
   authenticate,
   authorize('owner', 'admin', 'manager'),
+  idempotency(),
   ctrl.create
 )
 

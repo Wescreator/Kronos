@@ -19,10 +19,13 @@ const notify = async ({ companyId, userId, type, title, body, link }) => {
 // Cria só se ainda não existir notificação igual (mesmo user/type/link).
 // Usar exclusivamente para o cron de vencidos, que roda diariamente sobre
 // o mesmo item enquanto ele continuar em aberto.
+//
+// A unicidade é garantida pelo índice parcial no banco (ON CONFLICT DO NOTHING),
+// não por um SELECT prévio: o check-then-insert anterior duplicaria as
+// notificações assim que houvesse mais de uma instância rodando o cron.
 const notifyIfNew = async ({ companyId, userId, type, title, body, link }) => {
-  const already = await repo.existsForEntity({ companyId, userId, type, link })
-  if (already) return null
-  const notification = await repo.create({ companyId, userId, type, title, body, link })
+  const notification = await repo.createIfNew({ companyId, userId, type, title, body, link })
+  if (!notification) return null // já existia — nada a notificar
   pushRealtime(userId, notification)
   return notification
 }

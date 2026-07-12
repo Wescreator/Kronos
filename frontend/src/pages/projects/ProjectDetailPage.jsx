@@ -27,6 +27,7 @@ import api                 from '../../services/api'
 import useAuthStore        from '../../store/authStore'
 import { can }             from '../../utils/permissions'
 import { canManageItem, hasFullAccess } from '../../utils/projectItemPermissions'
+import useIdempotencyKey   from '../../hooks/useIdempotencyKey'
 
 const TABS = [
   { label: 'Etapas',     icon: CheckSquare },
@@ -164,6 +165,10 @@ function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canMa
   const [uploading,    setUploading]    = useState(false)
   const fileRef = useRef()
 
+  // Uma chave por comentário e uma por anexo — renovadas a cada sucesso.
+  const [commentIdemKey, renewCommentIdemKey] = useIdempotencyKey(true)
+  const [attachIdemKey,  renewAttachIdemKey]  = useIdempotencyKey(true)
+
   const canDeletePhase = canManageItem(phase.created_by, user)
 
   const handleToggle = async () => {
@@ -191,7 +196,8 @@ function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canMa
     if (!newComment.trim()) return
     setAddingComment(true)
     try {
-      await addPhaseComment(projectId, stageId, phase.id, newComment.trim())
+      await addPhaseComment(projectId, stageId, phase.id, newComment.trim(), commentIdemKey)
+      renewCommentIdemKey()
       setNewComment('')
       onUpdate()
     } catch { toast.error('Erro ao adicionar comentário') }
@@ -203,7 +209,8 @@ function PhaseItem({ phase, index, projectId, stageId, onUpdate, onDelete, canMa
     if (!file) return
     setUploading(true)
     try {
-      await uploadPhaseAttachment(projectId, stageId, phase.id, file)
+      await uploadPhaseAttachment(projectId, stageId, phase.id, file, attachIdemKey)
+      renewAttachIdemKey()
       onUpdate()
       toast.success('Arquivo anexado')
     } catch (err) {
@@ -367,6 +374,9 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
   const [adding,       setAdding]       = useState(false)
   const [deletingPhaseId, setDeletingPhaseId] = useState(null)
 
+  // Uma chave por fase adicionada — renovada a cada sucesso.
+  const [phaseIdemKey, renewPhaseIdemKey] = useIdempotencyKey(showAddForm)
+
   const completedCount = stage.phases?.filter(p => p.is_completed).length || 0
   const totalCount     = stage.phases?.length || 0
   const canDeleteStage  = canManageItem(stage.created_by, user)
@@ -388,7 +398,8 @@ function StageItem({ stage, index, projectId, onUpdate, onDeleteStage, canManage
     if (!newPhaseName.trim()) return toast.error('Informe o nome da fase')
     setAdding(true)
     try {
-      await addPhase(projectId, stage.id, { phase_name: newPhaseName.trim() })
+      await addPhase(projectId, stage.id, { phase_name: newPhaseName.trim() }, phaseIdemKey)
+      renewPhaseIdemKey()
       setNewPhaseName('')
       setShowAddForm(false)
       onUpdate()
@@ -566,6 +577,16 @@ export default function ProjectDetailPage() {
   const [loading,       setLoading]      = useState(true)
   const [tab,           setTab]          = useState(0)
   const [editing,       setEditing]      = useState(false)
+  const [savingProject, setSavingProject]= useState(false)
+  const [uploadingCover,setUploadingCover]= useState(false)
+  const [addingMemberId,setAddingMemberId]= useState(null)
+
+  // Chaves de idempotência (uma por ação, renovadas a cada sucesso) — ver
+  // hooks/useIdempotencyKey. Sem elas, um duplo clique nestes formulários
+  // inline criaria duas etapas / dois arquivos / duas capas.
+  const [stageIdemKey, renewStageIdemKey] = useIdempotencyKey(true)
+  const [fileIdemKey,  renewFileIdemKey]  = useIdempotencyKey(true)
+  const [coverIdemKey, renewCoverIdemKey] = useIdempotencyKey(true)
   const [form,          setForm]         = useState({})
   const [clients,       setClients]      = useState([])
   const [clientId,      setClientId]     = useState('')   // cliente cadastrado vinculado a este projeto
@@ -636,7 +657,13 @@ export default function ProjectDetailPage() {
     if (c) setForm(f => ({ ...f, client: c.name }))
   }
 
+  // Trava de duplo envio: além de disparar o PUT duas vezes, um segundo
+  // clique durante o salvamento fazia o backend gravar DUAS linhas idênticas
+  // no histórico de status do projeto (project.service.update compara o
+  // status antigo, que ambas as requisições leem igual).
   const handleSave = async () => {
+    if (savingProject) return
+    setSavingProject(true)
     try {
       const { data } = await updateProject(id, form)
 
@@ -663,21 +690,32 @@ export default function ProjectDetailPage() {
       setEditing(false)
       toast.success('Projeto atualizado')
     } catch { toast.error('Erro ao salvar') }
+    finally { setSavingProject(false) }
   }
 
   const handleCoverUpload = async (e) => {
     const file = e.target.files[0]
     if (!file) return
+    if (uploadingCover) return
+    setUploadingCover(true)
     try {
-      const { data } = await uploadCover(id, file)
+      const { data } = await uploadCover(id, file, coverIdemKey)
+      renewCoverIdemKey()
       setProject(data.project)
       toast.success('Capa atualizada')
     } catch { toast.error('Erro ao enviar capa') }
+    finally {
+      setUploadingCover(false)
+      e.target.value = '' // permite reenviar o MESMO arquivo depois
+    }
   }
 
   const handleAddMember = async (userId) => {
+    if (addingMemberId) return
+    setAddingMemberId(userId)
     try { await addMember(id, userId); toast.success('Membro adicionado'); load() }
     catch { toast.error('Erro ao adicionar membro') }
+    finally { setAddingMemberId(null) }
   }
 
   const handleRemoveMember = async (userId) => {
@@ -692,7 +730,8 @@ export default function ProjectDetailPage() {
     try {
       const fd = new FormData()
       fd.append('file', file)
-      await api.post(`/projects/${id}/files`, fd)
+      await api.post(`/projects/${id}/files`, fd, { idempotencyKey: fileIdemKey })
+      renewFileIdemKey()
       toast.success('Arquivo enviado!')
       loadFiles()
     } catch (err) {
@@ -719,7 +758,8 @@ export default function ProjectDetailPage() {
     if (!newStageName.trim()) return toast.error('Informe o nome da etapa')
     setAddingStage(true)
     try {
-      await createStage(id, { stage_name: newStageName.trim() })
+      await createStage(id, { stage_name: newStageName.trim() }, stageIdemKey)
+      renewStageIdemKey()
       setNewStageName('')
       setShowAddStageForm(false)
       reloadStages()
@@ -810,7 +850,7 @@ export default function ProjectDetailPage() {
             style={{ background: 'rgba(55,65,81,0.85)', border: '1px solid rgba(31,41,55,0.6)' }}>
             <Upload size={15} /> Alterar capa
           </div>
-          <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+          <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={uploadingCover} />
         </label>
       </div>
 
@@ -843,8 +883,10 @@ export default function ProjectDetailPage() {
           {canEdit && (
             editing ? (
               <>
-                <button onClick={handleSave} className="btn-primary"><Save size={14} /> Salvar</button>
-                <button onClick={() => setEditing(false)} className="btn-secondary">Cancelar</button>
+                <button onClick={handleSave} disabled={savingProject} className="btn-primary">
+                  <Save size={14} /> {savingProject ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button onClick={() => setEditing(false)} disabled={savingProject} className="btn-secondary">Cancelar</button>
               </>
             ) : (
               <button onClick={() => setEditing(true)} className="btn-secondary">
@@ -1016,6 +1058,7 @@ export default function ProjectDetailPage() {
                     {nonMembers.map(u => (
                       <button key={u.id}
                         onClick={() => { handleAddMember(u.id); setShowAddMember(false) }}
+                        disabled={!!addingMemberId}
                         className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
                         style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-subtle)' }}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover)'; e.currentTarget.style.color = 'var(--brand-slate)' }}

@@ -47,13 +47,6 @@ const create = async (data, userId, companyId) => {
 }
 
 const update = async (id, data, userId, companyId) => {
-  const project = await projectRepo.findById(id, companyId)
-  if (!project) throw new AppError(404, 'Projeto não encontrado')
-
-  if (data.status && data.status !== project.status) {
-    await projectRepo.addStatusHistory(id, companyId, project.status, data.status, userId, data.status_note)
-  }
-
   const fields = {}
   const allowedFields = [
     'title', 'client', 'description', 'budget', 'status',
@@ -63,7 +56,15 @@ const update = async (id, data, userId, companyId) => {
     if (data[field] !== undefined) fields[field] = data[field]
   }
 
-  return projectRepo.update(id, companyId, fields)
+  // A comparação do status e o registro do histórico acontecem sob lock dentro
+  // do repositório — ler o status aqui fora abriria a janela de corrida que
+  // duplicava o histórico quando duas requisições chegavam juntas.
+  const updated = await projectRepo.updateWithStatusHistory(
+    id, companyId, fields, userId, data.status_note
+  )
+  if (!updated) throw new AppError(404, 'Projeto não encontrado')
+
+  return updated
 }
 
 const updateCover = async (id, fileUrl, companyId) => {
@@ -85,7 +86,12 @@ const addMember = async (projectId, userId, companyId) => {
   const link = await companyRepo.findCompanyUser(companyId, userId)
   if (!link) throw new AppError(400, 'Usuário não pertence a esta empresa')
 
-  await projectRepo.addMember(projectId, userId)
+  const { created } = await projectRepo.addMember(projectId, userId)
+
+  // Só notifica quando o vínculo é NOVO. Repetir a requisição (duplo clique,
+  // retry, outra aba) agora é inócuo em vez de gerar 500 ou notificação
+  // duplicada — o resultado é o mesmo do primeiro envio.
+  if (!created) return
 
   await notificationService.notify({
     companyId,

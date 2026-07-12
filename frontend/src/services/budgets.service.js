@@ -1,9 +1,12 @@
 import api from './api'
 
+// Chave de idempotência opcional nas criações — ver hooks/useIdempotencyKey.
+const idem = (key) => (key ? { idempotencyKey: key } : {})
+
 // ── Orçamentos ──────────────────────────────────────────────────
 export const getBudgets       = (params) => api.get('/budgets', { params })
 export const getBudget        = (id)     => api.get(`/budgets/${id}`)
-export const createBudget     = (data)   => api.post('/budgets', data)
+export const createBudget     = (data, k)=> api.post('/budgets', data, idem(k))
 export const updateBudget     = (id, data) => api.put(`/budgets/${id}`, data)
 export const deleteBudget     = (id)     => api.delete(`/budgets/${id}`)
 
@@ -11,10 +14,10 @@ export const deleteBudget     = (id)     => api.delete(`/budgets/${id}`)
 export const calculateBudgetPreview = (data) => api.post('/budgets/calculate-preview', data)
 
 // ── Ciclo de vida ────────────────────────────────────────────────
-export const finalizeBudget         = (id) => api.post(`/budgets/${id}/finalize`)
+export const finalizeBudget         = (id, k) => api.post(`/budgets/${id}/finalize`, null, idem(k))
 export const checkBudgetDivergence  = (id) => api.get(`/budgets/${id}/divergence`)
 export const applyCurrentRates      = (id) => api.post(`/budgets/${id}/apply-current-rates`)
-export const recalculateBudget      = (id) => api.post(`/budgets/${id}/recalculate`)
+export const recalculateBudget      = (id, k) => api.post(`/budgets/${id}/recalculate`, null, idem(k))
 export const getBudgetLatestSnapshot = (id) => api.get(`/budgets/${id}/snapshot/latest`)
 
 // ── Configuração (Títulos / Níveis / Taxas) ──────────────────────

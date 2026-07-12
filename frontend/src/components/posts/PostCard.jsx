@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast'
 import Avatar from '../ui/Avatar'
 import { canManagePost } from '../../utils/permissions'
 import { formatDateTime } from '../../utils/format'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 const isImage = (mimeType) => (mimeType || '').startsWith('image/')
 
@@ -109,9 +110,16 @@ export default function PostCard({
   const [editing, setEditing] = useState(false)
   const [editText, setEditText] = useState(post.content || '')
   const [saving, setSaving] = useState(false)
-  
+  const [attaching, setAttaching] = useState(false)
+
   const [menuOpen, setMenuOpen] = useState(false)
   const triggerRef = useRef(null)
+
+  // Chaves de idempotência: uma por comentário enviado, outra por lote de
+  // anexos. Renovadas após cada sucesso — o usuário continua livre para enviar
+  // dois comentários idênticos de propósito. Ver hooks/useIdempotencyKey.
+  const [commentIdemKey, renewCommentIdemKey] = useIdempotencyKey(showComments)
+  const [attachIdemKey,  renewAttachIdemKey]  = useIdempotencyKey(menuOpen)
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -142,9 +150,10 @@ export default function PostCard({
     if (!commentText.trim() && commentFiles.length === 0) return
     setSendingComment(true)
     try {
-      await onAddComment(post.id, { content: commentText, files: commentFiles })
+      await onAddComment(post.id, { content: commentText, files: commentFiles }, commentIdemKey)
       setCommentText('')
       setCommentFiles([])
+      renewCommentIdemKey() // comentário enviado — libera o próximo
     } catch {
       toast.error('Erro ao enviar comentário')
     } finally {
@@ -152,15 +161,22 @@ export default function PostCard({
     }
   }
 
+  // Trava de duplo envio: cada upload gera uma object_key nova (UUID) no R2,
+  // então reenviar o MESMO arquivo cria um segundo objeto e um segundo anexo
+  // — não há deduplicação por conteúdo do lado do servidor.
   const handleAttachMore = async (e) => {
     const files = Array.from(e.target.files || [])
     if (!files.length) return
+    if (attaching) return
+    setAttaching(true)
     try {
-      await onAddAttachments(post.id, files)
+      await onAddAttachments(post.id, files, attachIdemKey)
       toast.success('Anexo(s) adicionado(s)')
+      renewAttachIdemKey() // lote enviado — libera o próximo
     } catch {
       toast.error('Erro ao anexar arquivo')
     } finally {
+      setAttaching(false)
       e.target.value = ''
     }
   }
@@ -208,8 +224,8 @@ export default function PostCard({
                   <Pencil size={13} /> Editar
                 </button>
                 <label className="w-full flex items-center gap-2 px-3.5 py-2 text-xs font-medium hover:bg-hover cursor-pointer" style={{ color: 'var(--text-primary)' }}>
-                  <Paperclip size={13} /> Anexar arquivo
-                  <input type="file" multiple className="hidden" onChange={(e) => { handleAttachMore(e); setMenuOpen(false) }} />
+                  <Paperclip size={13} /> {attaching ? 'Enviando...' : 'Anexar arquivo'}
+                  <input type="file" multiple className="hidden" disabled={attaching} onChange={(e) => { handleAttachMore(e); setMenuOpen(false) }} />
                 </label>
                 <button
                   onClick={() => { setMenuOpen(false); onDeletePost(post.id) }}

@@ -10,18 +10,30 @@ const getRooms = async (userId) => {
 }
 
 const createRoom = async ({ name, type = 'private', members = [] }, createdBy, companyId) => {
-  const room = await chatRepo.createRoom({ name, type, createdBy, companyId })
-
-  const allMembers = [...new Set([createdBy, ...members])]
-  for (const uid of allMembers) {
-    // O criador entra sempre; demais membros precisam ser da mesma empresa
-    if (uid !== createdBy) {
-      const link = await companyRepo.findCompanyUser(companyId, uid)
-      if (!link) continue
-    }
-    await chatRepo.addMember(room.id, uid)
+  // Valida os membros ANTES de criar qualquer coisa: o criador entra sempre;
+  // os demais precisam pertencer à mesma empresa.
+  const requested = [...new Set(members)].filter(uid => uid !== createdBy)
+  const validMembers = []
+  for (const uid of requested) {
+    const link = await companyRepo.findCompanyUser(companyId, uid)
+    if (link) validMembers.push(uid)
   }
-  return room
+
+  // Conversa privada entre duas pessoas é uma IDENTIDADE, não um registro que
+  // faça sentido duplicar: se A e B já conversam, reabrir a conversa existente
+  // em vez de criar uma segunda sala (onde metade das mensagens se perderia).
+  if (type === 'private' && validMembers.length === 1) {
+    const existing = await chatRepo.findPrivateRoomBetween(companyId, createdBy, validMembers[0])
+    if (existing) return existing
+  }
+
+  return chatRepo.createRoomWithMembers({
+    name,
+    type,
+    createdBy,
+    companyId,
+    memberIds: [createdBy, ...validMembers],
+  })
 }
 
 const deleteRoom = async (roomId, userId, userRole) => {

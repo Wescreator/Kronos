@@ -1,14 +1,7 @@
 const pool = require('../config/database')
 
 // ── Gerar número de proposta ──────────────────────────────────
-const nextProposalNumber = async () => {
-  const year = new Date().getFullYear()
-  const { rows } = await pool.query(
-    'SELECT next_proposal_number($1) AS proposal_number',
-    [year]
-  )
-  return rows[0].proposal_number
-}
+const counterRepo = require('./documentCounter.repository')
 
 // ── Buscar todas as propostas ─────────────────────────────────
 const findAll = async ({ companyId, limit, offset, search }) => {
@@ -98,24 +91,54 @@ const findById = async (id, companyId) => {
   }
 }
 
-// ── Criar proposta ────────────────────────────────────────────
-const create = async ({
-  companyId, proposalNumber, title, clientId, clientName, serviceObject,
-  finalNotes, serviceDeadline, validUntil, paymentMessage, createdBy
+/**
+ * Cria a proposta com número, cabeçalho e filhos (escopo, serviços, condições
+ * de pagamento) numa ÚNICA transação.
+ *
+ * O número vem do contador atômico por empresa, DENTRO da transação. Substitui
+ * a função next_proposal_number() do banco, que fazia MAX(...)+1 sem lock
+ * (corrida) e ignorava o company_id — numerando globalmente entre tenants,
+ * apesar de o UNIQUE ser (company_id, proposal_number).
+ */
+const createWithChildren = async ({
+  companyId, title, clientId, clientName, serviceObject,
+  finalNotes, serviceDeadline, validUntil, paymentMessage, createdBy,
+  scopeItems = [], services = [], paymentTerms = [],
 }) => {
-  const { rows } = await pool.query(
-    `INSERT INTO proposals
-       (company_id, proposal_number, title, client_id, client_name, service_object,
-        final_notes, service_deadline, valid_until, payment_message, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-     RETURNING *`,
-    [
-      companyId, proposalNumber, title, clientId || null, clientName || null,
-      serviceObject, finalNotes || null, serviceDeadline || null,
-      validUntil || null, paymentMessage || null, createdBy
-    ]
-  )
-  return rows[0]
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const proposalNumber = await counterRepo.nextProposalNumber(client, companyId)
+
+    const { rows } = await client.query(
+      `INSERT INTO proposals
+         (company_id, proposal_number, title, client_id, client_name, service_object,
+          final_notes, service_deadline, valid_until, payment_message, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       RETURNING *`,
+      [
+        companyId, proposalNumber, title, clientId || null, clientName || null,
+        serviceObject, finalNotes || null, serviceDeadline || null,
+        validUntil || null, paymentMessage || null, createdBy
+      ]
+    )
+
+    const proposal = rows[0]
+
+    await replaceScopeItems(proposal.id, companyId, scopeItems, client)
+    await replaceServices(proposal.id, companyId, services, client)
+    await replacePaymentTerms(proposal.id, companyId, paymentTerms, client)
+
+    await client.query('COMMIT')
+    return proposal
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
 
 // ── Atualizar proposta ────────────────────────────────────────
@@ -138,11 +161,15 @@ const remove = async (id, companyId) => {
   await pool.query('DELETE FROM proposals WHERE id = $1 AND company_id = $2', [id, companyId])
 }
 
+// `db` permite reaproveitar estas funções dentro de uma transação (recebendo o
+// client) ou de forma avulsa (usando o pool) — pool.query e client.query têm a
+// mesma assinatura.
+
 // ── SCOPE ITEMS ───────────────────────────────────────────────
-const replaceScopeItems = async (proposalId, companyId, items) => {
-  await pool.query('DELETE FROM proposal_scope_items WHERE proposal_id = $1', [proposalId])
+const replaceScopeItems = async (proposalId, companyId, items, db = pool) => {
+  await db.query('DELETE FROM proposal_scope_items WHERE proposal_id = $1', [proposalId])
   for (let i = 0; i < items.length; i++) {
-    await pool.query(
+    await db.query(
       'INSERT INTO proposal_scope_items (proposal_id, company_id, description, order_index) VALUES ($1,$2,$3,$4)',
       [proposalId, companyId, items[i].description, i]
     )
@@ -150,10 +177,10 @@ const replaceScopeItems = async (proposalId, companyId, items) => {
 }
 
 // ── SERVICES ──────────────────────────────────────────────────
-const replaceServices = async (proposalId, companyId, services) => {
-  await pool.query('DELETE FROM proposal_services WHERE proposal_id = $1', [proposalId])
+const replaceServices = async (proposalId, companyId, services, db = pool) => {
+  await db.query('DELETE FROM proposal_services WHERE proposal_id = $1', [proposalId])
   for (let i = 0; i < services.length; i++) {
-    await pool.query(
+    await db.query(
       `INSERT INTO proposal_services (proposal_id, company_id, description, amount, deadline_days, order_index)
        VALUES ($1,$2,$3,$4,$5,$6)`,
       [proposalId, companyId, services[i].description, services[i].amount || 0, services[i].deadline_days || 0, i]
@@ -162,10 +189,10 @@ const replaceServices = async (proposalId, companyId, services) => {
 }
 
 // ── PAYMENT TERMS ─────────────────────────────────────────────
-const replacePaymentTerms = async (proposalId, companyId, terms) => {
-  await pool.query('DELETE FROM proposal_payment_terms WHERE proposal_id = $1', [proposalId])
+const replacePaymentTerms = async (proposalId, companyId, terms, db = pool) => {
+  await db.query('DELETE FROM proposal_payment_terms WHERE proposal_id = $1', [proposalId])
   for (let i = 0; i < terms.length; i++) {
-    await pool.query(
+    await db.query(
       'INSERT INTO proposal_payment_terms (proposal_id, company_id, description, amount, order_index) VALUES ($1,$2,$3,$4,$5)',
       [proposalId, companyId, terms[i].description, terms[i].amount || 0, i]
     )
@@ -173,8 +200,7 @@ const replacePaymentTerms = async (proposalId, companyId, terms) => {
 }
 
 module.exports = {
-  nextProposalNumber,
   findAll, findById,
-  create, update, remove,
+  createWithChildren, update, remove,
   replaceScopeItems, replaceServices, replacePaymentTerms,
 }

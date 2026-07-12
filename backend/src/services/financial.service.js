@@ -23,41 +23,28 @@ const getExpenses = async (query, companyId) => {
 const createExpense = async (data, userId, companyId) => {
   const isRecurring = data.is_recurring === true || data.is_recurring === 'true'
 
-  const expense = await repo.createExpense({
-    companyId,
-    title:             data.title,
-    description:       data.description,
-    projectId:         data.project_id  || null,
-    categoryId:        data.category_id || null,
-    amount:            data.amount,
-    dueDate:           data.due_date,
-    isRecurring:       isRecurring,
-    recurringOriginId: null,
-    createdBy:         userId,
-  })
-
+  // Datas das ocorrências futuras (a despesa-mãe já cobre o mês base).
+  // A criação da mãe + ocorrências é atômica no repositório.
+  const occurrenceDates = []
   if (isRecurring) {
-    const occurrences = []
     const baseDate = new Date(data.due_date)
-
     for (let i = 1; i <= RECURRING_MONTHS_AHEAD; i++) {
-      const nextDate = addMonths(baseDate, i)
-      occurrences.push({
-        title:             data.title,
-        description:       data.description,
-        projectId:         data.project_id  || null,
-        categoryId:        data.category_id || null,
-        amount:            data.amount,
-        dueDate:           format(nextDate, 'yyyy-MM-dd'),
-        recurringOriginId: expense.id,
-        createdBy:         userId,
-      })
+      occurrenceDates.push(format(addMonths(baseDate, i), 'yyyy-MM-dd'))
     }
-
-    await repo.createRecurringOccurrences(companyId, occurrences)
   }
 
-  return expense
+  return await repo.createExpenseWithOccurrences({
+    companyId,
+    title:       data.title,
+    description: data.description,
+    projectId:   data.project_id  || null,
+    categoryId:  data.category_id || null,
+    amount:      data.amount,
+    dueDate:     data.due_date,
+    isRecurring,
+    createdBy:   userId,
+    occurrenceDates,
+  })
 }
 
 const confirmPayment = async (id, paidDate, companyId) => {
@@ -98,17 +85,6 @@ const getRevenues = async (query, companyId) => {
 const createRevenue = async (data, userId, companyId) => {
   const isArrayFormat = Array.isArray(data.installments_list)
 
-  const revenue = await repo.createRevenue({
-    companyId,
-    title:        data.title,
-    client:       data.client,
-    projectId:    data.project_id  || null,
-    totalAmount:  data.total_amount,
-    installments: isArrayFormat ? data.installments_list.length : (data.installments || 1),
-    description:  data.description,
-    createdBy:    userId,
-  })
-
   let installmentsList = []
 
   if (isArrayFormat) {
@@ -130,8 +106,18 @@ const createRevenue = async (data, userId, companyId) => {
     }
   }
 
-  await repo.createInstallments(companyId, revenue.id, installmentsList)
-  return revenue
+  // Receita + parcelas numa única transação: nunca uma receita sem parcelas.
+  return await repo.createRevenueWithInstallments({
+    companyId,
+    title:        data.title,
+    client:       data.client,
+    projectId:    data.project_id  || null,
+    totalAmount:  data.total_amount,
+    installments: installmentsList.length,
+    description:  data.description,
+    createdBy:    userId,
+    installmentsList,
+  })
 }
 
 const confirmReceipt = async (installmentId, receivedDate, companyId) => {

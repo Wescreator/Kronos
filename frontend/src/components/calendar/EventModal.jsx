@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import PortalModal from '../ui/PortalModal';
+import useIdempotencyKey from '../../hooks/useIdempotencyKey';
 
 const STATUS_OPTIONS = [
   { value: 'scheduled',   label: 'Agendado' },
@@ -48,6 +49,10 @@ export default function EventModal({ event, defaultDate, users = [], onSave, onC
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
+  // O modal é montado a cada abertura, então uma chave por montagem já
+  // representa exatamente uma intenção. Ver hooks/useIdempotencyKey.
+  const [idemKey] = useIdempotencyKey(true);
+
   useEffect(() => {
     if (event) {
       setForm({
@@ -84,7 +89,7 @@ export default function EventModal({ event, defaultDate, users = [], onSave, onC
         color:       form.color,
         status:      form.status,
         user_id:     form.user_id || null,
-      });
+      }, idemKey);
       onClose();
     } catch (e) {
       setError(e.message);

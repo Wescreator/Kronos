@@ -10,6 +10,7 @@ import Avatar from '../../components/ui/Avatar'
 import NewChatModal from '../../components/modals/NewChatModal'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import Spinner from '../../components/ui/Spinner'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
 
@@ -282,6 +283,9 @@ export default function ChatPage() {
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [content, setContent] = useState('')
 
+  // Chave de idempotência da mensagem em digitação — ver useIdempotencyKey.
+  const [msgIdemKey, renewMsgIdemKey] = useIdempotencyKey(true)
+
   const messagesEnd = useRef(null)
   const inputRef = useRef(null)
   const emojiRef = useRef(null)
@@ -422,7 +426,11 @@ export default function ChatPage() {
     clearTimeout(sendTypingTimer.current)
 
     try {
-      const { data } = await sendMessage(activeRoom.id, { content: text })
+      // Chave renovada a cada envio: protege a MESMA mensagem contra reenvio
+      // duplicado (retry/reconexão), sem impedir o usuário de mandar a mesma
+      // frase duas vezes de propósito.
+      const { data } = await sendMessage(activeRoom.id, { content: text }, msgIdemKey)
+      renewMsgIdemKey()
       setMessages(prev => {
         if (prev.some(m => m.id === data.message?.id)) return prev
         return data.message ? [...prev, data.message] : prev
@@ -468,8 +476,8 @@ export default function ChatPage() {
     }, 0)
   }
 
-  const handleCreateRoom = async (payload) => {
-    const { data } = await createRoom(payload)
+  const handleCreateRoom = async (payload, idemKey) => {
+    const { data } = await createRoom(payload, idemKey)
     setRooms(prev => {
       if (prev.some(r => r.id === data.room.id)) return prev
       return [data.room, ...prev]

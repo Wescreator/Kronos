@@ -138,16 +138,31 @@ const updateCover = async (id, companyId, coverUrl) => {
   return rows[0]
 }
 
+// Idempotente. A tabela tem UNIQUE (project_id, user_id): sem o ON CONFLICT,
+// um duplo clique em "Adicionar membro" adicionava o membro na 1ª requisição
+// e estourava 23505 (→ 500 "Erro ao adicionar membro") na 2ª, mentindo para o
+// usuário sobre um vínculo que já existia. Mesmo padrão já usado em
+// chat.repository.addMember e task.repository.setAssignees.
+// Retorna { member, created } — `created: false` indica que o vínculo já
+// existia, para que o service não dispare a notificação de novo.
 const addMember = async (projectId, userId, role) => {
   const { rows } = await pool.query(
     `
     INSERT INTO project_members (project_id, user_id, role)
     VALUES ($1, $2, $3)
+    ON CONFLICT (project_id, user_id) DO NOTHING
     RETURNING *
     `,
     [projectId, userId, role || 'member']
   )
-  return rows[0]
+
+  if (rows[0]) return { member: rows[0], created: true }
+
+  const { rows: existing } = await pool.query(
+    `SELECT * FROM project_members WHERE project_id = $1 AND user_id = $2`,
+    [projectId, userId]
+  )
+  return { member: existing[0] || null, created: false }
 }
 
 const removeMember = async (projectId, userId) => {
@@ -157,6 +172,71 @@ const removeMember = async (projectId, userId) => {
     [projectId, userId]
   )
   return rowCount > 0
+}
+
+/**
+ * Atualiza o projeto e, se o status mudou, registra o histórico — tudo sob LOCK.
+ *
+ * Antes o service lia o projeto, comparava o status e só depois gravava, sem
+ * lock. Duas requisições concorrentes (duplo clique em "Salvar", duas abas) liam
+ * o MESMO status antigo, ambas passavam no `if` e ambas inseriam → DUAS linhas
+ * idênticas no histórico de status do projeto.
+ *
+ * O `SELECT ... FOR UPDATE` trava a linha do projeto: a segunda requisição
+ * espera, relê o status JÁ atualizado e, com isso, não registra a transição de
+ * novo. A comparação e a escrita passam a ser atômicas.
+ */
+const updateWithStatusHistory = async (id, companyId, fields, changedBy, statusNote) => {
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const { rows: locked } = await client.query(
+      'SELECT status FROM projects WHERE id = $1 AND company_id = $2 FOR UPDATE',
+      [id, companyId]
+    )
+    if (!locked[0]) {
+      await client.query('ROLLBACK')
+      return null
+    }
+
+    const currentStatus = locked[0].status
+
+    if (fields.status && fields.status !== currentStatus) {
+      await client.query(
+        `INSERT INTO project_status_history
+           (project_id, company_id, from_status, to_status, changed_by, note)
+         VALUES ($1,$2,$3,$4,$5,$6)`,
+        [id, companyId, currentStatus, fields.status, changedBy, statusNote || null]
+      )
+    }
+
+    const keys = Object.keys(fields)
+    if (!keys.length) {
+      await client.query('COMMIT')
+      return findById(id, companyId)
+    }
+
+    const values = Object.values(fields)
+    const sets = keys.map((k, i) => `${k} = $${i + 1}`).join(', ')
+    values.push(id, companyId)
+
+    const { rows } = await client.query(
+      `UPDATE projects SET ${sets}, updated_at = NOW()
+        WHERE id = $${values.length - 1} AND company_id = $${values.length}
+        RETURNING *`,
+      values
+    )
+
+    await client.query('COMMIT')
+    return rows[0]
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
 
 const addStatusHistory = async (projectId, companyId, fromStatus, toStatus, changedBy, note) => {
@@ -226,4 +306,4 @@ const remove = async (id, companyId) => {
   return rowCount > 0
 }
 
-module.exports = {findAll, findById, create, update, updateCover, findStatusHistory, findMembers, addMember, removeMember, addStatusHistory, isMember, countDependents, remove}
+module.exports = {findAll, findById, create, update, updateWithStatusHistory, updateCover, findStatusHistory, findMembers, addMember, removeMember, addStatusHistory, isMember, countDependents, remove}

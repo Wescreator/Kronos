@@ -1,15 +1,6 @@
 const pool = require('../config/database')
 
-const nextBudgetNumber = async (companyId) => {
-  const year = new Date().getFullYear()
-  const { rows } = await pool.query(
-    `SELECT COUNT(*) + 1 AS seq FROM budgets
-     WHERE company_id = $1 AND EXTRACT(YEAR FROM created_at) = $2`,
-    [companyId, year]
-  )
-  const seq = String(rows[0].seq).padStart(4, '0')
-  return `ORC-${year}-${seq}`
-}
+const counterRepo = require('./documentCounter.repository')
 
 const findAll = async ({ companyId, limit, offset, search, status }) => {
   const conditions = ['b.company_id = $1']
@@ -96,22 +87,49 @@ const findById = async (id, companyId) => {
   return { ...budgetRows[0], items, snapshots }
 }
 
-const create = async ({
-  companyId, budgetNumber, title, clientId, clientName,
-  projectArea, fixedFeesTotal, finalNotes, createdBy,
+/**
+ * Cria o orçamento com número, cabeçalho e itens numa ÚNICA transação.
+ *
+ * O número é gerado DENTRO da transação (contador atômico): duas criações
+ * concorrentes na mesma empresa são serializadas pelo banco em vez de disputar
+ * o mesmo número e estourar o UNIQUE(company_id, budget_number) com um 500.
+ * Se a criação falhar no meio, o número também sofre rollback (não é queimado)
+ * e não sobra orçamento sem itens.
+ */
+const createWithItems = async ({
+  companyId, title, clientId, clientName,
+  projectArea, fixedFeesTotal, finalNotes, createdBy, items = [],
 }) => {
-  const { rows } = await pool.query(
-    `INSERT INTO budgets
-       (company_id, budget_number, title, client_id, client_name,
-        project_area, fixed_fees_total, final_notes, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
-     RETURNING *`,
-    [
-      companyId, budgetNumber, title, clientId || null, clientName || null,
-      projectArea || 0, fixedFeesTotal || 0, finalNotes || null, createdBy,
-    ]
-  )
-  return rows[0]
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const budgetNumber = await counterRepo.nextBudgetNumber(client, companyId)
+
+    const { rows } = await client.query(
+      `INSERT INTO budgets
+         (company_id, budget_number, title, client_id, client_name,
+          project_area, fixed_fees_total, final_notes, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+       RETURNING *`,
+      [
+        companyId, budgetNumber, title, clientId || null, clientName || null,
+        projectArea || 0, fixedFeesTotal || 0, finalNotes || null, createdBy,
+      ]
+    )
+
+    const budget = rows[0]
+    await replaceItems(budget.id, companyId, items, client)
+
+    await client.query('COMMIT')
+    return budget
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
 
 const update = async (id, companyId, fields) => {
@@ -134,12 +152,15 @@ const remove = async (id, companyId) => {
 }
 
 // ── Itens: substitui tudo (mesmo padrão de replaceScopeItems em proposals) ──
-const replaceItems = async (budgetId, companyId, items) => {
-  await pool.query('DELETE FROM budget_items WHERE budget_id = $1', [budgetId])
+// `db` permite reaproveitar a função dentro de uma transação (recebe o client)
+// ou de forma avulsa (usa o pool). pool.query e client.query têm a mesma
+// assinatura, então o mesmo código serve aos dois casos.
+const replaceItems = async (budgetId, companyId, items, db = pool) => {
+  await db.query('DELETE FROM budget_items WHERE budget_id = $1', [budgetId])
   const inserted = []
   for (let i = 0; i < items.length; i++) {
     const it = items[i]
-    const { rows } = await pool.query(
+    const { rows } = await db.query(
       `INSERT INTO budget_items
          (budget_id, company_id, custom_label, budget_level_id,
           area_used, rate_snapshot_value, rate_type, line_total, order_index)
@@ -157,19 +178,49 @@ const replaceItems = async (budgetId, companyId, items) => {
 }
 
 // ── Snapshot imutável ────────────────────────────────────────────────
+/**
+ * Cria um snapshot imutável, calculando a versão sob LOCK.
+ *
+ * Antes era MAX(version)+1 seguido de INSERT, sem lock: duas chamadas
+ * concorrentes (finalizar em duas abas, retry após timeout aparente) calculavam
+ * a MESMA versão e uma delas estourava o UNIQUE(budget_id, version) com um 500.
+ *
+ * O `SELECT ... FOR UPDATE` na linha do orçamento serializa a criação de
+ * snapshots POR ORÇAMENTO: a segunda requisição espera a primeira concluir e só
+ * então calcula sua versão, que agora é a correta.
+ */
 const createSnapshot = async (budgetId, companyId, { payload, totalAmount, createdBy }) => {
-  const { rows: last } = await pool.query(
-    'SELECT COALESCE(MAX(version), 0) AS max_version FROM budget_snapshots WHERE budget_id = $1',
-    [budgetId]
-  )
-  const version = Number(last[0].max_version) + 1
+  const client = await pool.connect()
 
-  const { rows } = await pool.query(
-    `INSERT INTO budget_snapshots (budget_id, company_id, version, payload, total_amount, created_by)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [budgetId, companyId, version, JSON.stringify(payload), totalAmount, createdBy]
-  )
-  return rows[0]
+  try {
+    await client.query('BEGIN')
+
+    // Trava a linha do orçamento — quem chegar depois espera aqui.
+    await client.query(
+      'SELECT id FROM budgets WHERE id = $1 AND company_id = $2 FOR UPDATE',
+      [budgetId, companyId]
+    )
+
+    const { rows: last } = await client.query(
+      'SELECT COALESCE(MAX(version), 0) AS max_version FROM budget_snapshots WHERE budget_id = $1',
+      [budgetId]
+    )
+    const version = Number(last[0].max_version) + 1
+
+    const { rows } = await client.query(
+      `INSERT INTO budget_snapshots (budget_id, company_id, version, payload, total_amount, created_by)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [budgetId, companyId, version, JSON.stringify(payload), totalAmount, createdBy]
+    )
+
+    await client.query('COMMIT')
+    return rows[0]
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
 
 const getLatestSnapshot = async (budgetId, companyId) => {
@@ -193,9 +244,8 @@ const getSnapshotByVersion = async (budgetId, companyId, version) => {
 }
 
 module.exports = {
-  nextBudgetNumber,
   findAll, findById,
-  create, update, remove,
+  createWithItems, update, remove,
   replaceItems,
   createSnapshot, getLatestSnapshot, getSnapshotByVersion,
 }

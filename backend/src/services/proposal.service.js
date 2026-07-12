@@ -35,11 +35,9 @@ const create = async (data, userId, companyId) => {
     throw new AppError(400, 'companyId inválido')
   }
 
-  const proposalNumber = await proposalRepo.nextProposalNumber()
-
-  const proposal = await proposalRepo.create({
+  // Número + cabeçalho + filhos numa única transação (ver createWithChildren).
+  const proposal = await proposalRepo.createWithChildren({
     companyId,
-    proposalNumber,
     title: data.title.trim(),
     clientId: data.client_id || null,
     clientName: data.client_name || null,
@@ -49,18 +47,11 @@ const create = async (data, userId, companyId) => {
     validUntil: data.valid_until || null,
     paymentMessage: data.payment_message || null,
     createdBy: userId,
+    // Normalização defensiva dos arrays
+    scopeItems:   Array.isArray(data.scope_items)   ? data.scope_items   : [],
+    services:     Array.isArray(data.services)      ? data.services      : [],
+    paymentTerms: Array.isArray(data.payment_terms) ? data.payment_terms : [],
   })
-
-  // CORREÇÃO: normalização defensiva dos arrays
-  const scopeItems = Array.isArray(data.scope_items) ? data.scope_items : []
-  const services = Array.isArray(data.services) ? data.services : []
-  const paymentTerms = Array.isArray(data.payment_terms) ? data.payment_terms : []
-
-  await Promise.all([
-    proposalRepo.replaceScopeItems(proposal.id, companyId, scopeItems),
-    proposalRepo.replaceServices(proposal.id, companyId, services),
-    proposalRepo.replacePaymentTerms(proposal.id, companyId, paymentTerms),
-  ])
 
   return proposalRepo.findById(proposal.id, companyId)
 }
@@ -110,11 +101,8 @@ const duplicate = async (id, userId, companyId) => {
   const original = await proposalRepo.findById(id, companyId)
   if (!original) throw new AppError(404, 'Proposta não encontrada')
 
-  const proposalNumber = await proposalRepo.nextProposalNumber()
-
-  const copy = await proposalRepo.create({
+  const copy = await proposalRepo.createWithChildren({
     companyId,
-    proposalNumber,
     title: `${original.title} (cópia)`,
     clientId: original.client_id,
     clientName: original.client_name,
@@ -124,13 +112,10 @@ const duplicate = async (id, userId, companyId) => {
     validUntil: original.valid_until,
     paymentMessage: original.payment_message,
     createdBy: userId,
+    scopeItems:   original.scope_items   || [],
+    services:     original.services      || [],
+    paymentTerms: original.payment_terms || [],
   })
-
-  await Promise.all([
-    proposalRepo.replaceScopeItems(copy.id, companyId, original.scope_items),
-    proposalRepo.replaceServices(copy.id, companyId, original.services),
-    proposalRepo.replacePaymentTerms(copy.id, companyId, original.payment_terms),
-  ])
 
   return proposalRepo.findById(copy.id, companyId)
 }

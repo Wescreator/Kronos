@@ -29,12 +29,63 @@ const findRoomByIdAndMember = async (roomId, userId) => {
   return rows[0] || null
 }
 
-const createRoom = async ({ name, type, createdBy, companyId }) => {
+/**
+ * Procura a conversa privada JÁ EXISTENTE entre exatamente dois usuários.
+ *
+ * Uma conversa 1:1 entre A e B é uma identidade natural — não é "um registro
+ * semelhante" que o usuário poderia querer criar de novo. Sem esta busca, duas
+ * abas (ou um retry) criavam DUAS salas privadas entre as mesmas pessoas e as
+ * mensagens se espalhavam entre elas.
+ */
+const findPrivateRoomBetween = async (companyId, userA, userB) => {
   const { rows } = await pool.query(
-    `INSERT INTO chat_rooms (name, type, created_by, company_id) VALUES ($1,$2,$3,$4) RETURNING *`,
-    [name, type, createdBy, companyId]
+    `SELECT cr.*
+       FROM chat_rooms cr
+      WHERE cr.type = 'private'
+        AND cr.company_id = $1
+        AND EXISTS (SELECT 1 FROM chat_room_members m WHERE m.room_id = cr.id AND m.user_id = $2)
+        AND EXISTS (SELECT 1 FROM chat_room_members m WHERE m.room_id = cr.id AND m.user_id = $3)
+        AND (SELECT count(*) FROM chat_room_members m WHERE m.room_id = cr.id) = 2
+      LIMIT 1`,
+    [companyId, userA, userB]
   )
-  return rows[0]
+  return rows[0] || null
+}
+
+/**
+ * Cria a sala e adiciona os membros numa ÚNICA transação.
+ *
+ * Antes eram statements soltos: uma falha entre o INSERT da sala e o dos
+ * membros deixava uma sala órfã, sem nenhum membro — invisível e inacessível
+ * para todos, inclusive para quem a criou.
+ */
+const createRoomWithMembers = async ({ name, type, createdBy, companyId, memberIds }) => {
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const { rows } = await client.query(
+      `INSERT INTO chat_rooms (name, type, created_by, company_id) VALUES ($1,$2,$3,$4) RETURNING *`,
+      [name, type, createdBy, companyId]
+    )
+    const room = rows[0]
+
+    for (const uid of memberIds) {
+      await client.query(
+        `INSERT INTO chat_room_members (room_id, user_id) VALUES ($1,$2) ON CONFLICT DO NOTHING`,
+        [room.id, uid]
+      )
+    }
+
+    await client.query('COMMIT')
+    return room
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
 }
 
 const addMember = async (roomId, userId) => {
@@ -84,7 +135,8 @@ const findRoomMemberIds = async (roomId) => {
 module.exports = {
   findRoomsByUser,
   findRoomByIdAndMember,
-  createRoom,
+  findPrivateRoomBetween,
+  createRoomWithMembers,
   addMember,
   deleteRoom,
   findMessages,

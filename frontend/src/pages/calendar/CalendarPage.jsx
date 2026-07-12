@@ -167,12 +167,14 @@ export default function CalendarPage() {
     setSelectedEvent(null)
   }
 
-  async function handleSave(payload) {
+  // idemKey vem do EventModal (uma chave por abertura do modal) — repetições da
+  // mesma requisição não criam um 2º evento. Ver hooks/useIdempotencyKey.
+  async function handleSave(payload, idemKey) {
     try {
       if (selectedEvent?.id) {
         await updateEvent(selectedEvent.id, payload)
       } else {
-        await createEvent(payload)
+        await createEvent(payload, idemKey)
       }
 
       await loadEvents()

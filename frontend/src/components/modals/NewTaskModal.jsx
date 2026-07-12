@@ -4,6 +4,7 @@ import PortalModal from '../ui/PortalModal'
 import { createTask } from '../../services/tasks.service'
 import { getProjects } from '../../services/projects.service'
 import { getUsers } from '../../services/team.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectId }) {
   const [form, setForm] = useState({
@@ -13,6 +14,9 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
   const [projects, setProjects] = useState([])
   const [users,    setUsers]    = useState([])
   const [loading,  setLoading]  = useState(false)
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (open) {
@@ -36,9 +40,10 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
     e.preventDefault()
     setLoading(true)
     try {
-      await createTask({ ...form, project_id: form.project_id || null })
+      await createTask({ ...form, project_id: form.project_id || null }, idemKey)
       toast.success('Tarefa criada!')
       setForm({ title:'', description:'', project_id:'', priority:'medium', due_date:'', assignees:[] })
+      renewIdemKey() // intenção concluída — libera a criação de outra tarefa
       onSuccess()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erro ao criar tarefa')

@@ -1,6 +1,7 @@
 const cron = require('node-cron')
 const pool = require('../config/database')
 const notificationService = require('../services/notification.service')
+const { cleanupExpiredKeys } = require('../middlewares/idempotency.middleware')
 
 const formatCurrency = (value) =>
   Number(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -78,10 +79,23 @@ const runCheck = async () => {
   }
 }
 
+// Descarta as chaves de idempotência antigas (>24h). Sem isso a tabela cresce
+// indefinidamente — 24h é folga larga para qualquer retry legítimo.
+const runIdempotencyCleanup = async () => {
+  try {
+    const removed = await cleanupExpiredKeys()
+    if (removed > 0) console.log(`[idempotency] ${removed} chave(s) expirada(s) removida(s)`)
+  } catch (err) {
+    console.error('[idempotency.cleanup] erro:', err.message)
+  }
+}
+
 // Roda todo dia às 06:00 (horário do servidor).
 const start = () => {
   cron.schedule('0 6 * * *', runCheck)
+  cron.schedule('30 4 * * *', runIdempotencyCleanup)
   console.log('✓ Cron de notificações de vencimento agendado (06:00 diário)')
+  console.log('✓ Cron de limpeza de chaves de idempotência agendado (04:30 diário)')
 }
 
-module.exports = { start, runCheck, checkOverdueExpenses, checkOverdueRevenues }
+module.exports = { start, runCheck, runIdempotencyCleanup, checkOverdueExpenses, checkOverdueRevenues }

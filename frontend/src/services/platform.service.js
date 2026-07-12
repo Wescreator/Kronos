@@ -10,8 +10,10 @@ const platformService = {
   listCompanies: () =>
     api.get('/platform/companies').then(r => r.data.companies),
 
-  createCompany: (payload) =>
-    api.post('/platform/companies', payload).then(r => r.data.company),
+  // O 2º/3º argumento `idempotencyKey` (opcional) nas criações vem do hook
+  // useIdempotencyKey — repetições da mesma requisição não criam um 2º registro.
+  createCompany: (payload, idempotencyKey) =>
+    api.post('/platform/companies', payload, idempotencyKey ? { idempotencyKey } : {}).then(r => r.data.company),
 
   updateCompany: (companyId, payload) =>
     api.patch(`/platform/companies/${companyId}`, payload).then(r => r.data.company),
@@ -34,8 +36,8 @@ const platformService = {
   listCompanyUsers: (companyId) =>
     api.get(`/platform/companies/${companyId}/users`).then(r => r.data.users),
 
-  createCompanyUser: (companyId, payload) =>
-    api.post(`/platform/companies/${companyId}/users`, payload).then(r => r.data.user),
+  createCompanyUser: (companyId, payload, idempotencyKey) =>
+    api.post(`/platform/companies/${companyId}/users`, payload, idempotencyKey ? { idempotencyKey } : {}).then(r => r.data.user),
 
   updateCompanyUser: (companyId, userId, payload) =>
     api.patch(`/platform/companies/${companyId}/users/${userId}`, payload).then(r => r.data.user),
@@ -68,8 +70,8 @@ const platformService = {
     api.get(`/platform/companies/${companyId}/clients`).then(r => r.data.clients),
 
   // payload: { portalEmail, password, projectIds: string[] }
-  createClientPortalAccess: (companyId, clientId, payload) =>
-    api.post(`/platform/companies/${companyId}/clients/${clientId}/access`, payload).then(r => r.data.client),
+  createClientPortalAccess: (companyId, clientId, payload, idempotencyKey) =>
+    api.post(`/platform/companies/${companyId}/clients/${clientId}/access`, payload, idempotencyKey ? { idempotencyKey } : {}).then(r => r.data.client),
 
   // payload: { password?, isActive?, projectIds? } — todos opcionais,
   // envie só o que deseja alterar.

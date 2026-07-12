@@ -116,19 +116,27 @@ const register = async (data) => {
 
   const passwordHash = await bcrypt.hash(data.password, 12)
 
-  const user = await userRepo.create({
-    name: data.name,
-    email,
-    passwordHash,
-    // 'employee' é o papel base atual da empresa — 'member' era da matriz
-    // antiga de roles e não existe mais em authorize()/permissions.js.
-    role: 'employee',
-    position: data.position,
-    phone: data.phone,
-    admittedAt: data.admitted_at,
-  })
-
-  return user
+  try {
+    return await userRepo.create({
+      name: data.name,
+      email,
+      passwordHash,
+      // 'employee' é o papel base atual da empresa — 'member' era da matriz
+      // antiga de roles e não existe mais em authorize()/permissions.js.
+      role: 'employee',
+      position: data.position,
+      phone: data.phone,
+      admittedAt: data.admitted_at,
+    })
+  } catch (err) {
+    // A checagem acima é um check-then-insert: entre o findByEmail e o INSERT
+    // há uma janela em que outro cadastro do MESMO e-mail pode entrar (duplo
+    // clique, duas abas). Quem perde a corrida bate no UNIQUE de users.email e
+    // recebia um 500 genérico. Quem garante a unicidade é o banco — aqui só
+    // traduzimos a violação para a resposta correta.
+    if (err.code === '23505') throw new AppError(409, 'E-mail já cadastrado')
+    throw err
+  }
 }
 
 const refreshToken = async (token) => {
@@ -165,10 +173,28 @@ const forgotPassword = async (email) => {
     return { message: 'Se o email estiver cadastrado, você receberá as instruções de recuperação em breve.' }
   }
 
-  const token = crypto.randomBytes(32).toString('hex')
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
+  // Reaproveita o token ainda válido em vez de gerar um novo.
+  //
+  // Antes, cada pedido sobrescrevia o token anterior. Quem clicasse duas vezes
+  // em "Recuperar senha" (ou pedisse de novo achando que o e-mail não chegou)
+  // recebia DOIS e-mails e só o mais recente funcionava — ao abrir o primeiro,
+  // que costuma estar mais à mão, via "Token inválido ou expirado" sem entender
+  // o motivo. Reaproveitando, os dois e-mails levam ao MESMO link e ambos valem.
+  //
+  // A validade NÃO é estendida: pedir de novo não amplia a janela de 1h do token
+  // original, então isso não vira um vetor para manter um link vivo indefinidamente.
+  const tokenAindaValido =
+    user.reset_token &&
+    user.reset_token_expires_at &&
+    new Date(user.reset_token_expires_at) > new Date()
 
-  await userRepo.setResetToken(user.id, token, expiresAt)
+  let token
+  if (tokenAindaValido) {
+    token = user.reset_token
+  } else {
+    token = crypto.randomBytes(32).toString('hex')
+    await userRepo.setResetToken(user.id, token, new Date(Date.now() + 60 * 60 * 1000))
+  }
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
   const resetLink = `${frontendUrl}/reset-password?token=${token}`

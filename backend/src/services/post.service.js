@@ -192,17 +192,28 @@ const uploadAttachments = async (postId, companyId, uploadedBy, files) => {
       mimeType: file.mimetype,
       folder: `posts/${postId}`,
     })
-    const attachment = await postRepo.addAttachment({
-      postId,
-      companyId,
-      uploadedBy,
-      fileName: file.originalname,
-      fileSize: file.buffer?.length || 0,
-      mimeType: file.mimetype,
-      objectKey: object_key,
-      url,
-    })
-    created.push(attachment)
+
+    // O objeto já subiu para o R2 (que não participa da transação do Postgres).
+    // Se o INSERT falhar, ninguém mais referencia esse objeto — sem a limpeza
+    // explícita ele viraria lixo permanente no bucket.
+    try {
+      const attachment = await postRepo.addAttachment({
+        postId,
+        companyId,
+        uploadedBy,
+        fileName: file.originalname,
+        fileSize: file.buffer?.length || 0,
+        mimeType: file.mimetype,
+        objectKey: object_key,
+        url,
+      })
+      created.push(attachment)
+    } catch (err) {
+      await fileService.remove(object_key).catch(() =>
+        console.error('[post.service] objeto órfão no R2 (falha ao remover):', object_key)
+      )
+      throw err
+    }
   }
   return created
 }
@@ -274,15 +285,25 @@ const addComment = async (postId, data, files, requester, companyId) => {
         mimeType: file.mimetype,
         folder: `comments/${comment.id}`,
       })
-      await postRepo.addCommentAttachment({
-        commentId: comment.id,
-        companyId,
-        fileName: file.originalname,
-        fileSize: file.buffer?.length || 0,
-        mimeType: file.mimetype,
-        objectKey: object_key,
-        url,
-      })
+
+      // Limpa o objeto do R2 se o INSERT falhar — senão ele fica órfão no
+      // bucket para sempre (o R2 não faz rollback junto com o Postgres).
+      try {
+        await postRepo.addCommentAttachment({
+          commentId: comment.id,
+          companyId,
+          fileName: file.originalname,
+          fileSize: file.buffer?.length || 0,
+          mimeType: file.mimetype,
+          objectKey: object_key,
+          url,
+        })
+      } catch (err) {
+        await fileService.remove(object_key).catch(() =>
+          console.error('[post.service] objeto órfão no R2 (falha ao remover):', object_key)
+        )
+        throw err
+      }
     }
   }
 

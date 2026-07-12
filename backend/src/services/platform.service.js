@@ -251,31 +251,41 @@ const createCompanyUser = async ({ companyId, name, email, password, role, posit
   const companyRole = role || 'admin'
   const passwordHash = await bcrypt.hash(password, 12)
 
-  const created = await prisma.$transaction(async (tx) => {
-    const user = await tx.user.create({
-      data: {
-        name:        name.trim(),
-        email:       normalizedEmail,
-        passwordHash,
-        role:        companyRole,
-        position:    position || null,
-        companyId,
-        isActive:    true,
-      },
-    })
+  let created
+  try {
+    created = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name:        name.trim(),
+          email:       normalizedEmail,
+          passwordHash,
+          role:        companyRole,
+          position:    position || null,
+          companyId,
+          isActive:    true,
+        },
+      })
 
-    await tx.companyUser.create({
-      data: { companyId, userId: user.id, role: companyRole, isActive: true },
-    })
+      await tx.companyUser.create({
+        data: { companyId, userId: user.id, role: companyRole, isActive: true },
+      })
 
-    return {
-      id:       user.id,
-      name:     user.name,
-      email:    user.email,
-      role:     companyRole,
-      position: user.position,
-    }
-  })
+      return {
+        id:       user.id,
+        name:     user.name,
+        email:    user.email,
+        role:     companyRole,
+        position: user.position,
+      }
+    })
+  } catch (err) {
+    // O findUnique acima é um check-then-insert: dois cadastros simultâneos do
+    // mesmo e-mail passam os dois pela checagem e o perdedor bate no UNIQUE,
+    // recebendo um 500 genérico. Traduz para o 409 correto — mesmo tratamento
+    // que createCompany já fazia.
+    if (err.code === 'P2002') throw new AppError(409, 'E-mail ja cadastrado.')
+    throw err
+  }
 
   await logActivity({
     entityType: 'company_user',

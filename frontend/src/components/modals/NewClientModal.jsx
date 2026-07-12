@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom'
 import { X, Trash2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 /* ── Opções dos selects ─────────────────────────────────────────── */
 const STATUS_OPTIONS = [
@@ -43,6 +44,9 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
   const [deleting,      setDeleting]      = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [projects,      setProjects]      = useState([])
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (!open) return
@@ -89,8 +93,9 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
         await api.put(`/clients/${client.id}`, payload)
         toast.success('Cliente atualizado')
       } else {
-        await api.post('/clients', payload)
+        await api.post('/clients', payload, { idempotencyKey: idemKey })
         toast.success('Cliente criado')
+        renewIdemKey() // intenção concluída
       }
       onSuccess()
     } catch (err) {

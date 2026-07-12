@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, Trash2, GripVertical } from 'lucide-react'
 import PortalModal from '../ui/PortalModal'
 import { createProposal, updateProposal } from '../../services/proposals.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
 
@@ -278,6 +279,9 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
   const [clients, setClients] = useState([])
   const [saving,  setSaving]  = useState(false)
 
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
+
   const isEdit = !!proposal
 
   useEffect(() => {
@@ -324,8 +328,9 @@ export default function ProposalFormModal({ open, onClose, onSuccess, proposal }
         await updateProposal(proposal.id, payload)
         toast.success('Proposta atualizada!')
       } else {
-        await createProposal(payload)
+        await createProposal(payload, idemKey)
         toast.success('Proposta criada!')
+        renewIdemKey() // intenção concluída
       }
       onSuccess()
       onClose()

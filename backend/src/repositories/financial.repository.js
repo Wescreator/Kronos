@@ -89,7 +89,40 @@ const findExpenses = async ({
   }
 }
 
-const createExpense = async ({
+const INSERT_EXPENSE_SQL = `
+  INSERT INTO expenses (
+      company_id,
+      title,
+      description,
+      project_id,
+      category_id,
+      amount,
+      due_date,
+      competence_month,
+      is_recurring,
+      recurring_origin_id,
+      created_by
+   )
+   VALUES (
+      $1,$2,$3,$4,$5,$6,$7,
+      DATE_TRUNC('month',$7::date)::date,
+      $8,$9,$10
+   )
+   RETURNING *`
+
+/**
+ * Cria a despesa e, quando recorrente, TODAS as ocorrências futuras numa
+ * ÚNICA transação.
+ *
+ * Antes eram 1 + 24 INSERTs soltos: se o loop falhasse na 13ª iteração
+ * (timeout de pool, queda de conexão), a despesa-mãe ficava gravada com
+ * ocorrências pela metade, sem rollback e sem reprocessamento — um estado
+ * inconsistente e invisível para o usuário. Agora é tudo-ou-nada.
+ *
+ * `occurrenceDates` são apenas as datas de vencimento; os demais campos da
+ * ocorrência são idênticos aos da despesa-mãe.
+ */
+const createExpenseWithOccurrences = async ({
   companyId,
   title,
   description,
@@ -98,30 +131,15 @@ const createExpense = async ({
   amount,
   dueDate,
   isRecurring,
-  recurringOriginId,
-  createdBy
+  createdBy,
+  occurrenceDates = []
 }) => {
-  const { rows } = await pool.query(
-    `INSERT INTO expenses (
-        company_id,
-        title,
-        description,
-        project_id,
-        category_id,
-        amount,
-        due_date,
-        competence_month,
-        is_recurring,
-        recurring_origin_id,
-        created_by
-     )
-     VALUES (
-        $1,$2,$3,$4,$5,$6,$7,
-        DATE_TRUNC('month',$7::date)::date,
-        $8,$9,$10
-     )
-     RETURNING *`,
-    [
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const { rows } = await client.query(INSERT_EXPENSE_SQL, [
       companyId,
       title,
       description,
@@ -130,47 +148,34 @@ const createExpense = async ({
       amount,
       dueDate,
       isRecurring || false,
-      recurringOriginId || null,
+      null,          // recurring_origin_id: a despesa-mãe não tem origem
       createdBy
-    ]
-  )
+    ])
 
-  return rows[0]
-}
+    const expense = rows[0]
 
-const createRecurringOccurrences = async (companyId, occurrences) => {
-  for (const occ of occurrences) {
-    await pool.query(
-      `INSERT INTO expenses (
-          company_id,
-          title,
-          description,
-          project_id,
-          category_id,
-          amount,
-          due_date,
-          competence_month,
-          is_recurring,
-          recurring_origin_id,
-          created_by
-      )
-      VALUES (
-          $1,$2,$3,$4,$5,$6,$7,
-          DATE_TRUNC('month',$7::date)::date,
-          TRUE,$8,$9
-      )`,
-      [
+    for (const occurrenceDate of occurrenceDates) {
+      await client.query(INSERT_EXPENSE_SQL, [
         companyId,
-        occ.title,
-        occ.description,
-        occ.projectId,
-        occ.categoryId,
-        occ.amount,
-        occ.dueDate,
-        occ.recurringOriginId,
-        occ.createdBy
-      ]
-    )
+        title,
+        description,
+        projectId,
+        categoryId,
+        amount,
+        occurrenceDate,
+        true,          // ocorrência de uma recorrência
+        expense.id,    // recurring_origin_id → aponta para a despesa-mãe
+        createdBy
+      ])
+    }
+
+    await client.query('COMMIT')
+    return expense
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
   }
 }
 
@@ -415,61 +420,83 @@ const findRevenueById = async (companyId, id) => {
   return rows[0] || null
 }
 
-const createRevenue = async ({
+/**
+ * Cria a receita e TODAS as suas parcelas numa ÚNICA transação.
+ *
+ * Antes eram INSERTs soltos: uma falha entre a receita e as parcelas deixava
+ * uma receita SEM nenhuma parcela. Como findRevenues faz JOIN com
+ * revenue_installments, essa receita órfã simplesmente sumia da listagem —
+ * existia no banco, contaminava relatórios que leem `revenues` direto, e era
+ * invisível/inexcluível pela UI. Agora é tudo-ou-nada.
+ */
+const createRevenueWithInstallments = async ({
   companyId,
   title,
-  client,
+  client: clientName,
   projectId,
   totalAmount,
   installments,
   description,
-  createdBy
+  createdBy,
+  installmentsList = []
 }) => {
-  const { rows } = await pool.query(
-    `INSERT INTO revenues (
-        company_id,
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const { rows } = await client.query(
+      `INSERT INTO revenues (
+          company_id,
+          title,
+          client,
+          project_id,
+          total_amount,
+          installments,
+          description,
+          created_by
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+      RETURNING *`,
+      [
+        companyId,
         title,
-        client,
-        project_id,
-        total_amount,
+        clientName,
+        projectId,
+        totalAmount,
         installments,
         description,
-        created_by
+        createdBy
+      ]
     )
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-    RETURNING *`,
-    [
-      companyId,
-      title,
-      client,
-      projectId,
-      totalAmount,
-      installments,
-      description,
-      createdBy
-    ]
-  )
 
-  return rows[0]
-}
+    const revenue = rows[0]
 
-const createInstallments = async (companyId, revenueId, installmentsList) => {
-  for (const inst of installmentsList) {
-    await pool.query(
-      `INSERT INTO revenue_installments (
-          company_id,
-          revenue_id,
-          installment_no,
-          amount,
-          due_date,
-          competence_month
+    for (const inst of installmentsList) {
+      await client.query(
+        `INSERT INTO revenue_installments (
+            company_id,
+            revenue_id,
+            installment_no,
+            amount,
+            due_date,
+            competence_month
+        )
+        VALUES (
+            $1,$2,$3,$4,$5,
+            DATE_TRUNC('month',$5::date)::date
+        )`,
+        [companyId, revenue.id, inst.no, inst.amount, inst.dueDate]
       )
-      VALUES (
-          $1,$2,$3,$4,$5,
-          DATE_TRUNC('month',$5::date)::date
-      )`,
-      [companyId, revenueId, inst.no, inst.amount, inst.dueDate]
-    )
+    }
+
+    await client.query('COMMIT')
+    return revenue
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
   }
 }
 
@@ -699,8 +726,7 @@ const getProjectFinancials = async (companyId) => {
 
 module.exports = {
   findExpenses,
-  createExpense,
-  createRecurringOccurrences,
+  createExpenseWithOccurrences,
   confirmPayment,
   updateExpense,
   deleteExpense,
@@ -709,8 +735,7 @@ module.exports = {
 
   findRevenues,
   findRevenueById,
-  createRevenue,
-  createInstallments,
+  createRevenueWithInstallments,
   updateInstallment,
   confirmReceipt,
   deleteRevenue,

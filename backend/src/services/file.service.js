@@ -66,18 +66,31 @@ const uploadForProject = async ({
 
   const url = `${PUBLIC_URL}/${objectKey}`
 
-  const file = await fileRepo.create({
-    projectId,
-    uploadedBy,
-    fileName: originalFilename,
-    fileSize: buffer?.length || 0,
-    mimeType,
-    driveFileId: objectKey,
-    driveUrl: url,
-    company_id: companyId || null
-  })
+  // O objeto já está no bucket. Se o INSERT falhar agora, ninguém mais vai
+  // referenciá-lo — ele viraria lixo permanente no R2, consumindo storage para
+  // sempre. O bucket não participa da transação do Postgres, então a limpeza
+  // precisa ser explícita.
+  try {
+    const file = await fileRepo.create({
+      projectId,
+      uploadedBy,
+      fileName: originalFilename,
+      fileSize: buffer?.length || 0,
+      mimeType,
+      driveFileId: objectKey,
+      driveUrl: url,
+      company_id: companyId || null
+    })
 
-  return { ...file, object_key: objectKey, url }
+    return { ...file, object_key: objectKey, url }
+  } catch (err) {
+    await remove(objectKey).catch(() => {
+      // A falha na limpeza não pode mascarar o erro original — o objeto órfão
+      // fica registrado no log para varredura posterior.
+      console.error('[file.service] objeto órfão no R2 (falha ao remover):', objectKey)
+    })
+    throw err
+  }
 }
 
 const listByProject = async (projectId) => {

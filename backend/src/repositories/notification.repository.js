@@ -10,16 +10,32 @@ const create = async ({ companyId, userId, type, title, body, link }) => {
   return rows[0]
 }
 
-// Usado apenas pelo cron financeiro: evita recriar a mesma notificação de
-// vencido todo dia enquanto o item continuar em aberto.
-const existsForEntity = async ({ companyId, userId, type, link }) => {
+/**
+ * Cria a notificação SÓ se ainda não existir uma igual — usado exclusivamente
+ * pelo cron financeiro, que reprocessa o mesmo item vencido todos os dias.
+ *
+ * Atômico: quem garante a unicidade é o índice parcial
+ * `notifications_financial_due_uniq` (WHERE type = 'financial_due'), não um
+ * SELECT prévio. O check-then-insert anterior tinha uma janela de corrida que
+ * duplicaria as notificações no dia em que o Render rodasse 2 instâncias do
+ * cron simultaneamente.
+ *
+ * O índice é PARCIAL de propósito: um UNIQUE amplo quebraria notify(), já que
+ * no chat todas as mensagens de uma sala compartilham o mesmo link.
+ *
+ * @returns a notificação criada, ou null se já existia (nada a notificar).
+ */
+const createIfNew = async ({ companyId, userId, type, title, body, link }) => {
   const { rows } = await pool.query(
-    `SELECT id FROM notifications
-      WHERE company_id = $1 AND user_id = $2 AND type = $3 AND link = $4
-      LIMIT 1`,
-    [companyId, userId, type, link]
+    `INSERT INTO notifications (company_id, user_id, type, title, body, link)
+     VALUES ($1,$2,$3,$4,$5,$6)
+     ON CONFLICT (company_id, user_id, type, link)
+       WHERE type = 'financial_due'
+       DO NOTHING
+     RETURNING *`,
+    [companyId, userId, type, title, body || null, link || null]
   )
-  return rows.length > 0
+  return rows[0] || null
 }
 
 // Remove a(s) notificação(ões) de vencido quando o item é resolvido
@@ -77,7 +93,7 @@ const removeAllForUser = async (userId) => {
 
 module.exports = {
   create,
-  existsForEntity,
+  createIfNew,
   removeForEntity,
   findByUser,
   markRead,

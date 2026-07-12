@@ -68,8 +68,10 @@ export default function PostsPage() {
     }
   }
 
-  const handleCreatePost = async (payload) => {
-    await createPost(payload)
+  // O 2º argumento é a chave de idempotência, emitida pelo componente que
+  // representa a intenção do usuário (o modal / o card) — ver useIdempotencyKey.
+  const handleCreatePost = async (payload, idemKey) => {
+    await createPost(payload, idemKey)
     setShowModal(false)
     loadFeed()
   }
@@ -92,8 +94,8 @@ export default function PostsPage() {
     }
   }
 
-  const handleAddAttachments = async (postId, files) => {
-    await addPostAttachments(postId, files)
+  const handleAddAttachments = async (postId, files, idemKey) => {
+    await addPostAttachments(postId, files, idemKey)
     refreshOne(postId)
   }
 
@@ -102,8 +104,8 @@ export default function PostsPage() {
     refreshOne(postId)
   }
 
-  const handleAddComment = async (postId, payload) => {
-    await addPostComment(postId, payload)
+  const handleAddComment = async (postId, payload, idemKey) => {
+    await addPostComment(postId, payload, idemKey)
     refreshOne(postId)
   }
 

@@ -4,6 +4,7 @@ import PortalModal from '../ui/PortalModal'
 import { createBudget, updateBudget } from '../../services/budgets.service'
 import { useBudgetConfig } from '../../hooks/useBudgetConfig'
 import { useBudgetCalculation } from '../../hooks/useBudgetCalculation'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 import { toast } from 'react-hot-toast'
 import api from '../../services/api'
 
@@ -140,6 +141,9 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budget }) {
   const [clients, setClients] = useState([])
   const [saving,  setSaving]  = useState(false)
 
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
+
   const isEdit = !!budget
   const { titles } = useBudgetConfig()
 
@@ -225,8 +229,9 @@ export default function NewBudgetModal({ open, onClose, onSuccess, budget }) {
         await updateBudget(budget.id, payload)
         toast.success('Orçamento atualizado!')
       } else {
-        await createBudget(payload)
+        await createBudget(payload, idemKey)
         toast.success('Orçamento criado!')
+        renewIdemKey() // intenção concluída
       }
       onSuccess()
       onClose()

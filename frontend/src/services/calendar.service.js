@@ -27,8 +27,9 @@ export const getEventById = async (id) => {
   return data.event ?? data
 }
 
-export const createEvent = async (payload) => {
-  const { data } = await api.post('/calendar', payload)
+// `idempotencyKey` (opcional) — ver hooks/useIdempotencyKey.
+export const createEvent = async (payload, idempotencyKey) => {
+  const { data } = await api.post('/calendar', payload, idempotencyKey ? { idempotencyKey } : {})
   return data.event ?? data
 }
 

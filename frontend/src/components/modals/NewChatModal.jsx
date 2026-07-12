@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Lock, Hash, Search, Check } from 'lucide-react'
 import Modal from '../ui/Modal'
 import { toast } from 'react-hot-toast'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 export default function NewChatModal({ open, onClose, role, users = [], currentUserId, onCreate }) {
   const [selectedUsers, setSelectedUsers] = useState([])
@@ -9,6 +10,9 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
   const [roomType, setRoomType] = useState('private')
   const [userSearch, setUserSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (!open) {
@@ -56,7 +60,7 @@ export default function NewChatModal({ open, onClose, role, users = [], currentU
         name: roomType === 'group' ? groupName.trim() : null,
         type: roomType,
         members: selectedUsers,
-      })
+      }, idemKey)
       onClose()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erro ao criar conversa')

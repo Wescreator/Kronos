@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react'
 import { Paperclip } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import PortalModal from '../ui/PortalModal'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 export default function NewPostModal({ open, onClose, onSuccess, projects, createPost }) {
   const [projectId, setProjectId] = useState('')
   const [content, setContent] = useState('')
   const [files, setFiles] = useState([])
   const [saving, setSaving] = useState(false)
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (!open) return
@@ -23,8 +27,9 @@ export default function NewPostModal({ open, onClose, onSuccess, projects, creat
 
     setSaving(true)
     try {
-      await createPost({ project_id: projectId, content, files })
+      await createPost({ project_id: projectId, content, files }, idemKey)
       toast.success('Postagem criada')
+      renewIdemKey() // intenção concluída
       onSuccess()
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Erro ao criar postagem')

@@ -16,6 +16,7 @@ import MetricsDivergenceModal from '../../components/modals/MetricsDivergenceMod
 import { formatDate } from '../../utils/format'
 import { toast } from 'react-hot-toast'
 import useAuthStore from '../../store/authStore'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 import { can } from '../../utils/permissions'
 
 const STATUS_META = {
@@ -228,6 +229,10 @@ export default function BudgetDetailPage() {
   const [finalizing,      setFinalizing]      = useState(false)
   const [recalculating,   setRecalculating]   = useState(false)
 
+  // Uma chave por ação — renovadas após cada sucesso. Ver useIdempotencyKey.
+  const [finalizeIdemKey, renewFinalizeIdemKey] = useIdempotencyKey(true)
+  const [recalcIdemKey,   renewRecalcIdemKey]   = useIdempotencyKey(true)
+
   const load = async () => {
     setLoading(true)
     try {
@@ -265,11 +270,15 @@ export default function BudgetDetailPage() {
     }
   }
 
+  // Finalizar e recalcular gravam snapshots imutáveis — sem a chave de
+  // idempotência, uma repetição da requisição (outra aba, retry) criaria uma
+  // segunda versão idêntica no histórico. Ver hooks/useIdempotencyKey.
   const handleFinalize = async () => {
     setFinalizing(true)
     try {
-      await finalizeBudget(id)
+      await finalizeBudget(id, finalizeIdemKey)
       toast.success('Orçamento finalizado! Snapshot imutável criado.')
+      renewFinalizeIdemKey()
       await load()
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Erro ao finalizar orçamento')
@@ -281,8 +290,9 @@ export default function BudgetDetailPage() {
   const handleRecalculate = async () => {
     setRecalculating(true)
     try {
-      await recalculateBudget(id)
+      await recalculateBudget(id, recalcIdemKey)
       toast.success('Orçamento recalculado! Novo snapshot criado.')
+      renewRecalcIdemKey()
       await load()
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Erro ao recalcular orçamento')

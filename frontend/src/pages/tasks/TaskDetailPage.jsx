@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { formatDate, formatDateTime, statusLabel, statusColors, priorityLabel, priorityColors } from '../../utils/format'
 import { toast } from 'react-hot-toast'
 import useAuthStore from '../../store/authStore'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 const STATUSES = ['open','in_progress','review','completed','cancelled']
 
@@ -21,6 +22,10 @@ export default function TaskDetailPage() {
   const [comment, setComment] = useState('')
   const [sending, setSending] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Uma chave por comentário — renovada a cada envio bem-sucedido, então dois
+  // comentários iguais de propósito continuam possíveis. Ver useIdempotencyKey.
+  const [commentIdemKey, renewCommentIdemKey] = useIdempotencyKey(true)
 
   const load = async () => {
     setLoading(true)
@@ -43,7 +48,8 @@ export default function TaskDetailPage() {
     if (!comment.trim()) return
     setSending(true)
     try {
-      await addTaskComment(id, { content: comment })
+      await addTaskComment(id, { content: comment }, commentIdemKey)
+      renewCommentIdemKey()
       setComment(''); load()
     } catch { toast.error('Erro ao enviar comentário') }
     finally { setSending(false) }

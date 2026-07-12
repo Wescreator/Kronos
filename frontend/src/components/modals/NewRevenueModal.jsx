@@ -5,6 +5,7 @@ import PortalModal from '../ui/PortalModal'
 import { formatCurrency } from '../../utils/format'
 import { createRevenue } from '../../services/financial.service'
 import { getProjects } from '../../services/projects.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 const REVENUE_MODES = [
   { key: 'new',     label: 'Nova Receita',    icon: FileText,     desc: 'Receita avulsa' },
@@ -22,6 +23,10 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
   const [projects,    setProjects]    = useState([])
   const [revenueMode, setRevenueMode] = useState('new')
   const [form,        setForm]        = useState(EMPTY_FORM)
+  const [submitting,  setSubmitting]  = useState(false)
+
+  // Uma chave por intenção — ver useIdempotencyKey. Renovada após criar.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (open) {
@@ -69,14 +74,19 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
 
   const totalAmount = form.installments_list.reduce((s, inst) => s + (parseFloat(inst.amount) || 0), 0)
 
+  // Trava de duplo envio: sem ela, um segundo clique durante a requisição
+  // em voo cria uma SEGUNDA receita com todas as parcelas duplicadas.
+  // Guarda de UI apenas; a idempotência de fato precisa vir do backend.
   const handleCreate = async (e) => {
     e.preventDefault()
+    if (submitting) return
     if (revenueMode === 'project' && !form.project_id) return toast.error('Selecione um projeto')
     if (!form.title.trim()) return toast.error('Informe o título')
 
     const invalid = form.installments_list.some(inst => !inst.amount || !inst.due_date)
     if (invalid) return toast.error('Preencha valor e data de todas as parcelas')
 
+    setSubmitting(true)
     try {
       await createRevenue({
         title:             form.title,
@@ -88,11 +98,14 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
           amount:   parseFloat(inst.amount),
           due_date: inst.due_date
         }))
-      })
+      }, idemKey)
       toast.success('Receita criada!')
+      renewIdemKey() // intenção concluída — libera a criação de uma nova receita
       onSuccess()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erro ao criar receita')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -235,8 +248,10 @@ export default function NewRevenueModal({ open, onClose, onSuccess }) {
         </div>
 
         <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-          <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
-          <button type="submit" className="btn-primary">Criar Receita</button>
+          <button type="button" onClick={onClose} disabled={submitting} className="btn-secondary">Cancelar</button>
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting ? 'Criando...' : 'Criar Receita'}
+          </button>
         </div>
       </form>
     </PortalModal>

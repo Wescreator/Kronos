@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PortalModal from '../ui/PortalModal'
 import platformService from '../../services/platform.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 const EMPTY = { portalEmail: '', password: '', projectIds: [], isActive: true }
 
@@ -15,6 +16,9 @@ export default function ClientAccessModal({ open, onClose, onSuccess, companyId,
   const [revoking, setRevoking] = useState(false)
   const [confirmRevoke, setConfirmRevoke] = useState(false)
   const [loadingProjects, setLoadingProjects] = useState(false)
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (!open || !client) return
@@ -78,8 +82,9 @@ export default function ClientAccessModal({ open, onClose, onSuccess, companyId,
           portalEmail: form.portalEmail.trim(),
           password: form.password,
           projectIds: form.projectIds,
-        })
+        }, idemKey)
         toast.success('Acesso criado com sucesso')
+        renewIdemKey() // intenção concluída
       }
       onSuccess()
     } catch (err) {

@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import PortalModal from '../ui/PortalModal'
 import platformService from '../../services/platform.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 const ROLE_OPTIONS = [
   { value: 'owner',    label: 'Owner'                },
@@ -20,6 +21,9 @@ export default function UserModal({ open, onClose, onSuccess, companyId, user = 
   const [saving,        setSaving]        = useState(false)
   const [deleting,      setDeleting]      = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (!open) return
@@ -46,8 +50,9 @@ export default function UserModal({ open, onClose, onSuccess, companyId, user = 
         await platformService.updateCompanyUser(companyId, user.id, payload)
         toast.success('Usuário atualizado')
       } else {
-        await platformService.createCompanyUser(companyId, form)
+        await platformService.createCompanyUser(companyId, form, idemKey)
         toast.success('Usuário criado')
+        renewIdemKey() // intenção concluída
       }
       onSuccess()
     } catch (err) {

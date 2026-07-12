@@ -4,6 +4,7 @@ import { Tag, Repeat } from 'lucide-react'
 import PortalModal from '../ui/PortalModal'
 import { createExpense, updateExpense, getCategories, createCategory } from '../../services/financial.service'
 import { getProjects } from '../../services/projects.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
 // ── Seletor de categoria com criação inline ───────────────────────
 function CategorySelect({ categories, value, onChange, onCategoryCreated }) {
@@ -130,6 +131,12 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
   const [form,       setForm]       = useState(EMPTY_FORM)
   const [categories, setCategories] = useState([])
   const [projects,   setProjects]   = useState([])
+  const [submitting, setSubmitting] = useState(false)
+
+  // Uma chave por intenção: nasce ao abrir o modal e só é renovada após uma
+  // criação bem-sucedida — assim o duplo clique é reconhecido como repetição,
+  // mas criar duas despesas iguais de propósito continua funcionando.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   const isEdit = !!expense
 
@@ -169,8 +176,14 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
     }
   }, [open, expense])
 
+  // Trava de duplo envio: sem ela, um segundo clique (ou Enter repetido)
+  // durante a requisição em voo cria uma SEGUNDA despesa — e, se for
+  // recorrente, mais 24 ocorrências. Guarda de UI apenas; a idempotência
+  // de fato precisa vir do backend.
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
     try {
       if (isEdit) {
         await updateExpense(expense.id, {
@@ -185,9 +198,10 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
           amount:       parseFloat(form.amount),
           project_id:   form.project_id || null,
           is_recurring: form.is_recurring,
-        })
+        }, idemKey)
         toast.success(form.is_recurring ? 'Despesa recorrente criada para os próximos 24 meses!' : 'Despesa criada!')
         setForm(EMPTY_FORM)
+        renewIdemKey() // intenção concluída — libera a criação de uma nova despesa
       }
       onSuccess()
     } catch (err) {
@@ -196,6 +210,8 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
       } else {
         toast.error(err.response?.data?.message || 'Erro ao criar despesa')
       }
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -340,11 +356,13 @@ export default function NewExpenseModal({ open, onClose, onSuccess, expense }) {
           className="flex justify-end gap-3 pt-2"
           style={{ borderTop: '1px solid var(--border-subtle)' }}
         >
-          <button type="button" onClick={onClose} className="btn-secondary">
+          <button type="button" onClick={onClose} disabled={submitting} className="btn-secondary">
             Cancelar
           </button>
-          <button type="submit" className="btn-primary">
-            {isEdit ? 'Salvar alterações' : 'Criar Despesa'}
+          <button type="submit" disabled={submitting} className="btn-primary">
+            {submitting
+              ? (isEdit ? 'Salvando...' : 'Criando...')
+              : (isEdit ? 'Salvar alterações' : 'Criar Despesa')}
           </button>
         </div>
       </form>

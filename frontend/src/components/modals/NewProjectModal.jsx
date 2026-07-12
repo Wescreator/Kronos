@@ -4,6 +4,7 @@ import { AlertTriangle }       from 'lucide-react'
 import PortalModal from '../ui/PortalModal'
 import { createProject, uploadCover, getProjects } from '../../services/projects.service'
 import { getAllClients, updateClient } from '../../services/clients.service'
+import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 import { addDays, format, startOfMonth, endOfMonth } from 'date-fns'
 
 const BLOCKING_STATUSES = ['in_progress', 'paused']
@@ -37,6 +38,9 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
   const [activeCount,  setActiveCount]  = useState(0)
   const [clients,      setClients]      = useState([])
   const [clientId,     setClientId]     = useState('')   // cliente existente a vincular
+
+  // Uma chave por intenção — ver hooks/useIdempotencyKey.
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
 
   useEffect(() => {
     if (!open) return
@@ -84,7 +88,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
     }
     setLoading(true)
     try {
-      const { data } = await createProject({ ...form, budget: parseFloat(form.budget) || 0 })
+      const { data } = await createProject({ ...form, budget: parseFloat(form.budget) || 0 }, idemKey)
       if (cover) await uploadCover(data.project.id, cover)
       // Vincula o cliente existente ao novo projeto (back-link: clients_leads.project_id).
       if (clientId) {
@@ -98,6 +102,7 @@ export default function NewProjectModal({ open, onClose, onSuccess }) {
       setForm({ title:'', client:'', description:'', budget:'', start_date:'', expected_date:'' })
       setClientId('')
       setCover(null)
+      renewIdemKey() // intenção concluída — libera a criação de outro projeto
       onSuccess()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erro ao criar projeto')

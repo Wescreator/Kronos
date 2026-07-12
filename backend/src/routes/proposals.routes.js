@@ -6,6 +6,7 @@ const fileCtrl = require('../controllers/proposal.file.controller')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const logger = require('../middlewares/logger.middleware')
+const idempotency = require('../middlewares/idempotency.middleware')
 const { uploadDriveFile } = require('../config/multer')
 
 // Todas as rotas exigem autenticação e escopo de empresa
@@ -15,12 +16,12 @@ router.use(authenticate, tenantMiddleware, logger)
 // não é implícito) — as listas abaixo espelham utils/permissions.js do
 // frontend; mantenha os dois em sincronia.
 router.get('/', ctrl.getAll)
-router.post('/', authorize('owner', 'admin', 'manager'), ctrl.create)
+router.post('/', authorize('owner', 'admin', 'manager'), idempotency(), ctrl.create)
 
 // Operações por ID
 router.get('/:id', ctrl.getById)
 router.put('/:id', authorize('owner', 'admin', 'manager'), ctrl.update)
-router.post('/:id/duplicate', authorize('owner', 'admin', 'manager'), ctrl.duplicate)
+router.post('/:id/duplicate', authorize('owner', 'admin', 'manager'), idempotency(), ctrl.duplicate)
 router.delete('/:id', authorize('owner', 'admin'), ctrl.remove)
 
 // Arquivos da proposta
@@ -29,6 +30,7 @@ router.post(
   '/:id/files',
   authorize('owner', 'admin', 'manager'),
   uploadDriveFile.single('file'),
+  idempotency(),
   fileCtrl.uploadFile
 )
 router.delete(
