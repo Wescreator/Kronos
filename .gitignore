@@ -1,3 +1,6 @@
 
 # Uploads locais (disco efêmero — persistência real é no R2/Drive)
 backend/uploads/
+
+# Documentação técnica de consulta pessoal (não versionada)
+documentation.md
