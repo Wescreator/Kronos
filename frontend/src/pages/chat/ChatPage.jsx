@@ -292,14 +292,28 @@ export default function ChatPage() {
   const typingTimers = useRef({})
   const sendTypingTimer = useRef(null)
   const activeRoomRef = useRef(null)
+  // Lidos DENTRO do handler do socket, que é registrado uma única vez: sem os
+  // refs ele fecharia sobre o `rooms`/`loadRooms` do primeiro render.
+  const roomsRef = useRef([])
+  const loadRoomsRef = useRef(null)
 
   useEffect(() => { activeRoomRef.current = activeRoom }, [activeRoom])
+  useEffect(() => { roomsRef.current = rooms }, [rooms])
 
   useEffect(() => {
     useSocketStore.getState().ensureConnected()
 
     const unsubscribe = useSocketStore.getState().subscribe((msg) => {
       if (msg.type === 'new_message') {
+        // Sala que ainda não está na lista deste usuário: é uma conversa privada
+        // que o remetente criou e só agora, com a 1ª mensagem, passa a existir
+        // para o destinatário. Recarrega a lista para trazê-la já com o nome e o
+        // avatar do outro participante (o payload da mensagem não os tem).
+        if (!roomsRef.current.some(r => r.id === msg.roomId)) {
+          loadRoomsRef.current?.(true)
+          return
+        }
+
         if (activeRoomRef.current?.id === msg.roomId) {
           setMessages(prev => {
             if (prev.some(m => m.id === msg.message.id)) return prev
@@ -366,8 +380,10 @@ export default function ChatPage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [showEmoji])
 
-  const loadRooms = useCallback(async () => {
-    setLoadingRooms(true)
+  // `silent`: recarga disparada por uma mensagem que chegou (não por ação do
+  // usuário) — não mostra o spinner nem pisca a lista embaixo dele.
+  const loadRooms = useCallback(async (silent = false) => {
+    if (!silent) setLoadingRooms(true)
     try {
       const { data } = await getRooms()
       let all = data.rooms || []
@@ -377,8 +393,10 @@ export default function ChatPage() {
       const sorted = [...all].sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0))
       setRooms(sorted)
     } catch { }
-    finally { setLoadingRooms(false) }
+    finally { if (!silent) setLoadingRooms(false) }
   }, [role, user?.id])
+
+  useEffect(() => { loadRoomsRef.current = loadRooms }, [loadRooms])
 
   useEffect(() => {
     loadRooms()

@@ -1,5 +1,24 @@
 const pool = require('../config/database')
 
+/**
+ * Salas visíveis para o usuário.
+ *
+ * Uma conversa privada AINDA SEM MENSAGENS só aparece para quem a criou: o
+ * destinatário só descobre a conversa quando a primeira mensagem chega. Sem
+ * isso, escolher alguém na lista de contatos já fazia surgir uma conversa
+ * vazia no sidebar do outro — como se ele tivesse sido chamado sem ninguém
+ * ter dito nada.
+ *
+ * A associação em chat_room_members é criada normalmente para os dois desde o
+ * início (é ela que dá acesso à sala e traz nome/avatar do outro participante);
+ * o que muda aqui é só a VISIBILIDADE na listagem.
+ *
+ * Grupos/canais seguem visíveis desde a criação — ali entrar no canal já é a
+ * informação relevante, mesmo sem mensagem nenhuma.
+ *
+ * O EXISTS não filtra is_deleted de propósito: depois que a conversa se revelou
+ * ao destinatário, apagar a última mensagem não a faz sumir do sidebar dele.
+ */
 const findRoomsByUser = async (userId) => {
   const { rows } = await pool.query(
     `SELECT cr.*,
@@ -12,6 +31,9 @@ const findRoomsByUser = async (userId) => {
      JOIN chat_room_members crm   ON crm.room_id  = cr.id AND crm.user_id  = $1
      LEFT JOIN chat_room_members crm2 ON crm2.room_id = cr.id AND crm2.user_id != $1
      LEFT JOIN users u ON u.id = crm2.user_id
+     WHERE cr.type <> 'private'
+        OR cr.created_by = $1
+        OR EXISTS (SELECT 1 FROM chat_messages cm WHERE cm.room_id = cr.id)
      ORDER BY last_message_at DESC NULLS LAST`,
     [userId]
   )
