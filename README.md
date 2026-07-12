@@ -18,7 +18,6 @@ Kronos/
     API.md          -> Referencia de todas as rotas da API
     ARCHITECTURE.md -> Visao de arquitetura e fluxos
     SECURITY.md     -> Relatorio de vulnerabilidades, correcoes e auditoria
-  CLAUDE.md     -> Guia de convencoes para desenvolvimento assistido por IA
   README.md     -> Este arquivo
 ```
 
@@ -128,7 +127,6 @@ As regras de permissao por modulo/acao estao em [frontend/src/utils/permissions.
 - [docs/SECURITY.md](docs/SECURITY.md) - vulnerabilidades identificadas, correcoes aplicadas e historico de auditoria (acoes de operacao concluidas em 2026-07)
 - [backend/README.md](backend/README.md) - detalhes do backend
 - [frontend/README.md](frontend/README.md) - detalhes do frontend
-- [CLAUDE.md](CLAUDE.md) - convencoes de codigo e armadilhas conhecidas (AppError, validate com stripUnknown, escopos de JWT, modelos tenant do Prisma)
 
 ---
 

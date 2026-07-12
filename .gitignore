@@ -4,3 +4,6 @@ backend/uploads/
 
 # Documentação técnica de consulta pessoal (não versionada)
 documentation.md
+
+# Instruções locais para ferramentas de IA — não fazem parte do projeto
+CLAUDE.md
