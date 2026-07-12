@@ -43,7 +43,15 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Impersonate-Company'],
+  // Todo header customizado que o frontend envia precisa estar aqui: o browser
+  // recusa a requisição no preflight se ela pedir um header que não está na
+  // lista. 'Idempotency-Key' é enviado nos POSTs de criação (services/api.js)
+  // — sem ele aqui, TODA criação quebra em produção (front e API em origens
+  // diferentes), enquanto em dev passa despercebido: o proxy do Vite deixa
+  // tudo na mesma origem e não há preflight.
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Impersonate-Company', 'Idempotency-Key'],
+  // Permite ao frontend LER a marca de replay da resposta idempotente.
+  exposedHeaders: ['Idempotent-Replay'],
 }
 
 app.use(cors(corsOptions))
