@@ -377,19 +377,22 @@ function ResumoTab({ company, editing, form, onChange, onEdit, onCancel, onSave,
 }
 
 function KPIsTab({ company, users, stats }) {
+  // `size`: os contadores mantêm o text-2xl padrão dos KPIs do sistema; valores
+  // textuais longos (data/hora, plano) usam um corpo menor para não estourar o
+  // card nem destoar da tipografia das demais telas.
   const cards = [
     { label: 'Usuários',            value: users.length,                 color: 'var(--text-primary)' },
     { label: 'Projetos',            value: stats?.projects   ?? '—',     color: '#0284C7' },
     { label: 'Clientes',            value: stats?.clients    ?? '—',     color: '#16A34A' },
     { label: 'Arquivos',            value: stats?.files      ?? '—',     color: '#D97706' },
-    { label: 'Último Acesso',       value: stats?.lastAccess ?? '—',     color: 'var(--text-secondary)' },
-    { label: 'Plano Contratado',    value: company.plan || '—',          color: 'var(--text-primary)' },
+    { label: 'Último Acesso',       value: stats?.lastAccess ?? '—',     color: 'var(--text-secondary)', size: 'text-sm' },
+    { label: 'Plano Contratado',    value: company.plan || '—',          color: 'var(--text-primary)',   size: 'text-sm' },
   ]
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
       {cards.map(c => (
         <div key={c.label} className="card p-5 text-center">
-          <p className="text-2xl font-bold mb-1" style={{ color: c.color }}>{c.value}</p>
+          <p className={`${c.size || 'text-2xl'} font-bold mb-1`} style={{ color: c.color }}>{c.value}</p>
           <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>{c.label}</p>
         </div>
       ))}

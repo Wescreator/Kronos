@@ -41,6 +41,22 @@ const computeFinancialSituacao = (lastPaymentDate) => {
     : 'inadimplente'
 }
 
+// Formatação de datas para exibição no Admin.
+//
+// O servidor (Render) roda em UTC. Sem `timeZone` explícito, toLocaleString usa
+// o fuso do runtime, então há duas classes de erro — em direções opostas:
+//
+//  • timestamptz (instante real: last_login_at, created_at) formatado em UTC
+//    adianta 3h e vira o dia nos registros noturnos → formatar em DISPLAY_TZ.
+//  • @db.Date (data pura: contracted_at, financial_due_date, last_payment_date)
+//    volta do driver como meia-noite UTC; formatá-la em DISPLAY_TZ recuaria para
+//    o dia anterior → formatar em UTC, que preserva o dia armazenado.
+const DISPLAY_TZ = 'America/Sao_Paulo'
+
+const fmtInstant     = (d) => (d ? new Date(d).toLocaleString('pt-BR',     { timeZone: DISPLAY_TZ }) : null)
+const fmtInstantDate = (d) => (d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: DISPLAY_TZ }) : null)
+const fmtDateOnly    = (d) => (d ? new Date(d).toLocaleDateString('pt-BR', { timeZone: 'UTC' })      : null)
+
 // Entity types que compõem o "histórico de alterações" da empresa no Admin
 // (filtra o ruído do logger genérico de requisições).
 const HISTORY_ENTITY_TYPES = ['company', 'company_user', 'client_access']
@@ -166,7 +182,7 @@ const getCompanyHistory = async (companyId) => {
       id:        r.id,
       label:     p.label || r.action || 'Alteração realizada',
       actor:     r.actor_name || 'Sistema',
-      createdAt: r.created_at ? new Date(r.created_at).toLocaleString('pt-BR') : null,
+      createdAt: fmtInstant(r.created_at),
       field:     p.field ?? null,
       oldValue:  p.oldValue ?? null,
       newValue:  p.newValue ?? null,
@@ -191,18 +207,18 @@ const getCompanyStats = async (companyId) => {
   ])
 
   const last = lastAccessAgg?._max?.lastLoginAt
-  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('pt-BR') : null)
 
   return {
     projects,
     clients,
     files,
-    lastAccess: last ? new Date(last).toLocaleString('pt-BR') : null,
+    lastAccess: fmtInstant(last),
     financial: {
       situacao:      company.financial_status ?? null,
-      vencimento:    fmtDate(company.financial_due_date),
-      contratadoEm:  fmtDate(company.contracted_at) || fmtDate(company.createdAt),
-      ultimoPagamento: fmtDate(company.last_payment_date),
+      vencimento:    fmtDateOnly(company.financial_due_date),
+      // Fallback em createdAt (timestamptz) quando não há data de contrato.
+      contratadoEm:  fmtDateOnly(company.contracted_at) || fmtInstantDate(company.createdAt),
+      ultimoPagamento: fmtDateOnly(company.last_payment_date),
       // Situação derivada da data de pagamento (adimplente/inadimplente).
       adimplencia:   computeFinancialSituacao(company.last_payment_date),
     },
@@ -344,9 +360,11 @@ const updateCompany = async (companyId, fields) => {
     const count = await prisma.companyUser.count({ where: { companyId } })
 
     // Auditoria: um evento por campo efetivamente alterado.
+    // Os únicos Date aqui são as colunas financeiras (@db.Date) — updated_at é
+    // pulado no laço abaixo —, por isso fmtDateOnly.
     const fmt = (v) => {
       if (v === null || v === undefined || v === '') return '—'
-      if (v instanceof Date) return v.toLocaleDateString('pt-BR')
+      if (v instanceof Date) return fmtDateOnly(v)
       return String(v)
     }
     for (const key of Object.keys(data)) {
