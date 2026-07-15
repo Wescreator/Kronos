@@ -2,7 +2,8 @@
 .env.production
 /node_modules
 .env.development
-
+API.md
+ARCHITETURE.md
 # Logs
 logs
 *.log

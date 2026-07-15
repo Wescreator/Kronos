@@ -177,7 +177,10 @@ const getOrCreate = async (projectId, companyId, userId) => {
   const items = await prisma.projectReportItem.findMany({ where: { reportId: report.id } })
   const ctx = await loadContext(projectId, companyId)
   return {
-    report: { id: report.id, project_id: projectId, updated_at: report.updatedAt },
+    report: {
+      id: report.id, project_id: projectId,
+      doc_title: report.docTitle, updated_at: report.updatedAt,
+    },
     ...ctx,
     items: buildTree(items),
   }
@@ -221,13 +224,20 @@ const save = async (projectId, companyId, userId, payload) => {
         })
       }
     }
-    await tx.projectReport.updateMany({ where: { id: reportId }, data: { updatedBy: userId } })
+    // doc_title: cabeçalho editável do documento ('' normaliza para null —
+    // o frontend cai no padrão "Relatório de Projeto").
+    const docTitle = (payload.doc_title || '').trim() || null
+    await tx.projectReport.updateMany({
+      where: { id: reportId },
+      data: { updatedBy: userId, docTitle },
+    })
   })
 
+  const saved = await prisma.projectReport.findFirst({ where: { id: reportId } })
   const items = await prisma.projectReportItem.findMany({ where: { reportId } })
   const ctx = await loadContext(projectId, companyId)
   return {
-    report: { id: reportId, project_id: projectId },
+    report: { id: reportId, project_id: projectId, doc_title: saved?.docTitle || null },
     ...ctx,
     items: buildTree(items),
   }

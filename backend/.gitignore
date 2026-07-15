@@ -2,7 +2,8 @@
 node_modules/
 .pnp
 .pnp.js
-
+API.md
+ARCHITETURE.md
 
 SKILL.md
 .claude

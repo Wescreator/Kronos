@@ -1,6 +1,6 @@
 const router   = require('express').Router()
 const ctrl     = require('../controllers/timeEntry.controller')
-const { authenticate } = require('../middlewares/auth.middleware')
+const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const validate = require('../middlewares/validate.middleware')
 const V        = require('../validators/timeEntry.validator')
@@ -17,8 +17,12 @@ router.get('/active',        ctrl.getActive)
 router.post('/start',        validate(V.start), idempotency(), ctrl.start)
 router.post('/stop',         ctrl.stop)
 router.delete('/active',     ctrl.discard)
-router.get('/summary',       ctrl.summary)
-router.get('/team',          ctrl.team)
+// Horas da EQUIPE (agregados de outros membros) são exclusivas do ADM —
+// espelha a UI: TeamActivity (ExecutiveDashboard) e módulo de Relatórios
+// são visíveis só para admin/developer. Os demais papéis continuam com o
+// próprio timer (/active, /start, /stop) e o histórico por tarefa (/task/:id).
+router.get('/summary',       authorize('admin'), ctrl.summary)
+router.get('/team',          authorize('admin'), ctrl.team)
 router.get('/task/:taskId',  ctrl.getByTask)
 router.get('/',              ctrl.list)
 

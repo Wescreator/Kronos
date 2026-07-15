@@ -312,7 +312,7 @@ function ExecutiveDashboard() {
             ))}
           </div>
           <Link to="/app/financial"
-            className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
+            className="mt-5 w-48 mx-auto flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200"
             style={{
               background: 'var(--brand-slate)',
               border: '1px solid var(--text-primary)',

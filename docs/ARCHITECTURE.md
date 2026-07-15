@@ -101,6 +101,19 @@ Rotas de autenticacao protegidas por rate limiting (ver [API.md](API.md)).
 
 O `services/api.js` centraliza axios (token + refresh + impersonacao).
 
+Modulo de Relatorios (`pages/reports/`, exclusivo de admin/developer via
+`permissions.js`): pagina-casca extensivel - as abas vem de
+`reports.registry.js` (hoje: Horas, Relatorio de Projeto, Relatorio
+Financeiro). Os documentos PDF saem por impressao do navegador (HTML em nova
+aba + `window.print()`, mesmo padrao de orcamentos/propostas), com cabecalho
+de marca compartilhado em `docBrand.js` alimentado por `GET /api/company/me`.
+
+Apontamento de horas (time tracking): a Task nunca armazena tempo - o total e
+a soma dos `time_entries` (registros imutaveis depois de encerrados; 1 timer
+ativo por usuario garantido por indice unico parcial). O widget do timer vive
+na Topbar (`components/timer/`), o historico na TaskDetailPage e a visao da
+equipe no ExecutiveDashboard (`components/dashboard/TeamActivity.jsx`).
+
 ---
 
 ## Armazenamento de arquivos

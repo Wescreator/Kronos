@@ -16,6 +16,11 @@ router.get(
   authorize('owner', 'admin', 'manager', 'employee'),
   async (req, res) => {
     try {
+      // Developer (escopo global) sem X-Impersonate-Company chega aqui com
+      // req.tenant = null — sem empresa não há o que devolver (antes: 500).
+      if (!req.tenant) {
+        return R.error(res, 'Sem contexto de empresa — impersone uma empresa via X-Impersonate-Company.', 400)
+      }
       const c = await companyRepo.findById(req.tenant.id)
       if (!c) return R.notFound(res, 'Empresa não encontrada')
       return R.success(res, {

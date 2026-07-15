@@ -65,8 +65,18 @@ Todas: Auth + Tenant (`authenticate, tenantMiddleware, logger`).
 | POST | `/:id/stages/:stageId/phases` | Adiciona fase |
 | PATCH | `/:id/stages/:stageId/phases/:phaseId` | Atualiza fase |
 | DELETE | `/:id/stages/:stageId/phases/:phaseId` | Remove fase |
+| GET | `/:id/report` | Relatorio de Projeto (admin) - abre/cria e SINCRONIZA com as fases concluidas do projeto |
+| PUT | `/:id/report` | Salva o relatorio (admin; replace-all `{ doc_title?, items: [...] }`; observacoes max 250 chars) |
 
 Projetos filtram por `company_id` nos repositories.
+
+Relatorio de Projeto (`/:id/report`, `authorize('admin')`): documento curado
+para PDF (modulo de Relatorios do frontend). O GET semeia/sincroniza itens a
+partir das fases CONCLUIDAS reais (etapas/fases nao concluidas sem relato sao
+removidas; itens custom e relatos do usuario nunca sao tocados). A resposta
+inclui contexto para o cabecalho/assinaturas: `project`, `client` (ClientLead
+vinculado ou texto livre), `responsible` e `company` (nome, razao social,
+CNPJ, contato, logo).
 
 ---
 
@@ -84,6 +94,32 @@ Todas: Auth + Tenant (`authenticate, tenantMiddleware, logger`).
 | POST | `/:id/comments` | Comenta (multipart `file` opcional) |
 
 Escopo por `company_id` aplicado em todas as queries (requer a migration `20250602_001`).
+
+---
+
+## Apontamento de Horas - `/api/time-entries`
+
+Todas: Auth + Tenant (`authenticate, tenantMiddleware, logger`) - mesma
+postura de Tarefas (sem `authorize`; todos os perfis internos apontam horas).
+
+| Metodo | Rota | Descricao |
+| ------ | ---- | --------- |
+| GET | `/active` | Timer ativo do usuario (ou null) |
+| POST | `/start` | Inicia cronometro (`{ task_id }`; valida + idempotency) |
+| POST | `/stop` | Encerra o timer ativo (grava `ended_at` + `duration_seconds`) |
+| DELETE | `/active` | Descarta um timer AINDA em andamento |
+| GET | `/summary` | **Admin** (`authorize('admin')`). Agregado (`?group_by=day\|week\|month\|project\|task\|user`, `?from=`, `?to=`, `?user_id=`, `?project_id=`, `?task_id=`); com `group_by=task` cada grupo traz `status` e `project` |
+| GET | `/team` | **Admin** (`authorize('admin')`). Atividade da equipe (`?period=week\|month`) - horas/registros/tarefas por membro |
+| GET | `/task/:taskId` | Historico da tarefa (total + registros + quebras por usuario/dia) |
+| GET | `/` | Lista paginada com filtros (`task_id`, `user_id`, `project_id`, `from`, `to`) |
+
+Regras: a Task nunca armazena tempo (total = soma dos registros); registros
+encerrados sao imutaveis (append-only); 1 timer ativo por usuario garantido
+por indice unico parcial no banco; `project_id` e derivado da task no service.
+Horas agregadas da EQUIPE (`/summary`, `/team`) sao exclusivas do admin -
+espelham a UI (TeamActivity e modulo de Relatorios). O timer proprio
+(`/active`, `/start`, `/stop`) e o historico por tarefa seguem abertos a
+todos os perfis internos.
 
 ---
 
@@ -170,6 +206,14 @@ Todas: Auth + `authorize('developer')` (escopo global). Operam apenas sobre empr
 | POST | `/companies/:id/users` | Cria usuario na empresa (`{ name, email, password, role, position? }`) |
 | PATCH | `/companies/:id/users/:userId` | Edita usuario (`{ name?, position?, role?, isActive?, password? }`) |
 | DELETE | `/companies/:id/users/:userId` | Exclui usuario (bloqueado se houver registros associados - use `isActive:false` para desativar) |
+
+---
+
+## Empresa logada - `/api/company`
+
+| Metodo | Rota | Gate | Descricao |
+| ------ | ---- | ---- | --------- |
+| GET | `/me` | Auth + Tenant + `authorize('owner','admin','manager','employee')` | Dados cadastrais da PROPRIA empresa (nome, razao social, CNPJ, e-mail, fone, logo, responsavel tecnico) - usados nos cabecalhos dos documentos gerados no frontend (Relatorios). O `authorize` com a lista de roles internos bloqueia tokens de portal (`scope: 'client'`). |
 
 ---
 

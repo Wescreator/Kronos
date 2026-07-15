@@ -18,8 +18,11 @@ const obsHtml = (observation) => observation
   ? `<p class="obs"><strong>Obs.:</strong> ${esc(observation).replace(/\n/g, '<br/>')}</p>`
   : ''
 
-export function buildProjectReportHtml({ company, project, client, responsible, items }) {
+export function buildProjectReportHtml({ company, project, client, responsible, items, docTitle }) {
   const emitted = new Date().toLocaleDateString('pt-BR')
+  // Cabeçalho editável por relatório (ex.: "Termo de Entrega");
+  // padrão quando vazio: "Relatório de Projeto".
+  const heading = (docTitle || '').trim() || 'Relatório de Projeto'
 
   const totalPhases = items.reduce((acc, s) => acc + (s.phases?.length || 0), 0)
   const donePhases  = items.reduce((acc, s) => acc + (s.phases?.filter(p => p.is_completed).length || 0), 0)
@@ -51,7 +54,7 @@ export function buildProjectReportHtml({ company, project, client, responsible, 
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Relatório de Projeto — ${esc(project?.title || '')}</title>
+<title>${esc(heading)} — ${esc(project?.title || '')}</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; }
@@ -93,7 +96,7 @@ export function buildProjectReportHtml({ company, project, client, responsible, 
 </head>
 <body>
 <div class="page">
-  ${docHeaderHtml(company, 'Relatório de Projeto', `Emitido em ${emitted}`)}
+  ${docHeaderHtml(company, heading, `Emitido em ${emitted}`)}
 
   <div class="title-band">
     <h1>${esc(project?.title || 'Projeto')}</h1>

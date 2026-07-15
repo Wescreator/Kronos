@@ -42,7 +42,8 @@ const toDraft = (items) => (items || []).map((s) => ({
 }))
 
 // Payload do PUT (descarta chaves locais e itens custom sem título).
-const toPayload = (draft) => ({
+const toPayload = (draft, docTitle) => ({
+  doc_title: (docTitle || '').trim() || null,
   items: draft
     .filter((s) => s.title.trim())
     .map((s) => ({
@@ -66,6 +67,7 @@ export default function ProjectReport() {
   const [projectId, setProjectId] = useState('')
   const [loaded, setLoaded]       = useState({ sig: null, data: null, error: null })
   const [draft, setDraft]         = useState([])
+  const [docTitle, setDocTitle]   = useState('')
   const [dirty, setDirty]         = useState(false)
   const [saving, setSaving]       = useState(false)
   const [feedback, setFeedback]   = useState(null) // { type: 'ok'|'err', text }
@@ -90,6 +92,7 @@ export default function ProjectReport() {
         if (!alive) return
         setLoaded({ sig: projectId, data, error: null })
         setDraft(toDraft(data.items))
+        setDocTitle(data.report?.doc_title || '')
         setDirty(false)
         setFeedback(null)
       })
@@ -125,9 +128,10 @@ export default function ProjectReport() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const { data } = await saveProjectReport(projectId, toPayload(draft))
+      const { data } = await saveProjectReport(projectId, toPayload(draft, docTitle))
       setLoaded({ sig: projectId, data, error: null })
       setDraft(toDraft(data.items))
+      setDocTitle(data.report?.doc_title || '')
       setDirty(false)
       setFeedback({ type: 'ok', text: 'Relatório salvo' })
     } catch (err) {
@@ -141,7 +145,8 @@ export default function ProjectReport() {
     if (!ctx) return
     printProjectReport({
       company: ctx.company, project: ctx.project, client: ctx.client,
-      responsible: ctx.responsible, items: toPayload(draft).items,
+      responsible: ctx.responsible, items: toPayload(draft, docTitle).items,
+      docTitle,
     })
   }
 
@@ -176,6 +181,15 @@ export default function ProjectReport() {
               ))}
             </select>
           </div>
+          {ctx && (
+            <div className="min-w-[240px] flex-1">
+              <label className="label">Cabeçalho do documento</label>
+              <input className="input" maxLength={120}
+                placeholder="Relatório de Projeto"
+                value={docTitle}
+                onChange={(e) => { setDocTitle(e.target.value); setDirty(true); setFeedback(null) }} />
+            </div>
+          )}
           {ctx && (
             <div className="flex items-center gap-2">
               <button className="btn-secondary" onClick={handlePrint}>
@@ -293,7 +307,7 @@ export default function ProjectReport() {
                   )}
                 </div>
 
-                <textarea className="input !min-h-0 py-2 text-sm" rows={2}
+                <textarea className="input !min-h-0 py-2 text-sm" rows={2} maxLength={250}
                   placeholder="Relato da etapa (aparece no PDF)…"
                   value={stage.observation}
                   onChange={(e) => patchStage(stage._key, { observation: e.target.value })} />
@@ -324,7 +338,7 @@ export default function ProjectReport() {
                           </>
                         )}
                       </div>
-                      <textarea className="input !min-h-0 py-1.5 text-xs" rows={1}
+                      <textarea className="input !min-h-0 py-1.5 text-xs" rows={1} maxLength={250}
                         placeholder="Relato da fase (aparece no PDF)…"
                         value={phase.observation}
                         onChange={(e) => patchPhase(stage._key, phase._key, { observation: e.target.value })} />
