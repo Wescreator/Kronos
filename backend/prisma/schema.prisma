@@ -57,6 +57,7 @@ model User {
   task_assignments                                  task_assignments[]
   task_comments                                     task_comments[]
   tasks                                             Task[]
+  timeEntries                                       TimeEntry[]
   companies                                         Company?               @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_users_company")
 
   @@index([companyId], map: "idx_users_company")
@@ -122,6 +123,7 @@ model Company {
   task_assignments       task_assignments[]
   task_comments          task_comments[]
   tasks                  Task[]
+  timeEntries            TimeEntry[]
   users                  User[]
 
   @@map("companies")
@@ -195,6 +197,7 @@ model Project {
   users_projects_owner_idTousers   User                   @relation("projects_owner_idTousers", fields: [ownerId], references: [id], onUpdate: NoAction)
   revenues                         Revenue[]
   tasks                            Task[]
+  timeEntries                      TimeEntry[]
 
   @@index([companyId], map: "idx_projects_company")
   @@index([companyId], map: "idx_projects_company_id")
@@ -236,6 +239,7 @@ model Task {
   companyId        String             @map("company_id") @db.Uuid
   task_assignments task_assignments[]
   task_comments    task_comments[]
+  timeEntries      TimeEntry[]
   companies        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_company")
   users            User               @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
   projects         Project?           @relation(fields: [projectId], references: [id], onUpdate: NoAction)
@@ -813,6 +817,85 @@ model task_comments {
   users      User     @relation(fields: [user_id], references: [id], onUpdate: NoAction)
 
   @@index([company_id], map: "idx_task_comments_company")
+}
+
+/// Apontamento de horas por tarefa. A Task não guarda tempo; o total é a soma
+/// de durationSeconds destes registros. endedAt NULL = timer rodando.
+///
+/// Campos em camelCase com @map (padrão dos models consultados via Prisma,
+/// como Task/Project): a extensão multi-tenant (src/config/prisma.js) injeta
+/// `companyId` no where, então o campo de escopo PRECISA se chamar companyId.
+///
+/// NOTA: o índice único parcial "time_entries_one_active_per_user"
+/// (UNIQUE (user_id) WHERE ended_at IS NULL) existe no banco mas não é
+/// representável no schema Prisma — ele é criado pela migration SQL.
+model TimeEntry {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId       String    @map("company_id") @db.Uuid
+  taskId          String    @map("task_id") @db.Uuid
+  projectId       String?   @map("project_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  startedAt       DateTime  @default(now()) @map("started_at") @db.Timestamptz(6)
+  endedAt         DateTime? @map("ended_at") @db.Timestamptz(6)
+  durationSeconds Int?      @map("duration_seconds")
+  workDate        DateTime  @default(dbgenerated("((now() AT TIME ZONE 'America/Sao_Paulo'::text))::date")) @map("work_date") @db.Date
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_time_entries_company")
+  task            Task      @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  user            User      @relation(fields: [userId], references: [id], onUpdate: NoAction)
+
+  @@index([companyId], map: "idx_time_entries_company")
+  @@index([companyId, userId, workDate], map: "idx_time_entries_company_user_date")
+  @@index([companyId, taskId], map: "idx_time_entries_company_task")
+  @@index([companyId, projectId], map: "idx_time_entries_company_project")
+  @@map("time_entries")
+}
+
+/// Relatório de Projeto (documento curado por projeto para gerar PDF).
+/// Campos camelCase com @map (padrão dos models via Prisma). companyId é o
+/// campo de escopo exigido pela extensão multi-tenant. As FKs para
+/// companies/projects/users existem no banco mas não são navegadas aqui
+/// (mantidas como escalares para não precisar de back-relations).
+model ProjectReport {
+  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId String              @map("company_id") @db.Uuid
+  projectId String              @unique @map("project_id") @db.Uuid
+  createdBy String?             @map("created_by") @db.Uuid
+  updatedBy String?             @map("updated_by") @db.Uuid
+  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  items     ProjectReportItem[]
+
+  @@index([companyId], map: "idx_project_reports_company")
+  @@map("project_reports")
+}
+
+/// Item da árvore do relatório: etapa (parentId null) ou fase (parentId
+/// preenchido), com a observação do ADM. source_id = id da etapa/fase real
+/// de onde foi semeado (ou null se o ADM adicionou só no relatório).
+model ProjectReportItem {
+  id          String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId   String              @map("company_id") @db.Uuid
+  reportId    String              @map("report_id") @db.Uuid
+  parentId    String?             @map("parent_id") @db.Uuid
+  kind        String              @default("stage") @db.VarChar(10)
+  title       String              @db.VarChar(300)
+  observation String?
+  isCompleted Boolean             @default(false) @map("is_completed")
+  sourceId    String?             @map("source_id") @db.Uuid
+  itemOrder   Int                 @default(0) @map("item_order")
+  createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  report      ProjectReport       @relation(fields: [reportId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  parent      ProjectReportItem?  @relation("report_item_children", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  children    ProjectReportItem[] @relation("report_item_children")
+
+  @@index([companyId], map: "idx_project_report_items_company")
+  @@index([reportId], map: "idx_project_report_items_report")
+  @@index([parentId], map: "idx_project_report_items_parent")
+  @@map("project_report_items")
 }
 
 model BudgetConfig {

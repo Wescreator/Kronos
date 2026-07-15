@@ -1,10 +1,11 @@
-import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper, Calculator} from 'lucide-react'
+import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper, Calculator, BarChart3} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
 import useSocketStore from '../../store/socketStore'
 import Avatar from '../ui/Avatar'
 import ThemeToggle from '../ui/ThemeToggle'
+import TimerWidget from '../timer/TimerWidget'
 import {getNotifications, markRead, markAllRead, deleteNotification,} from '../../services/notifications.service'
 import { formatDateTime } from '../../utils/format'
 import { canSeeModule } from '../../utils/permissions'
@@ -27,8 +28,9 @@ const NAV_LINKS = [
   { to: '/app/posts',     icon: Newspaper,          label: 'Posts',      module: 'posts'     },
   { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos',   module: 'projects'  },
   { to: '/app/proposals', icon: FileText,           label: 'Propostas',  module: 'proposals' },
-  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas',    module: 'tasks'     }
-] 
+  { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas',    module: 'tasks'     },
+  { to: '/app/reports',   icon: BarChart3,          label: 'Relatórios', module: 'reports'   }
+]
 
 export default function Topbar() {
   const { user, logout } = useAuthStore()
@@ -199,6 +201,9 @@ export default function Topbar() {
 
         {/* ── DIREITA ──────────────────────────────────────────────── */}
         <div className="flex items-center gap-1.5 ml-auto shrink-0">
+
+          {/* CRONÔMETRO (apontamento de horas) */}
+          <TimerWidget />
 
           {/* TEMA (claro / escuro) */}
           <ThemeToggle />

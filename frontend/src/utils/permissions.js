@@ -58,14 +58,18 @@ export const ROLE_STYLES = {
 // perfis (incluindo owner) veem o dashboard personalizado sem finanças
 // (TeamDashboard) — por isso 'dashboard' agora é visível a todos.
 // Espelha authorize('admin') em financial.routes.js no backend.
-const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets']
-const MODULES_SEM_FINANCEIRO = ALL_MODULES.filter(m => m !== 'financial')
+const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets', 'reports']
+// O módulo Relatórios é EXCLUSIVO do administrador (developer tem bypass) —
+// decisão de produto: agrega horas de TODA a equipe. Assim como o Financeiro,
+// nem o owner acessa. owner/manager/employee compartilham a mesma lista:
+// sem Financeiro e sem Relatórios.
+const MODULES_SEM_ADMIN = ALL_MODULES.filter(m => !['financial', 'reports'].includes(m))
 export const VISIBLE_MODULES = {
   developer: ALL_MODULES,
-  owner:     MODULES_SEM_FINANCEIRO,
+  owner:     MODULES_SEM_ADMIN,
   admin:     ALL_MODULES,
-  manager:   MODULES_SEM_FINANCEIRO,
-  employee:  MODULES_SEM_FINANCEIRO,
+  manager:   MODULES_SEM_ADMIN,
+  employee:  MODULES_SEM_ADMIN,
 }
 // ─────────────────────────────────────────────────────────────────
 
@@ -159,6 +163,13 @@ export const PERMISSIONS = {
     edit:    ADMIN_ROLES,
     delete:  ADMIN_ROLES,
     attach:  ADMIN_ROLES,
+  },
+  // NOVO — módulo de Relatórios (hoje só relatórios de horas; extensível).
+  // EXCLUSIVO do administrador (developer tem bypass em can()). Espelha
+  // VISIBLE_MODULES.reports.
+  reports: {
+    view:      FINANCE_ROLES,
+    viewHours: FINANCE_ROLES,
   },
   budgets: {
   view:         ALL_ROLES,

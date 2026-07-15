@@ -16,7 +16,29 @@ export const formatDateTime = (date) => {
   }).format(new Date(date))
 }
 
-export const formatPercent = (value) => `${value || 0}%`  
+export const formatPercent = (value) => `${value || 0}%`
+
+// Duração legível a partir de segundos (ex.: "1h 23min", "23min", "45s").
+// Usado no total da tarefa, histórico e relatórios de apontamento de horas.
+export const formatDuration = (totalSeconds) => {
+  const s = Math.max(0, Math.floor(totalSeconds || 0))
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}min`
+  if (m > 0) return `${m}min`
+  return `${s}s`
+}
+
+// Cronômetro corrido no formato relógio (HH:MM:SS ou MM:SS) — usado no timer
+// da Topbar enquanto conta.
+export const formatClock = (totalSeconds) => {
+  const s = Math.max(0, Math.floor(totalSeconds || 0))
+  const pad = (n) => String(n).padStart(2, '0')
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`
+}
 
 export const formatCompact = (value) => {
   if (!value) return 'R$ 0'

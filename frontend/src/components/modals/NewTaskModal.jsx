@@ -1,22 +1,42 @@
 import { useState, useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import PortalModal from '../ui/PortalModal'
-import { createTask } from '../../services/tasks.service'
+import { createTask, updateTask } from '../../services/tasks.service'
 import { getProjects } from '../../services/projects.service'
 import { getUsers } from '../../services/team.service'
 import useIdempotencyKey from '../../hooks/useIdempotencyKey'
 
-export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectId }) {
-  const [form, setForm] = useState({
+// Estado inicial do formulário. Em modo edição (`task` presente) pré-preenche
+// com os dados da tarefa; em criação, começa vazio (ou com o projeto padrão).
+// Como o estado inicial é derivado das props via useState, o modal deve ser
+// montado "fresco" a cada abertura de edição (os call sites o renderizam
+// condicionalmente), evitando setState dentro de effect só para pré-preencher.
+function buildInitialForm(task, defaultProjectId) {
+  if (task) {
+    return {
+      title:       task.title || '',
+      description: task.description || '',
+      project_id:  task.project_id || '',
+      priority:    task.priority || 'medium',
+      due_date:    task.due_date ? String(task.due_date).slice(0, 10) : '',
+      assignees:   (task.assignees || []).map(a => a.id),
+    }
+  }
+  return {
     title:'', description:'', project_id: defaultProjectId || '',
-    priority:'medium', due_date:'', assignees: []
-  })
+    priority:'medium', due_date:'', assignees: [],
+  }
+}
+
+export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectId, task = null }) {
+  const isEdit = !!task
+  const [form, setForm] = useState(() => buildInitialForm(task, defaultProjectId))
   const [projects, setProjects] = useState([])
   const [users,    setUsers]    = useState([])
   const [loading,  setLoading]  = useState(false)
 
-  // Uma chave por intenção — ver hooks/useIdempotencyKey.
-  const [idemKey, renewIdemKey] = useIdempotencyKey(open)
+  // Chave de idempotência só faz sentido na criação (updates são idempotentes).
+  const [idemKey, renewIdemKey] = useIdempotencyKey(open && !isEdit)
 
   useEffect(() => {
     if (open) {
@@ -40,13 +60,19 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
     e.preventDefault()
     setLoading(true)
     try {
-      await createTask({ ...form, project_id: form.project_id || null }, idemKey)
-      toast.success('Tarefa criada!')
-      setForm({ title:'', description:'', project_id:'', priority:'medium', due_date:'', assignees:[] })
-      renewIdemKey() // intenção concluída — libera a criação de outra tarefa
+      const payload = { ...form, project_id: form.project_id || null }
+      if (isEdit) {
+        await updateTask(task.id, payload)
+        toast.success('Tarefa atualizada!')
+      } else {
+        await createTask(payload, idemKey)
+        toast.success('Tarefa criada!')
+        setForm(buildInitialForm(null, defaultProjectId))
+        renewIdemKey() // intenção concluída — libera a criação de outra tarefa
+      }
       onSuccess()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erro ao criar tarefa')
+      toast.error(err.response?.data?.message || (isEdit ? 'Erro ao atualizar tarefa' : 'Erro ao criar tarefa'))
     } finally { setLoading(false) }
   }
 
@@ -58,7 +84,7 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
   ]
 
   return (
-    <PortalModal open={open} onClose={onClose} title="Nova Tarefa" size="lg">
+    <PortalModal open={open} onClose={onClose} title={isEdit ? 'Editar Tarefa' : 'Nova Tarefa'} size="lg">
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label
@@ -138,7 +164,7 @@ export default function NewTaskModal({ open, onClose, onSuccess, defaultProjectI
         <div className="flex justify-end gap-3 pt-2" style={{ borderTop: '1px solid var(--border-subtle)' }}>
           <button type="button" onClick={onClose} className="btn-secondary">Cancelar</button>
           <button type="submit" disabled={loading} className="btn-primary">
-            {loading ? 'Criando...' : 'Criar Tarefa'}
+            {loading ? (isEdit ? 'Salvando...' : 'Criando...') : (isEdit ? 'Salvar' : 'Criar Tarefa')}
           </button>
         </div>
       </form>

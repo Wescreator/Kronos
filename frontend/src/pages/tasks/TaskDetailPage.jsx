@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Send, Clock, FolderKanban, Trash2 } from 'lucide-react'
+import { ArrowLeft, Send, Clock, FolderKanban, Trash2, Pencil } from 'lucide-react'
 import { getTask, updateTask, addTaskComment, deleteTask } from '../../services/tasks.service'
 import Spinner from '../../components/ui/Spinner'
 import Badge from '../../components/ui/Badge'
 import Avatar from '../../components/ui/Avatar'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
+import TaskTimeHistory from '../../components/timer/TaskTimeHistory'
+import NewTaskModal from '../../components/modals/NewTaskModal'
 import { formatDate, formatDateTime, statusLabel, statusColors, priorityLabel, priorityColors } from '../../utils/format'
 import { toast } from 'react-hot-toast'
 import useAuthStore from '../../store/authStore'
@@ -22,6 +24,7 @@ export default function TaskDetailPage() {
   const [comment, setComment] = useState('')
   const [sending, setSending] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
 
   // Uma chave por comentário — renovada a cada envio bem-sucedido, então dois
   // comentários iguais de propósito continuam possíveis. Ver useIdempotencyKey.
@@ -78,12 +81,20 @@ export default function TaskDetailPage() {
         >
           <ArrowLeft size={15} /> Voltar para Tarefas
         </button>
-        <button
-          onClick={() => setConfirmDelete(true)}
-          className="btn-danger flex items-center gap-2 text-xs"
-        >
-          <Trash2 size={14} /> Excluir Tarefa
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowEdit(true)}
+            className="btn-secondary flex items-center gap-2 text-xs"
+          >
+            <Pencil size={14} /> Editar Tarefa
+          </button>
+          <button
+            onClick={() => setConfirmDelete(true)}
+            className="btn-danger flex items-center gap-2 text-xs"
+          >
+            <Trash2 size={14} /> Excluir Tarefa
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -150,6 +161,9 @@ export default function TaskDetailPage() {
               </div>
             </form>
           </div>
+
+          {/* Apontamento de horas — total + histórico (não altera o status) */}
+          <TaskTimeHistory taskId={task.id} />
         </div>
 
         {/* Sidebar de detalhes */}
@@ -216,6 +230,17 @@ export default function TaskDetailPage() {
         message={`Tem certeza que deseja excluir a tarefa "${task.title}"? Esta ação não pode ser desfeita.`}
         danger
       />
+
+      {/* Editar tarefa — reaproveita o formulário do NewTaskModal (modo edição).
+          Montado condicionalmente para pré-preencher com a tarefa atual. */}
+      {showEdit && (
+        <NewTaskModal
+          open
+          task={task}
+          onClose={() => setShowEdit(false)}
+          onSuccess={() => { setShowEdit(false); load() }}
+        />
+      )}
     </div>
   )
 }

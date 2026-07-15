@@ -4,6 +4,8 @@ const stageCtrl            = require('../controllers/stage.controller')
 const fileCtrl             = require('../controllers/project-file.controller')
 const phaseCommentCtrl     = require('../controllers/phase-comment.controller')
 const phaseAttachmentCtrl  = require('../controllers/phase-attachment.controller')
+const reportCtrl           = require('../controllers/projectReport.controller')
+const RV                   = require('../validators/projectReport.validator')
 const { authenticate, authorize } = require('../middlewares/auth.middleware')
 const tenantMiddleware = require('../middlewares/tenant.middleware')
 const validate    = require('../middlewares/validate.middleware')
@@ -44,6 +46,11 @@ router.patch('/:id/stages/:stageId/phases/reorder',   stageCtrl.reorderPhases)
 router.post('/:id/stages/:stageId/phases',            idempotency(), stageCtrl.addPhase)
 router.patch('/:id/stages/:stageId/phases/:phaseId',  stageCtrl.updatePhase)
 router.delete('/:id/stages/:stageId/phases/:phaseId', stageCtrl.deletePhase)
+
+// Relatório de Projeto (documento p/ PDF) — EXCLUSIVO do Admin (developer
+// bypassa authorize). GET faz get-or-seed; PUT salva a árvore editada.
+router.get('/:id/report', authorize('admin'), reportCtrl.getReport)
+router.put('/:id/report', authorize('admin'), validate(RV.save), reportCtrl.saveReport)
 
 // Comentários de fase (histórico — autor, data e hora)
 router.post('/:id/stages/:stageId/phases/:phaseId/comments',              idempotency(), phaseCommentCtrl.addComment)

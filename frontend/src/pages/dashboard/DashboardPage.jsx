@@ -23,6 +23,7 @@ import {
 import useAuthStore  from '../../store/authStore'
 import { can }       from '../../utils/permissions'
 import TeamDashboard from './TeamDashboard'
+import TeamActivity  from '../../components/dashboard/TeamActivity'
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
@@ -227,8 +228,8 @@ function ExecutiveDashboard() {
         </div>
       </div>
 
-      {/* ── Projetos + Resumo ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+      {/* ── Projetos + Resumo + Despesas a Vencer ──────────────────────── */}
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-5">
 
         {/* Projetos ativos */}
         <div className="xl:col-span-2 card p-6 flex flex-col">
@@ -323,86 +324,6 @@ function ExecutiveDashboard() {
             Financeiro completo <ArrowRight size={13} />
           </Link>
         </div>
-      </div>
-
-      {/* ── Gráfico de Fluxo de Caixa ─────────────────────────────────── */}
-      <div className="card p-6">
-        <div className="mb-5">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-            style={{ color: 'var(--text-muted)' }}>{new Date().getFullYear()}</p>
-          <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-            Fluxo de Caixa
-          </h3>
-        </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={cashflow} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
-            <defs>
-              <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#16A34A" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#DC2626" stopOpacity={0.30} />
-                <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false}
-              tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
-            <Tooltip content={<CustomTooltip />} />
-            <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }} />
-            <Area type="monotone" dataKey="Receitas" stroke="#16A34A" strokeWidth={2} fill="url(#gRev)" dot={false} />
-            <Area type="monotone" dataKey="Despesas" stroke="#DC2626" strokeWidth={2} fill="url(#gExp)" dot={false} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* ── Tarefas + Despesas ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
-
-        {/* Tarefas abertas */}
-        <div className="card p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
-                style={{ color: 'var(--text-muted)' }}>Pendentes</p>
-              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                Tarefas Abertas
-              </h3>
-            </div>
-            <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
-              style={{ color: 'var(--text-primary)' }}>
-              Ver todas <ArrowRight size={13} />
-            </Link>
-          </div>
-          <div className="space-y-1.5">
-            {tasks.length === 0 && (
-              <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>
-                Nenhuma tarefa aberta
-              </p>
-            )}
-            {tasks.map(t => (
-              <Link key={t.id} to={`/app/tasks/${t.id}`}
-                className="flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                <div className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-                    {t.title}
-                  </p>
-                  {t.due_date && (
-                    <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-                      <Clock size={10} /> {formatDate(t.due_date)}
-                    </p>
-                  )}
-                </div>
-                <Badge className={priorityColors[t.priority]}>{priorityLabel[t.priority]}</Badge>
-              </Link>
-            ))}
-          </div>
-        </div>
 
         {/* Despesas a vencer */}
         <div className="card p-6">
@@ -438,6 +359,89 @@ function ExecutiveDashboard() {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* ── Gráfico de Fluxo de Caixa ─────────────────────────────────── */}
+      <div className="card p-6">
+        <div className="mb-5">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+            style={{ color: 'var(--text-muted)' }}>{new Date().getFullYear()}</p>
+          <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            Fluxo de Caixa
+          </h3>
+        </div>
+        <ResponsiveContainer width="100%" height={220}>
+          <AreaChart data={cashflow} margin={{ top: 5, right: 5, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="gRev" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#16A34A" stopOpacity={0.30} />
+                <stop offset="95%" stopColor="#16A34A" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="gExp" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor="#DC2626" stopOpacity={0.30} />
+                <stop offset="95%" stopColor="#DC2626" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" />
+            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false}
+              tickFormatter={v => `${(v/1000).toFixed(0)}k`} />
+            <Tooltip content={<CustomTooltip />} />
+            <Legend wrapperStyle={{ fontSize: 12, color: 'var(--text-secondary)' }} />
+            <Area type="monotone" dataKey="Receitas" stroke="#16A34A" strokeWidth={2} fill="url(#gRev)" dot={false} />
+            <Area type="monotone" dataKey="Despesas" stroke="#DC2626" strokeWidth={2} fill="url(#gExp)" dot={false} />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* ── Tarefas + Atividade da Equipe (exclusivo do Dashboard Admin) ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+
+        {/* Tarefas abertas */}
+        <div className="card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-0.5"
+                style={{ color: 'var(--text-muted)' }}>Pendentes</p>
+              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                Tarefas Abertas
+              </h3>
+            </div>
+            <Link to="/app/tasks" className="flex items-center gap-1.5 text-xs font-semibold"
+              style={{ color: 'var(--text-primary)' }}>
+              Ver todas <ArrowRight size={13} />
+            </Link>
+          </div>
+          <div className="space-y-1.5 overflow-y-auto pr-1" style={{ maxHeight: 320 }}>
+            {tasks.length === 0 && (
+              <p className="text-sm text-center py-6" style={{ color: 'var(--text-muted)' }}>
+                Nenhuma tarefa aberta
+              </p>
+            )}
+            {tasks.map(t => (
+              <Link key={t.id} to={`/app/tasks/${t.id}`}
+                className="flex items-center gap-3 p-3 rounded-xl transition-all duration-150"
+                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <div className={`h-2 w-2 rounded-full shrink-0 ${priorityDot[t.priority]}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                    {t.title}
+                  </p>
+                  {t.due_date && (
+                    <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
+                      <Clock size={10} /> {formatDate(t.due_date)}
+                    </p>
+                  )}
+                </div>
+                <Badge className={priorityColors[t.priority]}>{priorityLabel[t.priority]}</Badge>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Atividade da Equipe (horas apontadas por membro) */}
+        <TeamActivity />
       </div>
     </div>
   )

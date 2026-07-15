@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, CheckSquare, Clock, Circle, Trash2, Search } from 'lucide-react'
+import { Plus, CheckSquare, Clock, Circle, Trash2, Search, Pencil } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { useTasks } from '../../hooks/useTasks'
 import { getTasksDashboard, deleteTask } from '../../services/tasks.service'
@@ -32,7 +32,8 @@ const STATUS_FILTERS = [
 ]
 
 export default function TasksPage() {
-  const [showModal, setShowModal] = useState(false)
+  // Modal de tarefa: undefined = fechado; null = criar; objeto = editar.
+  const [modalTask, setModalTask] = useState(undefined)
   const [filters,   setFilters]   = useState({ status: '', priority: '', search: '' })
   const [searchInput, setSearchInput] = useState('')
   const [stats,     setStats]     = useState(null)
@@ -74,7 +75,7 @@ export default function TasksPage() {
         tag="Gestão"
         subtitle="Acompanhe e gerencie todas as tarefas da equipe"
         actions={
-          <button onClick={() => setShowModal(true)} className="btn-primary">
+          <button onClick={() => setModalTask(null)} className="btn-primary">
             <Plus size={15} /> Nova Tarefa
           </button>
         }
@@ -152,7 +153,7 @@ export default function TasksPage() {
         <EmptyState
           icon={CheckSquare}
           title="Nenhuma tarefa encontrada"
-          action={<button onClick={() => setShowModal(true)} className="btn-primary">Nova Tarefa</button>}
+          action={<button onClick={() => setModalTask(null)} className="btn-primary">Nova Tarefa</button>}
         />
       ) : (
         <div className="card overflow-hidden">
@@ -231,16 +232,28 @@ export default function TasksPage() {
                     </span>
                   </td>
                   <td className="table-cell">
-                    <button
-                      onClick={() => setTaskToDelete(t)}
-                      className="p-1.5 rounded-lg transition-colors"
-                      style={{ color: 'var(--text-muted)' }}
-                      onMouseEnter={e => e.currentTarget.style.color = '#FB7185'}
-                      onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-                      title="Excluir tarefa"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setModalTask(t)}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--text-muted)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = 'var(--text-primary)'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                        title="Editar tarefa"
+                      >
+                        <Pencil size={15} />
+                      </button>
+                      <button
+                        onClick={() => setTaskToDelete(t)}
+                        className="p-1.5 rounded-lg transition-colors"
+                        style={{ color: 'var(--text-muted)' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#FB7185'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                        title="Excluir tarefa"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -249,11 +262,16 @@ export default function TasksPage() {
         </div>
       )}
 
-      <NewTaskModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        onSuccess={() => { setShowModal(false); refetch() }}
-      />
+      {/* Montado condicionalmente: garante estado inicial "fresco" do
+          formulário a cada abertura (criar = null, editar = a tarefa). */}
+      {modalTask !== undefined && (
+        <NewTaskModal
+          open
+          task={modalTask}
+          onClose={() => setModalTask(undefined)}
+          onSuccess={() => { setModalTask(undefined); refetch() }}
+        />
+      )}
 
       <ConfirmDialog
         open={!!taskToDelete}

@@ -16,6 +16,7 @@
     "prisma:studio": "prisma studio",
     "dev:local": "cross-env NODE_ENV=development node -r dotenv/config src/server.js dotenv_config_path=.env.development",
     "seed:local": "node src/database/seeds/004_seed_local_users.js",
+    "seed:demo": "node src/database/seeds/005_seed_demo_data.js",
     "test": "node --test"
   },
   "prisma": {

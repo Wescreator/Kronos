@@ -50,6 +50,27 @@ test('update/delete/upsert por chave única em modelo tenant são bloqueados', a
   })
 })
 
+test('TimeEntry (apontamento de horas) é modelo tenant: bloqueado sem contexto', async () => {
+  await assert.rejects(
+    () => prisma.timeEntry.findMany(),
+    /sem contexto de empresa/,
+    'TimeEntry precisa estar em TENANT_MODELS para ser escopado por empresa',
+  )
+})
+
+test('TimeEntry: findUnique/update por id único são bloqueados (use findFirst/updateMany)', async () => {
+  await runWithTenant({ companyId: COMPANY, scope: 'company' }, async () => {
+    await assert.rejects(
+      () => prisma.timeEntry.findUnique({ where: { id: COMPANY } }),
+      /nao e escopada/,
+    )
+    await assert.rejects(
+      () => prisma.timeEntry.update({ where: { id: COMPANY }, data: {} }),
+      /nao e escopada/,
+    )
+  })
+})
+
 test('modelo de plataforma (User) NÃO exige contexto de empresa', async () => {
   // findUnique em User passa direto pela extensão (modelo exempto).
   // Sem banco acessível o erro seria de conexão — o que interessa é que

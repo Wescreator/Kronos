@@ -64,6 +64,11 @@ const update = async (id, data, userId, companyId) => {
     if (data[key] !== undefined) fields[key] = data[key]
   }
 
+  // due_date vazio (usuário limpou o prazo) → null; sem isso o UPDATE gravaria
+  // '' numa coluna DATE e o Postgres rejeitaria. due_date válido é uma string
+  // 'YYYY-MM-DD' (ver task.validator) — gravada sem conversão de fuso.
+  if (fields.due_date === '') fields.due_date = null
+
   if (data.status === 'completed' && task.status !== 'completed') {
     fields.completed_at = new Date()
   }
