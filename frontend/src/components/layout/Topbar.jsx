@@ -1,4 +1,4 @@
-import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper, Calculator, BarChart3} from 'lucide-react'
+import {Bell, Menu, X, LayoutDashboard, FolderKanban, DollarSign, CheckSquare, MessageSquare, Users, Calendar, FileText, Trash2, Newspaper, Calculator, BarChart3, UploadCloud} from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import useAuthStore from '../../store/authStore'
@@ -29,7 +29,8 @@ const NAV_LINKS = [
   { to: '/app/projects',  icon: FolderKanban,       label: 'Projetos',   module: 'projects'  },
   { to: '/app/proposals', icon: FileText,           label: 'Propostas',  module: 'proposals' },
   { to: '/app/tasks',     icon: CheckSquare,        label: 'Tarefas',    module: 'tasks'     },
-  { to: '/app/reports',   icon: BarChart3,          label: 'Relatórios', module: 'reports'   }
+  { to: '/app/reports',   icon: BarChart3,          label: 'Relatórios', module: 'reports'   },
+  { to: '/app/imports',   icon: UploadCloud,        label: 'Importar',   module: 'imports'   }
 ]
 
 export default function Topbar() {

@@ -9,3 +9,6 @@ documentation.md
 CLAUDE.md
 SKILL.md
 .claude
+
+# Documentação de consulta local (specs, referência de API/arquitetura)
+docs/

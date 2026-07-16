@@ -10,6 +10,7 @@ const UPDATABLE_FIELDS = {
   name: 'name',
   email: 'email',
   phone: 'phone',
+  cpfCnpj: 'cpf_cnpj',
   status: 'status',
   situacao: 'situacao',
   financeiro: 'financeiro',
@@ -139,14 +140,15 @@ const create = async (companyId, data) => {
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO clients_leads (company_id, name, email, phone, status, situacao, financeiro, project_id, user_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      `INSERT INTO clients_leads (company_id, name, email, phone, cpf_cnpj, status, situacao, financeiro, project_id, user_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING *`,
       [
         companyId,
         data.name,
         data.email,
         data.phone || null,
+        data.cpfCnpj || null,
         status,
         situacao,
         financeiro,

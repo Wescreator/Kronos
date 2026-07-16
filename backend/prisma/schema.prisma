@@ -25,6 +25,7 @@ model User {
   resetToken                                        String?                @map("reset_token") @db.VarChar(255)
   resetTokenExpiresAt                               DateTime?              @map("reset_token_expires_at") @db.Timestamptz(6)
   companyId                                         String?                @map("company_id") @db.Uuid
+  token_version                                     Int                    @default(0)
   activity_logs                                     activity_logs[]
   budget_snapshots                                  BudgetSnapshot[]
   budgets                                           Budget[]
@@ -38,6 +39,8 @@ model User {
   company_users                                     CompanyUser[]
   expense_categories                                ExpenseCategory[]
   expenses                                          Expense[]
+  idempotency_keys                                  idempotency_keys[]
+  import_jobs                                       import_jobs[]
   notifications                                     Notification[]
   phase_attachments                                 phase_attachments[]
   phase_comments                                    phase_comments[]
@@ -48,6 +51,8 @@ model User {
   project_members                                   project_members[]
   project_phases_project_phases_completed_byTousers project_phases[]       @relation("project_phases_completed_byTousers")
   project_phases_project_phases_created_byTousers   project_phases[]       @relation("project_phases_created_byTousers")
+  project_reports_project_reports_created_byTousers ProjectReport[]        @relation("project_reports_created_byTousers")
+  project_reports_project_reports_updated_byTousers ProjectReport[]        @relation("project_reports_updated_byTousers")
   project_stages_created                            project_stages[]       @relation("project_stages_created_by")
   project_status_history                            ProjectStatusHistory[]
   projects_projects_created_byTousers               Project[]              @relation("projects_created_byTousers")
@@ -101,8 +106,14 @@ model Company {
   clients_leads          ClientLead[]
   comment_attachments    CommentAttachment[]
   company_users          CompanyUser[]
+  document_counters      document_counters[]
   expense_categories     ExpenseCategory[]
   expenses               Expense[]
+  idempotency_keys       idempotency_keys[]
+  import_column_mappings import_column_mappings[]
+  import_jobs            import_jobs[]
+  import_staging_rows    import_staging_rows[]
+  import_templates       import_templates[]
   notifications          Notification[]
   phase_attachments      phase_attachments[]
   phase_comments         phase_comments[]
@@ -110,6 +121,8 @@ model Company {
   post_comments          PostComment[]
   posts                  Post[]
   project_phases         project_phases[]
+  project_report_items   ProjectReportItem[]
+  project_reports        ProjectReport[]
   project_stages         project_stages[]
   project_status_history ProjectStatusHistory[]
   projects               Project[]
@@ -190,6 +203,7 @@ model Project {
   posts                            Post[]
   project_files                    project_files[]
   project_members                  project_members[]
+  project_reports                  ProjectReport?
   project_stages                   project_stages[]
   project_status_history           ProjectStatusHistory[]
   companies                        Company                @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_projects_company")
@@ -239,10 +253,10 @@ model Task {
   companyId        String             @map("company_id") @db.Uuid
   task_assignments task_assignments[]
   task_comments    task_comments[]
-  timeEntries      TimeEntry[]
   companies        Company            @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_tasks_company")
   users            User               @relation(fields: [createdBy], references: [id], onUpdate: NoAction)
   projects         Project?           @relation(fields: [projectId], references: [id], onUpdate: NoAction)
+  timeEntries      TimeEntry[]
 
   @@index([companyId], map: "idx_tasks_company")
   @@index([companyId], map: "idx_tasks_company_id")
@@ -442,6 +456,7 @@ model ClientLead {
   portalIsActive        Boolean               @default(true) @map("portal_is_active")
   portalLastLoginAt     DateTime?             @map("portal_last_login_at") @db.Timestamptz(6)
   portalPasswordHash    String?               @map("portal_password_hash") @db.VarChar(255)
+  cpf_cnpj              String?               @db.VarChar(14)
   budgets               Budget[]
   client_project_access ClientProjectAccess[]
   projects              Project?              @relation(fields: [projectId], references: [id], onUpdate: NoAction)
@@ -568,9 +583,9 @@ model activity_logs {
   payload     Json?
   ip_address  String?  @db.Inet
   created_at  DateTime @default(now()) @db.Timestamptz(6)
-  company_id  String   @db.Uuid
+  company_id  String?  @db.Uuid
   users       User?    @relation(fields: [user_id], references: [id], onUpdate: NoAction)
-  companies   Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_activity_logs_company")
+  companies   Company? @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_activity_logs_company")
 
   @@index([company_id], map: "idx_activity_logs_company")
   @@index([created_at(sort: Desc)], map: "idx_logs_date")
@@ -842,8 +857,8 @@ model TimeEntry {
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
   company         Company   @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_time_entries_company")
+  project         Project?  @relation(fields: [projectId], references: [id], onUpdate: NoAction)
   task            Task      @relation(fields: [taskId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  project         Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
   user            User      @relation(fields: [userId], references: [id], onUpdate: NoAction)
 
   @@index([companyId], map: "idx_time_entries_company")
@@ -859,15 +874,19 @@ model TimeEntry {
 /// companies/projects/users existem no banco mas não são navegadas aqui
 /// (mantidas como escalares para não precisar de back-relations).
 model ProjectReport {
-  id        String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  companyId String              @map("company_id") @db.Uuid
-  projectId String              @unique @map("project_id") @db.Uuid
-  docTitle  String?             @map("doc_title") @db.VarChar(120)
-  createdBy String?             @map("created_by") @db.Uuid
-  updatedBy String?             @map("updated_by") @db.Uuid
-  createdAt DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  items     ProjectReportItem[]
+  id                                      String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  companyId                               String              @map("company_id") @db.Uuid
+  projectId                               String              @unique @map("project_id") @db.Uuid
+  createdBy                               String?             @map("created_by") @db.Uuid
+  updatedBy                               String?             @map("updated_by") @db.Uuid
+  createdAt                               DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                               DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  docTitle                                String?             @map("doc_title") @db.VarChar(120)
+  items                                   ProjectReportItem[]
+  companies                               Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_project_reports_created_byTousers User?               @relation("project_reports_created_byTousers", fields: [createdBy], references: [id], onUpdate: NoAction)
+  projects                                Project             @relation(fields: [projectId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users_project_reports_updated_byTousers User?               @relation("project_reports_updated_byTousers", fields: [updatedBy], references: [id], onUpdate: NoAction)
 
   @@index([companyId], map: "idx_project_reports_company")
   @@map("project_reports")
@@ -889,9 +908,10 @@ model ProjectReportItem {
   itemOrder   Int                 @default(0) @map("item_order")
   createdAt   DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  report      ProjectReport       @relation(fields: [reportId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  companies   Company             @relation(fields: [companyId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   parent      ProjectReportItem?  @relation("report_item_children", fields: [parentId], references: [id], onDelete: Cascade, onUpdate: NoAction)
   children    ProjectReportItem[] @relation("report_item_children")
+  report      ProjectReport       @relation(fields: [reportId], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
   @@index([companyId], map: "idx_project_report_items_company")
   @@index([reportId], map: "idx_project_report_items_report")
@@ -1026,6 +1046,114 @@ model BudgetSnapshot {
   @@index([budgetId], map: "idx_budget_snapshots_budget")
   @@index([companyId], map: "idx_budget_snapshots_company")
   @@map("budget_snapshots")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model document_counters {
+  company_id  String  @db.Uuid
+  doc_type    String  @db.VarChar(20)
+  year        Int
+  last_number Int     @default(0)
+  companies   Company @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([company_id, doc_type, year])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model idempotency_keys {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id         String    @db.Uuid
+  company_id      String?   @db.Uuid
+  idem_key        String    @db.VarChar(120)
+  endpoint        String    @db.VarChar(200)
+  request_hash    String    @db.VarChar(64)
+  status          String    @default("processing") @db.VarChar(20)
+  response_status Int?
+  response_body   Json?
+  created_at      DateTime  @default(now()) @db.Timestamptz(6)
+  completed_at    DateTime? @db.Timestamptz(6)
+  companies       Company?  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, idem_key], map: "idempotency_keys_user_key_uniq")
+  @@index([created_at])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model import_column_mappings {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  import_job_id      String      @db.Uuid
+  company_id         String      @db.Uuid
+  source_column_name String      @db.VarChar(255)
+  target_field       String      @db.VarChar(50)
+  transform_rule     Json?
+  companies          Company     @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  import_jobs        import_jobs @relation(fields: [import_job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([import_job_id, source_column_name])
+  @@index([import_job_id], map: "idx_import_mappings_job")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model import_jobs {
+  id                     String                   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id             String                   @db.Uuid
+  module                 String                   @db.VarChar(30)
+  status                 String                   @default("uploaded") @db.VarChar(15)
+  original_file_key      String?
+  original_filename      String?                  @db.VarChar(255)
+  detected_columns       Json?
+  row_count              Int?
+  error_message          String?
+  created_by             String                   @db.Uuid
+  created_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  updated_at             DateTime                 @default(now()) @db.Timestamptz(6)
+  confirmed_at           DateTime?                @db.Timestamptz(6)
+  import_column_mappings import_column_mappings[]
+  companies              Company                  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users                  User                     @relation(fields: [created_by], references: [id], onUpdate: NoAction)
+  import_staging_rows    import_staging_rows[]
+
+  @@index([company_id, created_at(sort: Desc)], map: "idx_import_jobs_company")
+  @@index([status, updated_at], map: "idx_import_jobs_stale")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model import_staging_rows {
+  id                 String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  import_job_id      String      @db.Uuid
+  company_id         String      @db.Uuid
+  row_number         Int
+  raw_data           Json
+  mapped_data        Json?
+  group_key          String?     @db.VarChar(64)
+  status             String      @default("ok") @db.VarChar(10)
+  duplicate_match_id String?     @db.Uuid
+  duplicate_action   String?     @db.VarChar(10)
+  error_message      String?
+  duplicate_reason   String?     @db.VarChar(30)
+  companies          Company     @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  import_jobs        import_jobs @relation(fields: [import_job_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([import_job_id, row_number])
+  @@index([company_id], map: "idx_import_rows_company")
+  @@index([import_job_id, row_number], map: "idx_import_rows_job")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model import_templates {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  company_id     String   @db.Uuid
+  module         String   @db.VarChar(30)
+  column_mapping Json
+  created_at     DateTime @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime @default(now()) @db.Timestamptz(6)
+  companies      Company  @relation(fields: [company_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([company_id, module], map: "idx_import_templates_company")
 }
 
 enum calendar_event_status {

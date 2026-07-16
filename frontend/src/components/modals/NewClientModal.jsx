@@ -30,6 +30,7 @@ const EMPTY = {
   name:       '',
   email:      '',
   phone:      '',
+  cpfCnpj:    '',
   status:     'lead',
   situacao:   '',
   financeiro: '',
@@ -55,6 +56,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
           name:       client.name       || '',
           email:      client.email      || '',
           phone:      client.phone      || '',
+          cpfCnpj:    client.cpf_cnpj   || '',
           status:     client.status     || 'lead',
           situacao:   client.situacao   || '',
           financeiro: client.financeiro || '',
@@ -84,6 +86,7 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
         name:       form.name,
         email:      form.email      || null,
         phone:      form.phone      || null,
+        cpfCnpj:    form.cpfCnpj    || null,
         status:     form.status,
         situacao:   form.situacao   || null,
         financeiro: form.financeiro || null,
@@ -230,6 +233,14 @@ export default function NewClientModal({ open, onClose, onSuccess, client = null
                 value={form.phone} onChange={e => set('phone', e.target.value)}
                 onFocus={onFocus} onBlur={onBlur} />
             </div>
+          </div>
+
+          {/* CPF/CNPJ — usado também como critério de duplicata na importação de planilhas */}
+          <div>
+            <label style={labelStyle}>CPF/CNPJ <span style={optionalStyle}>(opcional)</span></label>
+            <input style={inputStyle} placeholder="000.000.000-00 ou 00.000.000/0000-00"
+              value={form.cpfCnpj} onChange={e => set('cpfCnpj', e.target.value)}
+              onFocus={onFocus} onBlur={onBlur} />
           </div>
 
           {/* Divisor */}

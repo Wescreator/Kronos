@@ -22,5 +22,6 @@ server.headersTimeout = parseInt(process.env.HTTP_HEADERS_TIMEOUT_MS) || 20000
 
 require('./config/websocket')(server)
 require('./jobs/notification.cron').start()
+require('./jobs/importWatchdog.cron').start()
 
 module.exports = server

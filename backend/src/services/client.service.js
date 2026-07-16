@@ -87,6 +87,20 @@ const validatePhone = (value) => {
 
 // Retorna undefined quando o valor não foi enviado (permite diferenciar
 // "não mandou status" de "mandou status inválido" no update).
+// CPF/CNPJ: aceita com ou sem máscara, guarda só os dígitos (11 = CPF,
+// 14 = CNPJ) — mesmo formato normalizado usado pela importação de planilhas.
+const validateCpfCnpj = (value) => {
+  const normalized = normalizeString(value)
+  if (!normalized) {
+    return null
+  }
+  const digits = normalized.replace(/\D/g, '')
+  if (digits.length !== 11 && digits.length !== 14) {
+    throw validationError('O campo "cpfCnpj" precisa ter 11 (CPF) ou 14 (CNPJ) dígitos.')
+  }
+  return digits
+}
+
 const validateStatus = (value) => {
   if (value === undefined || value === null || value === '') {
     return undefined
@@ -172,6 +186,7 @@ const createClientOrLead = async (companyId, data = {}) => {
   const name       = validateName(data.name, { required: true })
   const email      = validateEmail(data.email)
   const phone      = validatePhone(data.phone)
+  const cpfCnpj    = validateCpfCnpj(data.cpfCnpj)
   const status     = validateStatus(data.status) || 'lead'
   const situacao   = validateSituacao(data.situacao) || null
   const financeiro = validateFinanceiro(data.financeiro) || null
@@ -180,6 +195,7 @@ const createClientOrLead = async (companyId, data = {}) => {
     name,
     email,
     phone,
+    cpfCnpj,
     status,
     situacao,
     financeiro,
@@ -218,6 +234,9 @@ const updateClientOrLead = async (id, companyId, fields) => {
   }
   if ('phone' in sanitized) {
     sanitized.phone = validatePhone(sanitized.phone)
+  }
+  if ('cpfCnpj' in sanitized) {
+    sanitized.cpfCnpj = validateCpfCnpj(sanitized.cpfCnpj)
   }
   if ('status' in sanitized) {
     const status = validateStatus(sanitized.status)

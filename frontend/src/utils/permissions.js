@@ -58,7 +58,7 @@ export const ROLE_STYLES = {
 // perfis (incluindo owner) veem o dashboard personalizado sem finanças
 // (TeamDashboard) — por isso 'dashboard' agora é visível a todos.
 // Espelha authorize('admin') em financial.routes.js no backend.
-const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets', 'reports']
+const ALL_MODULES = ['dashboard', 'projects', 'clients', 'tasks', 'financial', 'chat', 'team', 'agenda', 'proposals', 'posts', 'budgets', 'reports', 'imports']
 // O módulo Relatórios é EXCLUSIVO do administrador (developer tem bypass) —
 // decisão de produto: agrega horas de TODA a equipe. Assim como o Financeiro,
 // nem o owner acessa. owner/manager/employee compartilham a mesma lista:
@@ -170,6 +170,16 @@ export const PERMISSIONS = {
   reports: {
     view:      FINANCE_ROLES,
     viewHours: FINANCE_ROLES,
+  },
+  // NOVO — módulo de Importação de Planilhas (/app/imports). A página é
+  // visível a todos (importar CLIENTES é aberto, espelhando client.routes.js
+  // sem authorize), mas o destino Financeiro segue a regra do módulo
+  // Financeiro: só admin (espelha authorize('admin') em import.routes.js /
+  // authorizeImportModule no backend).
+  imports: {
+    view:            ALL_ROLES,
+    importClientes:  ALL_ROLES,
+    importFinanceiro: FINANCE_ROLES,
   },
   budgets: {
   view:         ALL_ROLES,

@@ -31,6 +31,7 @@ import ProposalDetailPage from './pages/proposals/ProposalDetailPage'
 import ClientPage         from './pages/client/ClientPage'
 import PostsPage          from './pages/posts/PostsPage'
 import ReportsPage        from './pages/reports/ReportsPage'
+import ImportsPage        from './pages/imports/ImportsPage'
 
 // NOVO — portal do cliente (escopo 'client')
 import ClientPortalLoginPage from './pages/portal/ClientPortalLoginPage'
@@ -150,6 +151,7 @@ export default function App() {
           <Route path="tasks"               element={<TasksPage />} />
           <Route path="tasks/:id"           element={<TaskDetailPage />} />
           <Route path="reports"             element={<PermissionRoute module="reports"><ReportsPage /></PermissionRoute>} />
+          <Route path="imports"             element={<PermissionRoute module="imports"><ImportsPage /></PermissionRoute>} />
           <Route path="financial"           element={<PermissionRoute module="financial"><FinancialPage /></PermissionRoute>} />
           <Route path="financial/expenses"  element={<PermissionRoute module="financial"><ExpensesPage /></PermissionRoute>} />
           <Route path="financial/revenues"  element={<PermissionRoute module="financial"><RevenuesPage /></PermissionRoute>} />

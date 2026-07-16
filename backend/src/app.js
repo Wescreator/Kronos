@@ -126,6 +126,7 @@ app.use('/api/posts',       require('./routes/post.routes'))
 // NOVO — autenticação do portal do cliente (rotas públicas, sem authenticate)
 app.use('/api/client-portal/auth', require('./routes/client-portal-auth.routes'))
 app.use('/api/budgets', require('./routes/budget.routes'))
+app.use('/api/imports', require('./routes/import.routes'))
 app.use('/api/budget-config', require('./routes/budgetConfig.routes'))
 
 // ── Error handler global ──────────────────────────────────────────────────────
